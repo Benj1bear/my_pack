@@ -1,8 +1,12 @@
 # my_pack
 python functions I made for 297201 assignments and other stuff
-
 # Note:
 you may use any of the functions in here but I've used this at massey university so... it's possible you'll be plagarized if you don't at the very least cite the relevant sections from which you got what you used if you copy sections of the code here.
+# if you are importing on the same level as the my_pack folder directory:
+Because you have a folder that's the same name as the script you want to access you should (in this case) run:
+```python
+from my_pack.my_pack import Type
+```
 # pipe example
 ```python
 from my_pack import pipe
