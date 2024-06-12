@@ -45,12 +45,7 @@ open("my_pack.py", "wb").write(file.content)
 # how to get started
 open the jupyter notebook and run the first cell containing with the following:
 ```python
-import pandas as pd
 from my_pack import install
-
-# setup defaults or not; up to you
-defaults={"version":"'0.1.0'","description":"'contains useful function'","author":"'author'","email":"'email'"}
-pd.Series(defaults).to_pickle("PYTHON_SETUP_DEFAULTS.pkl")
 
 # install the package so it can be used elsewhere
 install("my_pack")
