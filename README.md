@@ -51,7 +51,7 @@ open("my_pack.py", "wb").write(file.content)
 open("*alternative directory and filename desired*", "wb").write(file.content)
 ```
 # how to get started
-open the jupyter notebook and run the first cell containing with the following:
+open the jupyter notebook and run the first cell containing the following:
 ```python
 from my_pack import install
 
