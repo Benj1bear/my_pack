@@ -182,7 +182,7 @@ def git_clone(url=[],directory=[],repo=True):
     url_length=len(url)
     if dir_length == 1:
         directory=directory*url_length
-    if url_length == 1:
+    elif url_length == 1:
         url=url*dir_length
     elif url_length != dir_length:
         raise Exception("Length mismatch between the number of supplied urls: "+str(url_length)+", and directories: "+str(dir_length))
