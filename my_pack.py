@@ -22,6 +22,7 @@ lock=RLock()
 import re
 import glob
 import shutil
+from inspect import getfile
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
@@ -88,6 +89,8 @@ def install(library_name,directory="",setup=True,requirements=True,defaults=True
         if setup == True:
             print("---setup configs---")
             if defaults == True:
+                # get the default setup directory correct
+                default_config = "\\".join(getfile(install).split("\\")[:-1])+"\\"+default_config
                 configs = dict(pd.read_pickle(default_config))
                 configs["description"] = "'"+input("description: ")+"'"
             else:
@@ -123,7 +126,7 @@ setup(
             os.chdir(directory)
         try:
             subprocess.run("pip install -e .")
-        except OSError as e:
+        except Exception as e:
             print("Error: "+e)
         # wait for it to finish...
         print("\n"+library_name+" successfully installed at: "+os.getcwd())
@@ -132,8 +135,9 @@ setup(
         print("You may need to restart the kernel to use or uninstall")
         print("To uninstall whilst retaining the pre-installation files run: !pip uninstall "+library_name)
         os.chdir(current_dir)
-    except:
+    except Exception as e:
         os.chdir(current_dir)
+        print(e)
 
 def uninstall(library_name,keep_setup=True):
     """Runs pip uninstall library_name 
