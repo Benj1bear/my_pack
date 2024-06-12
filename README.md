@@ -58,16 +58,10 @@ install("my_pack")
 If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again.
 ```python
 # either in jupyter notebook or python shell in the same directory as the my_pack.py file run:
-
 from my_pack import install
-# Note: this assumes the .pkl file is in the same directory
-# which it won't be for any other installations, so you could remember the directory or edit the code
-install("my_pack") 
+
 # once installed you can then install scripts from different directories,
-# else you'll need to be in the same directory as my_pack to be able to do so
-#install("another_pack","*the directory where it's at*",default_config="*where it's at*")
-# or
-#install("another_pack","*the directory where it's at*",defaults=False)
+install("another_pack","*the directory where it's at*")
 ```
 Also, you can uninstall using the uninstall function. Setting keep_setup to False will remove the \_\_init\_\_.py and setup.py files along with the .egg-info folder but retain the original script. So uninstalling by itelf only cut soff the 'connection' but still leaves behind the setup files. Note: you should be able to apply the install and uninstall functions to any python script ideally.
 ```python
