@@ -17,3 +17,4 @@ subprocess
 shutil
 html5lib
 requests
+inspect
