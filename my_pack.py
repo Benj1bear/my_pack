@@ -81,7 +81,7 @@ def install(library_name,directory="",setup=True,requirements=True,defaults=True
        library_name: the name of your new module to access (in anaconda potentially if using jupyter notebook)
        directory: directory where your python script is
        default_config: a .pkl file that's a pd.Series with your default information i.e.:
-       pd.Series({"version":"'0.1.0'","description":"'contains useful function'","author":"'me'","email":"''"}).to_pickle("PYTHON_SETUP_DEFAULTS.pkl")
+       pd.Series({"version":"'0.1.0'","description":"'contains useful function'","author":"'author'","email":"'email'"}).to_pickle("PYTHON_SETUP_DEFAULTS.pkl")
     """
     try:
         current_dir=os.getcwd()
