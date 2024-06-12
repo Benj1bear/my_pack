@@ -120,7 +120,7 @@ setup(
             with open(directory+"setup.py","w") as file:
                 file.write(setup_content)
             print("Successfully created setup files __init__.py and setup.py.")
-        print("\ninstalling "+library_name+"...",end="\r")
+        print("\ninstalling "+library_name+"...")
         # go to the directory then run the command
         if directory != "":
             os.chdir(directory)
