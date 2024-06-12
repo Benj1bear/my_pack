@@ -77,9 +77,12 @@ uninstall("my_pack",keep_setup=False)
 # chaning file path
 if you do this then you'll need to reinstall. 
 i.e. if:
+
 old path: c:/a/b/c/my_pack.py
+
 new path: c:/a/c/d/my_pack.py
-Then go into the same directory and run the second code block in teh How to get started jupyter notebook that will reinstall without having to modify any of the files e.g. to 'relink' it
+
+Then go into the new directory and run the second code block in the How to get started jupyter notebook that will reinstall without having to modify any of the files e.g. to 'relink' it. You don't need to uninstall (I think).
 ```python
 from my_pack import install
 install("my_pack",setup=False)
