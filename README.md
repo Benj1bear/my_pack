@@ -52,9 +52,10 @@ install("my_pack")
 # install and uninstall
 If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again.
 ```python
-# either in jupyter notebook or python shell (after running install("my_pack") from within the same directory) in the same or different directory as the my_pack.py file run:
+# either in jupyter notebook or python shell (after running install("my_pack") from within the same directory)
+# in the same or different directory as the my_pack.py file run:
 from my_pack import install
-# you're in a directory one above
+# if you're in a directory one above
 #from my_pack.my_pack import #*desired function*
 
 # once installed you can then install scripts from different directories,
