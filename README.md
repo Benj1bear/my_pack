@@ -69,7 +69,7 @@ install("my_pack")
 # or
 #install("another_pack","*the directory where it's at*",defaults=False)
 ```
-Also, you can uninstall using the uninstall function. Setting keep_setup to False will remove the \_\_init\_\_.py and setup.py files along with the .egg-info folder but retain the original script. So uninstalling by itelf only cutsoff the 'connection' but still leaves behind the setup files. Note: you should be able to apply the install and uninstall functions to any python script ideally.
+Also, you can uninstall using the uninstall function. Setting keep_setup to False will remove the \_\_init\_\_.py and setup.py files along with the .egg-info folder but retain the original script. So uninstalling by itelf only cut soff the 'connection' but still leaves behind the setup files. Note: you should be able to apply the install and uninstall functions to any python script ideally.
 ```python
 from my_pack import uninstall
 uninstall("my_pack",keep_setup=False)
