@@ -171,6 +171,43 @@ def uninstall(library_name,keep_setup=True):
         print(e)
         print("if the module name and directory is correct you may need to restart the kernel if the import doesn't work")
 ###########
+
+def git_clone(url=[],directory=[],repo=True):
+    """For cloning multiple github repos or files into choosen directories"""
+    if type(directory) == str:
+        directory=[directory]
+    if type(url) == str:
+        url=[url]
+    dir_length=len(directory)
+    url_length=len(url)
+    if dir_length == 1:
+        directory=directory*url_length
+    if url_length == 1:
+        url=url*dir_length
+    elif url_length != dir_length:
+        raise Exception("Length mismatch between the number of supplied urls: "+str(url_length)+", and directories: "+str(dir_length))
+    if repo == True:
+        for file,path in zip(url,directory):
+            try:
+                if path == "":
+                    subprocess.run("git clone "+file)
+                else:
+                    current=os.getcwd()
+                    os.chdir(path)
+                    subprocess.run("git clone "+file)
+                    os.chdir(current)
+            except Exception as e:
+                print("Failed retrieving "+file)
+                print(e)
+        return
+    else:
+        for file,path in zip(url,directory):
+            try:
+                open(path+file.split("/")[-1], "wb").write(requests.get(file).content)
+            except Exception as e:
+                print("Failed retrieving "+file)
+                print(e)
+
 def partition(number_of_subsets,interval):
     """Creates the desired number of partitions on a range.
        Accepts integers for the number_of_subsets but will 
