@@ -5,7 +5,7 @@ you may use any of the functions in here but I've used this at massey university
 # if you are importing on the same level as the my_pack folder directory:
 Because you have a folder that's the same name as the script you want to access you should (in this case) run:
 ```python
-from my_pack.my_pack import *desired function*
+from my_pack.my_pack import #*desired function*
 ```
 # pipe example
 ```python
