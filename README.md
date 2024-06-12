@@ -74,3 +74,13 @@ Also, you can uninstall using the uninstall function. Setting keep_setup to Fals
 from my_pack import uninstall
 uninstall("my_pack",keep_setup=False)
 ```
+# chaning file path
+if you do this then you'll need to reinstall. 
+i.e. if:
+old path: c:/a/b/c/my_pack.py
+new path: c:/a/c/d/my_pack.py
+Then go into the same directory and run the second code block in teh How to get started jupyter notebook that will reinstall without having to modify any of the files e.g. to 'relink' it
+```python
+from my_pack import install
+install("my_pack",setup=False)
+```
