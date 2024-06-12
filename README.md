@@ -74,7 +74,7 @@ Also, you can uninstall using the uninstall function. Setting keep_setup to Fals
 from my_pack import uninstall
 uninstall("my_pack",keep_setup=False)
 ```
-# chaning file path
+# changing file path
 if you do this then you'll need to reinstall. 
 i.e. if:
 
