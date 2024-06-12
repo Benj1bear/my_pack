@@ -2,11 +2,6 @@
 python functions I made for 297201 assignments and other stuff
 # Note:
 you may use any of the functions in here but I've used this at massey university so... it's possible you'll be plagarized if you don't at the very least cite the relevant sections from which you got what you used if you copy sections of the code here.
-# if you are importing on the same level as the my_pack folder directory:
-Renaming the name of the folder can suffice otherwise because you have a folder that's the same name as the script you want to access you should (in this case) run:
-```python
-from my_pack.my_pack import #*desired function*
-```
 # pipe example
 ```python
 from my_pack import pipe
@@ -57,8 +52,10 @@ install("my_pack")
 # install and uninstall
 If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again.
 ```python
-# either in jupyter notebook or python shell in the same directory as the my_pack.py file run:
+# either in jupyter notebook or python shell (after running install("my_pack") from within the same directory) in the same or different directory as the my_pack.py file run:
 from my_pack import install
+# you're in a directory one above
+#from my_pack.my_pack import #*desired function*
 
 # once installed you can then install scripts from different directories,
 install("another_pack","*the directory where it's at*")
