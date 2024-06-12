@@ -34,12 +34,18 @@ multi_thread(number_of_threads,interval_length,for_loop,part=True)[0] # it retur
 in a jupyter notebook or python shell or otherwise run something similar to either of the following code:
 ```python
 !git clone https://github.com/Benj1bear/my_pack
+# or
+import os
+current=os.getcwd()
+os.chdir("*Desired directory*")
+!git clone https://github.com/Benj1bear/my_pack
+os.chdir(current)
 # or for the library file itself if wanted
 import requests
 file = requests.get("https://raw.githubusercontent.com/Benj1bear/my_pack/main/my_pack.py")
 open("my_pack.py", "wb").write(file.content)
 # or
-#open("*alternative directory and filename desired*", "wb").write(file.content)
+open("*alternative directory and filename desired*", "wb").write(file.content)
 ```
 # how to get started
 open the jupyter notebook and run the first cell containing with the following:
