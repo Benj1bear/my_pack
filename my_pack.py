@@ -475,12 +475,8 @@ def Type(df=[],ls=[],keep=[],this=True,show=False):
         keep = df[keep]
     except:
         keep = pd.Series([])
-    if this == False:
-        for string in ls:
-            df = df[[i for i in df.columns if df[i].dtype != string]]
-    else:
-        for string in ls:
-            df = df[[i for i in df.columns if df[i].dtype == string]]
+    for string in ls:
+        df = df[[i for i in df.columns if (df[i].dtype == string) == this]]
     return pd.concat([df,keep],axis=1)
 
 def cprop_plot(occ,part,args={"figsize":(15.5,7.5),"alpha":0.4}):
