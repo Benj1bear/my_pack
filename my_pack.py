@@ -128,15 +128,15 @@ setup(
             os.chdir(directory)
         try:
             subprocess.run("pip install -e .")
+            # wait for it to finish...
+            print("\n"+library_name+" successfully installed at: "+os.getcwd())
+            print("\nYou can now access the module where applicable by using: from "+library_name+" import *desired function*")
+            print("or: import "+library_name)
+            print("You may need to restart the kernel to use or uninstall")
+            print("To uninstall whilst retaining the pre-installation files run: !pip uninstall "+library_name)
         except Exception as e:
             print(e)
             print("note: some imported packages may use dummy names")
-        # wait for it to finish...
-        print("\n"+library_name+" successfully installed at: "+os.getcwd())
-        print("\nYou can now access the module where applicable by using: from "+library_name+" import *desired function*")
-        print("or: import "+library_name)
-        print("You may need to restart the kernel to use or uninstall")
-        print("To uninstall whilst retaining the pre-installation files run: !pip uninstall "+library_name)
         os.chdir(current_dir)
     except Exception as e:
         os.chdir(current_dir)
