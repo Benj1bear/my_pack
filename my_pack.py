@@ -23,6 +23,7 @@ import re
 import glob
 import shutil
 from inspect import getfile
+import sys
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
@@ -43,6 +44,8 @@ def get_requirements(filename,unique=True):
     filtered = filtered[filtered.str.len() > 0]
     if unique==True:
         return list(filtered.unique())
+    # filter out standard libraries
+    filtered = filtered[filtered.isin(list(sys.stdlib_module_names)) == False]
     # return as a list
     return list(filtered)
 
