@@ -1,7 +1,7 @@
 numpy
 bs4
 seaborn
-sklearn
+scikit-learn
 datetime 
 requests
 setuptools
