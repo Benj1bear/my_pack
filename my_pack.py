@@ -128,7 +128,7 @@ setup(
             os.chdir(directory)
         process=subprocess.run("pip install -e .",capture_output=True)    
         if process.returncode != 0:
-            print("---installation failed---"
+            print("---installation failed---")
             print("note: some imported packages may use dummy names")            
             print(process.stdout.decode('utf-8'))
         else:
