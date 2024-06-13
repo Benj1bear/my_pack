@@ -43,7 +43,7 @@ def get_requirements(filename,unique=True):
     filtered = filtered.str.split(",").explode().str.strip("")
     filtered = filtered[filtered.str.len() > 0]
     if unique==True:
-        return list(filtered.unique())
+        filtered = pd.Series(filtered.unique())
     # filter out standard libraries
     filtered = filtered[filtered.isin(list(sys.stdlib_module_names)) == False]
     # return as a list
