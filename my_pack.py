@@ -129,7 +129,8 @@ setup(
         try:
             subprocess.run("pip install -e .")
         except Exception as e:
-            print("Error: "+e)
+            print(e)
+            print("note: some imported packages may use dummy names")
         # wait for it to finish...
         print("\n"+library_name+" successfully installed at: "+os.getcwd())
         print("\nYou can now access the module where applicable by using: from "+library_name+" import *desired function*")
