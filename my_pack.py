@@ -155,8 +155,8 @@ def uninstall(library_name,keep_setup=True):
     """
     # get the libraries directory
     try:
-    directory = __import__(library_name).__file__
-    directory = "\\".join(directory.split("\\")[:-1])+"\\"
+        directory = __import__(library_name).__file__
+        directory = "\\".join(directory.split("\\")[:-1])+"\\"
     except:
         # if the name of the package is different to the name of the module
         process=subprocess.run("pip show "+library_name,capture_output=True)
