@@ -154,6 +154,7 @@ def uninstall(library_name,keep_setup=True):
        
     """
     # get the libraries directory
+    print("getting package directory...",end="\r")
     try:
         directory = __import__(library_name).__file__
         directory = "\\".join(directory.split("\\")[:-1])+"\\"
