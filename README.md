@@ -30,16 +30,23 @@ multi_thread(number_of_threads,interval_length,for_loop,part=True)[0] # it retur
 #Threads complete
 #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
-# how to retrieve:
+# how to get started - retrieve or install:
 in a jupyter notebook or python shell or otherwise run something similar to either of the following code:
 ```python
+# to install
+var="#egg=my_pack"
+!pip install -e git+https://github.com/Benj1bear/my_pack$var
+
+# if just wanting to clone the repo then replace the above with:
 !git clone https://github.com/Benj1bear/my_pack
+
 
 # or
 import os
 current=os.getcwd()
 os.chdir("*Desired directory*")
-!git clone https://github.com/Benj1bear/my_pack
+var="#egg=my_pack"
+!pip install -e git+https://github.com/Benj1bear/my_pack$var
 os.chdir(current)
 
 # or for the library file itself if wanted
@@ -49,14 +56,6 @@ open("my_pack.py", "wb").write(file.content)
 
 # or
 open("*alternative directory and filename desired*", "wb").write(file.content)
-```
-# how to get started
-open the jupyter notebook and run the first cell containing the following:
-```python
-from my_pack import install
-
-# install the package so it can be used elsewhere
-install("my_pack")
 ```
 # install and uninstall
 If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again. Also, some packages use dummy names for their imports which can mess with the requirements setup.
