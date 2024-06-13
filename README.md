@@ -59,7 +59,7 @@ from my_pack import install
 install("my_pack")
 ```
 # install and uninstall
-If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again.
+If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again. Also, some packages use dummy names for their imports which can mess with the requirements setup.
 ```python
 # either in jupyter notebook or python shell (after running install("my_pack") from within the same directory)
 # in the same or different directory as the my_pack.py file run:
