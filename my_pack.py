@@ -69,7 +69,7 @@ def req_search(directory):
     # return only the unique requirements
     return list(set(requirements))
         
-def install(library_name,directory="",setup=True,requirements=True,defaults=True,default_config="PYTHON_SETUP_DEFAULTS.pkl"):
+def install(library_name,directory="",setup=True,get_requirements=True,defaults=True,default_config="PYTHON_SETUP_DEFAULTS.pkl"):
     """Creates necessary files for a library that can be accessed globally 
        on your local machine created in the same directory as the script 
        choosen to become a library.
@@ -99,9 +99,8 @@ def install(library_name,directory="",setup=True,requirements=True,defaults=True
                     configs[i] = "'"+input(i+": ")+"'"
             requirements = []
             # search for requirements
-            if requirements == True:
+            if get_requirements == True:
                 requirements = req_search(directory)
-            configs = configs|{"requirements":requirements}
             setup_content = """
 from setuptools import setup, find_packages
 
@@ -112,7 +111,7 @@ setup(
     author="""+configs["author"]+""",
     author_email="""+configs["email"]+""",
     packages=find_packages(),
-    install_requires="""+str(configs["requirements"])+"""
+    install_requires="""+str(requirements)+"""
 )
 """
             # create __init__.py and setup.py
