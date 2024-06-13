@@ -8,5 +8,5 @@ setup(
     author='author',
     author_email='email',
     packages=find_packages(),
-    install_requires=['glob', 'setuptools', 'matplotlib', 'inspect', 're', 'threading', 'subprocess', 'pandas', 'sklearn', 'IPython', 'datetime ', 'shutil', 'seaborn', 'bs4', 'requests', 'json', 'html5lib', 'os', 'numpy', 'io']
+    install_requires=['setuptools', 'matplotlib', 'inspect', 'pandas', 'sklearn', 'IPython', 'seaborn', 'bs4', 'requests', 'html5lib', 'numpy']
 )
