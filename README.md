@@ -60,7 +60,7 @@ open("*alternative directory and filename desired*", "wb").write(file.content)
 # install and uninstall
 If you want to use libraries beyond one directory and in across many projects like you would with regular imports of libraries then you can install it using the install function. Note: this kind of install is editable meaning you can make saved changes to your library and it will update; though you'll need to reload the importing of it again. Also, some packages use dummy names for their imports which can mess with the requirements setup.
 ```python
-# either in jupyter notebook or python shell (after running install("my_pack") from within the same directory)
+# either in jupyter notebook or python shell (after running installing my_pack)
 # in the same or different directory as the my_pack.py file run:
 from my_pack import install
 # if you're in a directory one above
@@ -83,7 +83,7 @@ old path: c:/a/b/c/my_pack.py
 
 new path: c:/a/c/d/my_pack.py
 
-Then go into the new directory and run the second code block in the How to get started jupyter notebook that will reinstall without having to modify any of the files e.g. to 're-link' it. You don't need to run the uninstall function (I think).
+Then go into the new directory and run the second code block in the jupyter notebook that will reinstall without having to modify any of the files e.g. to 're-link' it. You don't need to run the uninstall function (I think).
 ```python
 from my_pack import install
 install("my_pack",setup=False)
