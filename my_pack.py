@@ -154,8 +154,24 @@ def uninstall(library_name,keep_setup=True):
        
     """
     # get the libraries directory
+    try:
     directory = __import__(library_name).__file__
     directory = "\\".join(directory.split("\\")[:-1])+"\\"
+    except:
+        # if the name of the package is different to the name of the module
+        process=subprocess.run("pip show "+library_name,capture_output=True)
+        if process.returncode != 0:
+            print(process.stdout.decode("utf-8"))
+            return
+        df=pd.Series(process.stdout.decode("utf-8").split("\r\n")).str.split(":")
+        df.index=df.str[0]
+        df=df.str[1:]
+        def joinup(x):
+            if type(x)==list:
+                return ":".join(x)
+            return x
+        # directory
+        directory=df.apply(joinup)["Location"].strip()+"\\"
     if keep_setup == False:
         print("uninstalling "+library_name+" and removing setup files")
     else:
