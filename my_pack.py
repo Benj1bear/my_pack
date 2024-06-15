@@ -19,6 +19,8 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 import time
+from IPython.display import clear_output
+from IPython import get_ipython
 ########### for installing editable local libraries and figuring out what modules python scripts use
 import re
 import glob
@@ -285,6 +287,37 @@ def background_process(FUNC=stand_by,*args,**kwargs):
         del globals()[name]
     Thread(target=process).start()
 
+current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
+def capture(interpret_code=True):
+    """Function to capture the inputs in real time (only works in jupyter notebook because of the 'In' variable)
+       The only issues with it is that because it runs on a thread it therefore can only work one cell at a time
+       so the display may come out unexpectedly
+    """
+    global current_execution
+    last_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
+    # add some delay to stop interference with the main thread
+    time.sleep(1)
+    # wait until cell has been executed
+    if current_execution != last_execution:
+        clear_output()
+        print("post-processor:")
+        code=get_ipython().__getstate__()["_trait_values"]["parent_header"]["content"]["code"]
+        ############################# getting this done ###############################
+        #if interpret_code:
+        #    code=interpret(code)
+        ############################# getting this done ###############################
+        try:
+            # printing the last line
+            code_ls=code.split("\n")# need to fix later for edge cases (when \n is in a string)
+            last_line=code_ls[-1]
+            code_ls="\n".join(code_ls[:-1])
+            exec(code_ls+"\ndisplay("+last_line+")")
+        except:
+            exec(code)
+        # make sure the current execution is updated
+        current_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
+
+##################################
 def partition(number_of_subsets,interval):
     """Creates the desired number of partitions on a range.
        Accepts integers for the number_of_subsets but will 
