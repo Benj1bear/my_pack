@@ -79,9 +79,9 @@ uninstall("my_pack",keep_setup=False)
 if you do this then you'll need to reinstall. 
 i.e. if:
 
-old path: c:/a/b/c/my_pack.py
+old path: c:\a\b\c\my_pack.py
 
-new path: c:/a/c/d/my_pack.py
+new path: c:\a\c\d\my_pack.py
 
 Then go into the new directory and run the second code block in the jupyter notebook that will reinstall without having to modify any of the files e.g. to 're-link' it. You don't need to run the uninstall function (I think).
 ```python
