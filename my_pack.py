@@ -247,18 +247,41 @@ def str_anti_join(string1,string2):
             temp[indx]=""
         indx+=1
     return "".join(temp)
-
+## background processing
+def create_variable(name):
+    globals()[name] = []
 standing_by_count=0
 def stand_by():
     global standing_by_count
     time.sleep(1)
     print(standing_by_count)
-    standing_by_count+=1
-        
+    standing_by_count+=1   
+
+def stop_process(ID):
+    globals()["process "+str(ID)]=True
+
+def show_process():
+    global ids_used
+    for i in range(ids_used):
+        try:
+            print("process "+str(i+1)+" running...")
+        except:
+            None
+
+ids_used=0
 def background_process(FUNC=stand_by,*args,**kwargs):
     def process():
+        # create an id
+        global ids_used
+        ids_used+=1
+        name="process "+str(ids_used)
+        create_variable(name)
+        globals()[name]=False
         while True:
             FUNC(*args,**kwargs)
+            if globals()[name]:
+                break
+        del globals()[name]
     Thread(target=process).start()
 
 def partition(number_of_subsets,interval):
@@ -275,8 +298,6 @@ def partition(number_of_subsets,interval):
     for i in range(len(partitions)-1):
         interval_partitions += [[partitions[i],partitions[i+1]]]
     return interval_partitions
-def create_variable(name):
-    globals()[name] = []
 def thread_runs():
     return os.getenv('FORCE_STOP', True) == "False"
 def multi_thread(number_of_threads,interval_length,FUNC,part=False):
