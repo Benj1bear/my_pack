@@ -302,10 +302,8 @@ def capture(interpret_code=True):
         clear_output()
         print("post-processor:")
         code=get_ipython().__getstate__()["_trait_values"]["parent_header"]["content"]["code"]
-        ############################# getting this done ###############################
-        #if interpret_code:
-        #    code=interpret(code)
-        ############################# getting this done ###############################
+        if interpret_code:
+            code=interpret(code)
         try:
             # printing the last line
             code_ls=code.split("\n")# need to fix later for edge cases (when \n is in a string)
