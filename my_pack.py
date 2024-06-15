@@ -229,6 +229,26 @@ def git_clone(url=[],directory=[],repo=True):
                 print("Failed retrieving "+file)
                 print(e)
 
+def str_anti_join(string1,string2):
+    """anti_joins strings sequentially e.g. assuming appendment"""
+    string_in=[]
+    diff=len(string2) - len(string1)
+    if diff != 0:
+        string1=list(string1)
+        string2=list(string2)
+        if diff > 0:    
+            string1=string1+["__"]*diff # since strings should list into single characters
+            temp=string2
+        else:
+            string2=string2+["__"]*diff
+            temp=string1
+    indx=0
+    for s1,s2 in zip(string1,string2):
+        if s1 == s2:
+            temp[indx]=""
+        indx+=1
+    return "".join(temp)
+
 standing_by_count=0
 def stand_by():
     global standing_by_count
