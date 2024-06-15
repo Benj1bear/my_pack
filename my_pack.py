@@ -564,7 +564,47 @@ def unstr(x):
     temp = globals()[x]
     del globals()[x]
     return temp
-
+#####################
+def operate(line,FUNC,operator):
+    """operate function returns a string on all operations except for the pipe operator that fully executes
+       so we either end up with an executable string or a result
+       
+       Make sure to have order to the functions you execute i.e. pipe operators last
+    """
+    globals()["temp"]=[]
+    exec("globals()['temp']=FUNC(*tuple([unstr(i.strip()) for i in line.split(operator)]))")
+    temp=globals()["temp"]
+    del globals()["temp"]
+    return temp
+def line_sep(string):
+    """separates lines in code using ';' """
+    in_string=0
+    indx=0
+    ls=list(string)
+    for i in ls:
+        if i == '"' or i == "'":
+            in_string=(in_string+1) % 2
+        elif i == ";" and in_string==False:
+            ls[indx]="\n"
+        indx+=1
+    return "".join(ls)
+def interpret(code,checks=[],operators=[]):
+    """Checks your code against your own set of rules for how code should be formated"""
+    # make sure they're lists
+    if type(checks) != list:
+        checks=[checks]
+    if type(operators) != list:
+        operators=[operators]
+    # \n in strings becomes \\n, so you can split this way
+    # line_sep takes care of the ';' occurances
+    lines=line_sep(code).split("\n")
+    for check,operator in zip(checks,operators):
+        indx=0
+        for line in lines:
+            lines[indx]=operate(line,check,operator)
+            indx+=1
+    return lines
+#####################
 def standardize(x):
     scaler=StandardScaler()
     return pd.DataFrame(scaler.fit_transform(x),columns=x.columns)
