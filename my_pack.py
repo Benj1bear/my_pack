@@ -231,7 +231,6 @@ def git_clone(url=[],directory=[],repo=True):
 
 def str_anti_join(string1,string2):
     """anti_joins strings sequentially e.g. assuming appendment"""
-    string_in=[]
     diff=len(string2) - len(string1)
     if diff != 0:
         string1=list(string1)
