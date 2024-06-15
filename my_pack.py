@@ -229,6 +229,19 @@ def git_clone(url=[],directory=[],repo=True):
                 print("Failed retrieving "+file)
                 print(e)
 
+standing_by_count=0
+def stand_by():
+    global standing_by_count
+    time.sleep(1)
+    print(standing_by_count)
+    standing_by_count+=1
+        
+def background_process(FUNC=stand_by,*args,**kwargs):
+    def process():
+        while True:
+            FUNC(*args,**kwargs)
+    Thread(target=process).start()
+
 def partition(number_of_subsets,interval):
     """Creates the desired number of partitions on a range.
        Accepts integers for the number_of_subsets but will 
