@@ -9,7 +9,8 @@ from io import StringIO
 import json
 from bs4 import BeautifulSoup
 import requests
-from IPython.display import display, Markdown
+from IPython.display import display, Markdown,HTML,clear_output
+from IPython import get_ipython
 import html5lib
 import subprocess
 import seaborn as sns
@@ -19,14 +20,19 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 import time
-from IPython.display import clear_output
-from IPython import get_ipython
 ########### for installing editable local libraries and figuring out what modules python scripts use
 import re
 import glob
 import shutil
 from inspect import getfile
 import sys
+
+def import_js(file,id=""):
+    """For importing javascript files while avoiding duplicates from appending scripts"""
+    if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
+        print("javascript loaded")
+        os.environ[file+" JAVASCRIPT_LOADED"]="False"
+        return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
