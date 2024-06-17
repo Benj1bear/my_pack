@@ -30,31 +30,44 @@ import sys
 def import_js(file,id=""):
     """For importing javascript files while avoiding duplicating from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
-        Javascript("""
-let original_cell = Jupyter.notebook.get_selected_cell()
-let string=document.getElementById('"""+file+id+"""')
+        get="""
+let original_cell = Jupyter.notebook.get_selected_cell();
+let string=document.getElementById('"""+file+id+"""');
 if (string == null){
-    string="''"
+    string="0";
 } else{
-    string=string.outerHTML.toString()
+    string=string.outerHTML.toString().length.toString();
 }
 Jupyter.notebook.insert_cell_below();
-Jupyter.notebook.select_next();
-Jupyter.notebook.get_selected_cell().set_text('os.environ["TEMP import_js"]='+string);
-let cell = Jupyter.notebook.get_selected_cell()
-cell.execute();
+"""
+        line="""\nstring='if int("'+string+'") == 0:';"""
+        line+="""\nstring+='\\n\\tos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
+        line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\"const script = document.createElement(\"script\");';"
+        line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
+        line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
+        line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
+        line+="\nstring+='\\n\"\"\"))';"
+        line+="""\nstring+='\\n\\tos.environ["TEMP_IMPORT_JS"] = "1"';"""
+        line+="\nstring+='\\nelse:';"
+        line+="""\nstring+='\\n\\tos.environ["TEMP_IMPORT_JS"] = "0"';"""
+        line+="\nstring='import os\\n'+string;"
+        log="""
+Jupyter.notebook.get_selected_cell().set_text(string);
+Jupyter.notebook.get_selected_cell().execute();
+"""
+        finish="""
 Jupyter.notebook.delete_cell();
 if (Jupyter.notebook.select_next().get_selected_cell() !== original_cell){
     Jupyter.notebook.select_prev();
 }
-""")
-        # if for whatever reason it's asynchronous
-        while os.getenv("TEMP import_js",True):
-            continue
-        if len(os.getenv("TEMP import_js")) == 0:
-            os.environ[file+" JAVASCRIPT_LOADED"]="False"
-            return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
-    print(file+".js is already imported")
+"""
+        display(Javascript(get+line+log+finish))
+        if int(os.getenv("TEMP_IMPORT_JS")):
+            print(file+".js Javascript loaded")
+        else:
+            print(file+".js Javascript embedded in notebook")
+        return
+    print(file+".js is imported")
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
