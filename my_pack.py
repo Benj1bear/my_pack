@@ -28,9 +28,10 @@ from inspect import getfile
 import sys
 
 def import_js(file,id=""):
-    """For importing javascript files while avoiding duplicates from appending scripts"""
+    """For importing javascript files while avoiding duplicating from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
         Javascript("""
+let original_cell = Jupyter.notebook.get_selected_cell()
 let string=document.getElementById('"""+file+id+"""')
 if (string == null){
     string="''"
@@ -38,13 +39,18 @@ if (string == null){
     string=string.outerHTML.toString()
 }
 Jupyter.notebook.insert_cell_below();
-
+Jupyter.notebook.select_next();
 Jupyter.notebook.get_selected_cell().set_text('os.environ["TEMP import_js"]='+string);
-Jupyter.notebook.get_selected_cell().execute();
+let cell = Jupyter.notebook.get_selected_cell()
+cell.execute();
+Jupyter.notebook.delete_cell();
+if (Jupyter.notebook.select_next().get_selected_cell() !== original_cell){
+    Jupyter.notebook.select_prev();
+}
 """)
         # if for whatever reason it's asynchronous
-        #while os.getenv("TEMP import_js",True):
-        #    continue
+        while os.getenv("TEMP import_js",True):
+            continue
         if len(os.getenv("TEMP import_js")) == 0:
             os.environ[file+" JAVASCRIPT_LOADED"]="False"
             return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
