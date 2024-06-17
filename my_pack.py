@@ -9,7 +9,7 @@ from io import StringIO
 import json
 from bs4 import BeautifulSoup
 import requests
-from IPython.display import display, Markdown,HTML,clear_output
+from IPython.display import display, Markdown,HTML,Javascript,clear_output
 from IPython import get_ipython
 import html5lib
 import subprocess
@@ -30,8 +30,24 @@ import sys
 def import_js(file,id=""):
     """For importing javascript files while avoiding duplicates from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
-        os.environ[file+" JAVASCRIPT_LOADED"]="False"
-        return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
+        Javascript("""
+let string=document.getElementById('pipe')
+if (string == null){
+    string="''"
+} else{
+    string=string.outerHTML.toString()
+}
+Jupyter.notebook.insert_cell_below();
+
+Jupyter.notebook.get_selected_cell().set_text('os.environ["TEMP import_js"]='+string);
+Jupyter.notebook.get_selected_cell().execute();
+""")
+        # if for whatever reason it's asynchronous
+        #while os.getenv("TEMP import_js",True):
+        #    continue
+        if len(os.getenv("TEMP import_js")) == 0:
+            os.environ[file+" JAVASCRIPT_LOADED"]="False"
+            return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
     print("failed to import: "+file+".js")
 
 def get_requirements(filename,unique=True):
