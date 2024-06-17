@@ -31,7 +31,7 @@ def import_js(file,id=""):
     """For importing javascript files while avoiding duplicates from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
         Javascript("""
-let string=document.getElementById('pipe')
+let string=document.getElementById('"""+file+id+"""')
 if (string == null){
     string="''"
 } else{
