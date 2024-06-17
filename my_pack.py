@@ -238,6 +238,88 @@ def git_clone(url=[],directory=[],repo=True):
                 print("Failed retrieving "+file)
                 print(e)
 
+
+def unstr(x):
+    """Allows simple conversion of a string of a type to its type
+       globals()[x] gets deleted to free the memory so that all
+       variables within this function are strictly only temporary.
+    """
+    exec("globals()[x]="+x)
+    temp = globals()[x]
+    del globals()[x]
+    return temp
+#####################
+def operate(line,FUNC,operator):
+    """operate function returns a string on all operations except for the pipe operator that fully executes
+       so we either end up with an executable string or a result
+       
+       Make sure to have order to the functions you execute i.e. pipe operators last
+    """
+    # check assiging
+    name="temp"
+    line=line.strip().split("=")
+    assigned=False
+    if len(line) > 1:
+        assigned=True
+        name=line[0].strip()
+        try:
+            line="=".join(line[1:])
+        except:
+            line=line[1:]
+    else:
+        line=line[0]
+    # split on operator to prepare inputs
+    temp=line_sep(line,operator,sep="\n").split("\n")
+    exec("globals()[name]=FUNC(*tuple([unstr(i.strip()) for i in temp]))")
+    temp=globals()[name]
+    if assigned==False:
+        return temp
+
+def line_sep(string):
+    """separates lines in code using ';' """
+    in_string=0
+    indx=0
+    ls=list(string)
+    for i in ls:
+        if i == '"' or i == "'":
+            in_string=(in_string+1) % 2
+        elif i == ";" and in_string==False:
+            ls[indx]="\n"
+        indx+=1
+    return "".join(ls)
+
+def interpret(code,checks=[],operators=[]):
+    """Checks your code against your own set of rules for how code should be formated"""
+    # make sure they're lists
+    if type(checks) != list:
+        checks=[checks]
+    if type(operators) != list:
+        operators=[operators]
+    # \n in strings becomes \\n, so you can split this way
+    # line_sep takes care of the ';' occurances and comments
+    lines=[]
+    # get lines
+    for line in line_sep(code,";","\n").split("\n"):
+        # remove comments
+        temp=line_sep(line,"#")[0]
+        # remove spaces
+        if len(temp) > 0:
+            lines+=[temp]
+    for check,operator in zip(checks,operators):
+        indx=0
+        for line in lines:
+            lines[indx]=operate(line,check,operator)
+            indx+=1
+    try:
+        return "\n".join(lines)
+    except:
+        return lines[0]
+
+
+
+
+
+
 def str_anti_join(string1,string2):
     """anti_joins strings sequentially e.g. assuming appendment"""
     diff=len(string2) - len(string1)
@@ -305,19 +387,26 @@ def capture(interpret_code=True):
     time.sleep(1)
     # wait until cell has been executed
     if current_execution != last_execution:
-        clear_output()
-        print("post-processor:")
         code=get_ipython().__getstate__()["_trait_values"]["parent_header"]["content"]["code"]
-        if interpret_code:
-            code=interpret(code)
-        try:
-            # printing the last line
-            code_ls=code.split("\n")# need to fix later for edge cases (when \n is in a string)
-            last_line=code_ls[-1]
-            code_ls="\n".join(code_ls[:-1])
-            exec(code_ls+"\ndisplay("+last_line+")")
-        except:
-            exec(code)
+        if code != "background_process(capture,True)" and len(code) != len("".join(line_sep(code,"|>"," "))):
+            clear_output()
+            if interpret_code == True:
+                print("interpreting...")
+                code=interpret(code,pipe,"|>")
+            #clear_output()
+            print("post-processor:")
+            try:
+                code_ls=str(code).split("\n")
+                last_line=code_ls[-1]
+                code_ls="\n".join(code_ls[:-1])
+                exec(code_ls+"\ndisplay("+last_line+")")#error
+                print("")
+            except:
+                try:exec(str(code))
+                # a variable must have been assigned
+                except:
+                    try:display(code)
+                    except:None
         # make sure the current execution is updated
         current_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
 
@@ -559,55 +648,6 @@ def pipe(*args,reverse=False):
         os.environ["REVERSE_PIPE"] = "False"
     return returns
 
-def unstr(x):
-    """Allows simple conversion of a string of a type to its type
-       globals()[x] gets deleted to free the memory so that all
-       variables within this function are strictly only temporary.
-    """
-    exec("globals()[x]="+x)
-    temp = globals()[x]
-    del globals()[x]
-    return temp
-#####################
-def operate(line,FUNC,operator):
-    """operate function returns a string on all operations except for the pipe operator that fully executes
-       so we either end up with an executable string or a result
-       
-       Make sure to have order to the functions you execute i.e. pipe operators last
-    """
-    globals()["temp"]=[]
-    exec("globals()['temp']=FUNC(*tuple([unstr(i.strip()) for i in line.split(operator)]))")
-    temp=globals()["temp"]
-    del globals()["temp"]
-    return temp
-def line_sep(string):
-    """separates lines in code using ';' """
-    in_string=0
-    indx=0
-    ls=list(string)
-    for i in ls:
-        if i == '"' or i == "'":
-            in_string=(in_string+1) % 2
-        elif i == ";" and in_string==False:
-            ls[indx]="\n"
-        indx+=1
-    return "".join(ls)
-def interpret(code,checks=[],operators=[]):
-    """Checks your code against your own set of rules for how code should be formated"""
-    # make sure they're lists
-    if type(checks) != list:
-        checks=[checks]
-    if type(operators) != list:
-        operators=[operators]
-    # \n in strings becomes \\n, so you can split this way
-    # line_sep takes care of the ';' occurances
-    lines=line_sep(code).split("\n")
-    for check,operator in zip(checks,operators):
-        indx=0
-        for line in lines:
-            lines[indx]=operate(line,check,operator)
-            indx+=1
-    return lines
 #####################
 def standardize(x):
     scaler=StandardScaler()
