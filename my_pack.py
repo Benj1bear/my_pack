@@ -275,17 +275,46 @@ def operate(line,FUNC,operator):
     if assigned==False:
         return temp
 
-def line_sep(string):
+def indx_split(indx=[],string=""):
+    """Allows splitting of strings via indices"""
+    return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
+                
+def line_sep(string,op,sep=""):
     """separates lines in code using ';' """
     in_string=0
     indx=0
+    req=len(op)
+    count=0
     ls=list(string)
+    if sep == "":
+        ls2=[]
     for i in ls:
+        if i == op[count]:
+            count+=1
+        else:
+            count=0
         if i == '"' or i == "'":
             in_string=(in_string+1) % 2
-        elif i == ";" and in_string==False:
-            ls[indx]="\n"
+        elif count == req:
+            if in_string==False:
+                if sep == "":
+                    if req > 1:
+                        ls2+=[indx-req+1]
+                        ls2+=[indx+1]
+                    else:
+                        ls2+=[indx]
+                else:
+                    if req > 1:
+                        ls[indx-req+1:indx+1]=sep
+                    else:
+                        ls[indx]=sep
+            count=0
         indx+=1
+    # if needing to slice it
+    if sep == "":
+        ls = indx_split([0]+ls2,string)
+        return ls
+    # since it's already formatted
     return "".join(ls)
 
 def interpret(code,checks=[],operators=[]):
