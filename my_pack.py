@@ -30,9 +30,9 @@ import sys
 def import_js(file,id=""):
     """For importing javascript files while avoiding duplicates from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
-        print("javascript loaded")
         os.environ[file+" JAVASCRIPT_LOADED"]="False"
         return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
+    print("failed to import: "+file+".js")
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
