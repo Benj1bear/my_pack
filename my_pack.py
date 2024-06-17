@@ -48,7 +48,7 @@ Jupyter.notebook.get_selected_cell().execute();
         if len(os.getenv("TEMP import_js")) == 0:
             os.environ[file+" JAVASCRIPT_LOADED"]="False"
             return HTML('<script id="'+file+id+'" src="'+file+'.js"></script>')
-    print("failed to import: "+file+".js")
+    print(file+".js is already imported")
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
