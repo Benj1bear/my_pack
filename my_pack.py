@@ -276,31 +276,18 @@ def unstr(x):
     del globals()[x]
     return temp
 #####################
-def operate(line,FUNC,operator):
-    """operate function returns a string on all operations except for the pipe operator that fully executes
-       so we either end up with an executable string or a result
-       
-       Make sure to have order to the functions you execute i.e. pipe operators last
-    """
-    # check assiging
-    name="temp"
-    line=line.strip().split("=")
-    assigned=False
-    if len(line) > 1:
-        assigned=True
-        name=line[0].strip()
-        try:
-            line="=".join(line[1:])
-        except:
-            line=line[1:]
-    else:
-        line=line[0]
-    # split on operator to prepare inputs
-    temp=line_sep(line,operator,sep="\n").split("\n")
-    exec("globals()[name]=FUNC(*tuple([unstr(i.strip()) for i in temp]))")
-    temp=globals()[name]
-    if assigned==False:
-        return temp
+def prep(line,FUNC,operator):
+    """Takes a line splits on binary operator and rewrites with the relevant function"""
+    # split the = into sections where each section get's interpreted
+    assignments=line.strip().split("=")
+    indx=0
+    for assignment in assignments:
+        # split on operator and wrap with function
+        assignments[indx] = FUNC.__name__+"("+line_sep(line,operator,sep=",")+")"
+        indx+=1
+    if len(assignments) > 1:
+        return "=".join(assignments)
+    return assignments[0]
 
 def indx_split(indx=[],string=""):
     """Allows splitting of strings via indices"""
@@ -345,7 +332,7 @@ def line_sep(string,op,sep=""):
     return "".join(ls)
 
 def interpret(code,checks=[],operators=[]):
-    """Checks your code against your own set of rules for how code should be formated"""
+    """Checks code against a custom set of rules for how code should be formated"""
     # make sure they're lists
     if type(checks) != list:
         checks=[checks]
@@ -361,11 +348,14 @@ def interpret(code,checks=[],operators=[]):
         # remove spaces
         if len(temp) > 0:
             lines+=[temp]
+    # go through each line checking through the operators
     for check,operator in zip(checks,operators):
         indx=0
         for line in lines:
-            lines[indx]=operate(line,check,operator)
+            if operator in line:
+                lines[indx]=prep(line,check,operator)
             indx+=1
+    # join lines back together
     try:
         return "\n".join(lines)
     except:
