@@ -278,11 +278,12 @@ def unstr(x):
 def prep(line,FUNC,operator):
     """Takes a line splits on binary operator and rewrites with the relevant function"""
     # split the = into sections where each section get's interpreted
-    assignments=line.strip().split("=")
+    assignments=line.split("=")
     indx=0
     for assignment in assignments:
-        # split on operator and wrap with function
-        assignments[indx] = FUNC.__name__+"("+line_sep(line,operator,sep=",")+")"
+        if operator in assignment:
+            # split on operator and wrap with function
+            assignments[indx] = FUNC.__name__+"("+line_sep(assignment,operator,sep=",")+")"
         indx+=1
     if len(assignments) > 1:
         return "=".join(assignments)
