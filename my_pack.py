@@ -49,14 +49,16 @@ Jupyter.notebook.select_next();
         line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
         line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
         line+="\nstring+='\\n\"\"\"))';"
-        line+="\nstring='import os\\n'+string;"
+        line+="\nstring='import os\\nfrom IPython.display import Javascript\\n'+string;"
         line+="""\nstring+='\\nos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
         log="""
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
 Jupyter.notebook.delete_cell();
 """
-        return Javascript(get+line+log) # or display works as well
+        display(Javascript(get+line+log))
+        print(file+".js loaded")
+        return
     print(file+".js is imported")
 
 def get_requirements(filename,unique=True):
