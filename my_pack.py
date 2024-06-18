@@ -50,8 +50,7 @@ Jupyter.notebook.select_next();
     line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
     line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
     line+="\nstring+='\\n\"\"\"))';"
-    line+="\nstring='import os\\nfrom IPython.display import Javascript\\n'+string;"
-    line+="""\nstring+='\\nos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
+    line+="\nstring='from IPython.display import Javascript\\n'+string;"
     log="""
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
