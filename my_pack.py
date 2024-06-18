@@ -28,9 +28,10 @@ from inspect import getfile
 import sys
 
 def import_js(file,id=""):
-    """For importing javascript files while avoiding duplicating from appending scripts"""
-    if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
-        get="""
+    """For importing javascript files while avoiding duplicating from appending scripts
+       To remove them, refresh the page, since the scripts are only during the session
+    """
+    get="""
 Jupyter.notebook.select_prev();
 Jupyter.notebook.insert_cell_below();
 
@@ -43,23 +44,22 @@ if (string == null){
 }
 Jupyter.notebook.select_next();
 """
-        line="""\nstring='if int("'+string+'") == 0:';"""
-        line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\"const script = document.createElement(\"script\");';"
-        line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
-        line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
-        line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
-        line+="\nstring+='\\n\"\"\"))';"
-        line+="\nstring='import os\\nfrom IPython.display import Javascript\\n'+string;"
-        line+="""\nstring+='\\nos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
-        log="""
+    line="""\nstring='if int("'+string+'") == 0:';"""
+    line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\"const script = document.createElement(\"script\");';"
+    line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
+    line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
+    line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
+    line+="\nstring+='\\n\"\"\"))';"
+    line+="\nstring='import os\\nfrom IPython.display import Javascript\\n'+string;"
+    line+="""\nstring+='\\nos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
+    log="""
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
 Jupyter.notebook.delete_cell();
 """
-        display(Javascript(get+line+log))
-        print(file+".js loaded")
-        return
-    print(file+".js is imported")
+    display(Javascript(get+line+log))
+    print(file+".js loaded")
+    return
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
