@@ -293,7 +293,7 @@ def indx_split(indx=[],string=""):
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
                 
 def line_sep(string,op,sep=""):
-    """separates lines in code by op """
+    """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
     req=len(op)
