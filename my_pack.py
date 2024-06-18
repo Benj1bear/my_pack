@@ -339,6 +339,19 @@ def line_sep(string,op,sep=""):
     # since it's already formatted
     return "".join(ls)
 
+def get_indents(line):
+    """Gets the number of python valid indentations for a line and then scales indentation accordingly"""
+    n_white_space=0
+    for char in line:
+        if char == " ":
+            n_white_space+=1
+        else:
+            break
+    if n_white_space % 4 != 0:
+        raise Exception("indentations must be 4 spaces to be valid:"+line)
+    return " "*n_white_space
+
+
 def interpret(code,checks=[],operators=[]):
     """Checks code against a custom set of rules for how code should be formated"""
     # make sure they're lists
@@ -361,7 +374,8 @@ def interpret(code,checks=[],operators=[]):
         indx=0
         for line in lines:
             if operator in line:
-                lines[indx]=prep(line,check,operator)
+                # get the number of indentations at the start of the line
+                lines[indx]=get_indents(line)+prep(line,check,operator)
             indx+=1
     # join lines back together
     try:
