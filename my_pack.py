@@ -31,6 +31,9 @@ def import_js(file,id=""):
     """For importing javascript files while avoiding duplicating from appending scripts"""
     if os.getenv(file+" JAVASCRIPT_LOADED",True) == True:
         get="""
+Jupyter.notebook.select_prev();
+Jupyter.notebook.insert_cell_below();
+
 let original_cell = Jupyter.notebook.get_selected_cell();
 let string=document.getElementById('"""+file+id+"""');
 if (string == null){
@@ -38,35 +41,22 @@ if (string == null){
 } else{
     string=string.outerHTML.toString().length.toString();
 }
-Jupyter.notebook.insert_cell_below();
+Jupyter.notebook.select_next();
 """
         line="""\nstring='if int("'+string+'") == 0:';"""
-        line+="""\nstring+='\\n\\tos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
         line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\"const script = document.createElement(\"script\");';"
         line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
         line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
         line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
         line+="\nstring+='\\n\"\"\"))';"
-        line+="""\nstring+='\\n\\tos.environ["TEMP_IMPORT_JS"] = "1"';"""
-        line+="\nstring+='\\nelse:';"
-        line+="""\nstring+='\\n\\tos.environ["TEMP_IMPORT_JS"] = "0"';"""
         line+="\nstring='import os\\n'+string;"
+        line+="""\nstring+='\\nos.environ[\""""+file+id+""" JAVASCRIPT_LOADED"]="False"';"""
         log="""
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
-"""
-        finish="""
 Jupyter.notebook.delete_cell();
-if (Jupyter.notebook.select_next().get_selected_cell() !== original_cell){
-    Jupyter.notebook.select_prev();
-}
 """
-        display(Javascript(get+line+log+finish))
-        if int(os.getenv("TEMP_IMPORT_JS")):
-            print(file+".js Javascript loaded")
-        else:
-            print(file+".js Javascript embedded in notebook")
-        return
+        return Javascript(get+line+log) # or display works as well
     print(file+".js is imported")
 
 def get_requirements(filename,unique=True):
