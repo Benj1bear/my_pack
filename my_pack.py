@@ -276,7 +276,15 @@ def unstr(x):
     return temp
 #####################
 def prep(line,FUNC,operator):
-    """Takes a line splits on binary operator and rewrites with the relevant function"""
+    """Takes a line splits on binary operator and rewrites with the relevant function
+       If wanting all custom code interpretations you may omit all the code here and just
+       define your custom functions that will perform all the desired operations and then
+       use:
+       
+       return FUNC.__name__+"("+line_sep(line,operator,sep=",")+")"
+
+       The final formatting will just be many functions applied to a string.
+    """
     # split the = into sections where each section get's interpreted
     assignments=line.split("=")
     indx=0
