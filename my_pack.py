@@ -58,7 +58,6 @@ Jupyter.notebook.delete_cell();
 """
     display(Javascript(get+line+log))
     print(file+".js loaded")
-    return
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
