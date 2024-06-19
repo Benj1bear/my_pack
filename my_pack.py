@@ -285,7 +285,7 @@ def prep(line,FUNC,operator):
 
        The final formatting will just be many functions applied to a string.
     """
-    # split the = into sections where each section get's interpreted
+    # split the = into sections where each section gets interpreted
     assignments=line.split("=")
     indx=0
     for assignment in assignments:
