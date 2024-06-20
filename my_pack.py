@@ -321,9 +321,9 @@ def line_sep(string,op,sep=""):
                 if sep == "":
                     if req > 1:
                         ls2+=[indx-req+1]
-                        ls2+=[indx+1]
                     else:
                         ls2+=[indx]
+                    ls2+=[indx+1]
                 else:
                     if req > 1:
                         ls[indx-req+1:indx+1]=sep
