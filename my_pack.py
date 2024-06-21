@@ -409,7 +409,7 @@ def interpret(code,checks=[],operators=[]):
         for line in lines:
             if operator in line:
                 # for handling (a=..,b=..)
-                line = line_enclose(line,"(",")",FUNC=enclose_dict)
+                #line = line_enclose(line,"(",")",FUNC=enclose_dict)
                 # get the number of indentations at the start of the line
                 lines[indx]=get_indents(line)+prep(line,check,operator)
             indx+=1
