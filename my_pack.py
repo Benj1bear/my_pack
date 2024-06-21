@@ -300,7 +300,7 @@ def indx_split(indx=[],string=""):
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
                 
-def line_sep(string,op,sep=""):
+def line_sep(string,op,sep="",index=False):
     """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
@@ -331,6 +331,8 @@ def line_sep(string,op,sep=""):
                         ls[indx]=sep
             count=0
         indx+=1
+    if index==True:
+        return ls2
     # if needing to slice it
     if sep == "":
         ls = indx_split([0]+ls2,string)
