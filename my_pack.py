@@ -273,7 +273,7 @@ def unstr(x):
     temp = globals()[x]
     del globals()[x]
     return temp
-#####################
+
 def prep(line,FUNC,operator):
     """Takes a line splits on binary operator and rewrites with the relevant function
        If wanting all custom code interpretations you may omit all the code here and just
@@ -353,7 +353,6 @@ def get_indents(line):
     return " "*n_white_space
 
 def enclose_dict(string,enclosing):
-    print(enclosing)
     ls=list(string)
     length=len(ls)
     diff=0
