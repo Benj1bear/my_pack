@@ -385,13 +385,29 @@ def interpret(code,checks=[],operators=[]):
         return lines[0]
 
 
-def line_enclose(string,start,end):
-    """Gets the desired string enclosed by two symbols that are not " or ' 
-       and are not in strings
-    """
+def enclose_dict(string,enclosing):
+    ls=list(string)
+    for i in enclosing:
+        temp = ",".join(string[i[0]:i[1]][1:-1].split("=")).split(",")
+        for key in range(len(temp)//2):
+            temp[2*key] = '"'+temp[2*key]+'":'
+            temp[2*key+1] = temp[2*key+1]+","
+        ls[i[0]:i[1]] = "{"+"".join(temp)+"}"
+    return "".join(ls)
+
+def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     start=line_sep(string,start,index=True)
     end=line_sep(string,end,index=True)
     enclosing=[]
+    if separate == True or sep!= "":
+        ls=list(string)
+        for i in range(len(start)//2):
+            ls[start[2*i]:end[2*i+1]] = sep
+        return "".join(ls)
+    if FUNC != "":
+        for i in range(len(start)//2):
+            enclosing+=[[start[2*i],end[2*i+1]]]
+        return FUNC(string,enclosing)
     for i in range(len(start)//2):
         enclosing+=[start[2*i],end[2*i+1]]
     return indx_split([0]+enclosing,string)
