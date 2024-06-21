@@ -352,20 +352,25 @@ def get_indents(line):
         raise Exception("indentations must be 4 spaces to be valid:"+line)
     return " "*n_white_space
 
-def enclose_dict(string,enclosing):
-    ls=list(string)
-    length=len(ls)
-    diff=0
-    for i in enclosing:
-        temp = string[i[0]:i[1]][1:-1].split("=")
-        if len(temp) > 1:
-            temp = ",".join(temp).split(",")
-            for key in range(len(temp)//2):
-                temp[2*key] = '"'+temp[2*key]+'":'
-                temp[2*key+1] = temp[2*key+1]+","
-            diff = length - len(ls)
-            ls[i[0]-diff:i[1]-diff] = "{"+"".join(temp)+"}"
-    return "".join(ls)
+
+
+def bracket_up(string,start="(",end=")",avoid="\"'"):
+    """ For pairing bracket indexes """
+    indx=0
+    left=[]
+    ls=[]
+    in_string=0
+    for i in string:
+        if i == start:
+            left+=[indx]
+        elif i == end:
+            ls+=[[left[-1],indx,in_string]]
+            left=left[:-1]
+        if i in avoid:
+            in_string = (in_string+1) % 2
+        indx+=1
+    return pd.DataFrame(ls,columns=["start","end","in_string"])
+
 
 def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     start=line_sep(string,start,index=True)
