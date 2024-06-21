@@ -352,6 +352,40 @@ def get_indents(line):
         raise Exception("indentations must be 4 spaces to be valid:"+line)
     return " "*n_white_space
 
+def enclose_dict(string,enclosing):
+    print(enclosing)
+    ls=list(string)
+    length=len(ls)
+    diff=0
+    for i in enclosing:
+        temp = string[i[0]:i[1]][1:-1].split("=")
+        if len(temp) > 1:
+            temp = ",".join(temp).split(",")
+            for key in range(len(temp)//2):
+                temp[2*key] = '"'+temp[2*key]+'":'
+                temp[2*key+1] = temp[2*key+1]+","
+            diff = length - len(ls)
+            ls[i[0]-diff:i[1]-diff] = "{"+"".join(temp)+"}"
+    return "".join(ls)
+
+def line_enclose(string,start,end,FUNC="",sep="",separate=False):
+    start=line_sep(string,start,index=True)
+    end=line_sep(string,end,index=True)
+    enclosing=[]
+    if separate == True or sep!= "":
+        ls=list(string)
+        for i in range(len(start)//2):
+            ls[start[2*i]:end[2*i+1]] = sep
+        return "".join(ls)
+    if FUNC != "":
+        for i in range(len(start)//2):
+            enclosing+=[[start[2*i],end[2*i+1]]]
+        return FUNC(string,enclosing)
+    for i in range(len(start)//2):
+        enclosing+=[start[2*i],end[2*i+1]]
+    return indx_split([0]+enclosing,string)
+
+
 
 def interpret(code,checks=[],operators=[]):
     """Checks code against a custom set of rules for how code should be formated"""
@@ -375,6 +409,8 @@ def interpret(code,checks=[],operators=[]):
         indx=0
         for line in lines:
             if operator in line:
+                # for handling (a=..,b=..)
+                line = line_enclose(line,"(",")",FUNC=enclose_dict)
                 # get the number of indentations at the start of the line
                 lines[indx]=get_indents(line)+prep(line,check,operator)
             indx+=1
@@ -384,37 +420,6 @@ def interpret(code,checks=[],operators=[]):
     except:
         return lines[0]
 
-
-def enclose_dict(string,enclosing):
-    print(enclosing)
-    ls=list(string)
-    length=len(ls)
-    diff=0
-    for i in enclosing:
-        temp = ",".join(string[i[0]:i[1]][1:-1].split("=")).split(",")
-        for key in range(len(temp)//2):
-            temp[2*key] = '"'+temp[2*key]+'":'
-            temp[2*key+1] = temp[2*key+1]+","
-        diff = length - len(ls)
-        ls[i[0]-diff:i[1]-diff] = "{"+"".join(temp)+"}"
-    return "".join(ls)
-
-def line_enclose(string,start,end,FUNC="",sep="",separate=False):
-    start=line_sep(string,start,index=True)
-    end=line_sep(string,end,index=True)
-    enclosing=[]
-    if separate == True or sep!= "":
-        ls=list(string)
-        for i in range(len(start)//2):
-            ls[start[2*i]:end[2*i+1]] = sep
-        return "".join(ls)
-    if FUNC != "":
-        for i in range(len(start)//2):
-            enclosing+=[[start[2*i],end[2*i+1]]]
-        return FUNC(string,enclosing)
-    for i in range(len(start)//2):
-        enclosing+=[start[2*i],end[2*i+1]]
-    return indx_split([0]+enclosing,string)
 
 
 
