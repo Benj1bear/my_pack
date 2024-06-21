@@ -385,7 +385,16 @@ def interpret(code,checks=[],operators=[]):
         return lines[0]
 
 
-
+def line_enclose(string,start,end):
+    """Gets the desired string enclosed by two symbols that are not " or ' 
+       and are not in strings
+    """
+    start=line_sep(string,start,index=True)
+    end=line_sep(string,end,index=True)
+    enclosing=[]
+    for i in range(len(start)//2):
+        enclosing+=[start[2*i],end[2*i+1]]
+    return indx_split([0]+enclosing,string)
 
 
 
