@@ -386,13 +386,17 @@ def interpret(code,checks=[],operators=[]):
 
 
 def enclose_dict(string,enclosing):
+    print(enclosing)
     ls=list(string)
+    length=len(ls)
+    diff=0
     for i in enclosing:
         temp = ",".join(string[i[0]:i[1]][1:-1].split("=")).split(",")
         for key in range(len(temp)//2):
             temp[2*key] = '"'+temp[2*key]+'":'
             temp[2*key+1] = temp[2*key+1]+","
-        ls[i[0]:i[1]] = "{"+"".join(temp)+"}"
+        diff = length - len(ls)
+        ls[i[0]-diff:i[1]-diff] = "{"+"".join(temp)+"}"
     return "".join(ls)
 
 def line_enclose(string,start,end,FUNC="",sep="",separate=False):
