@@ -378,10 +378,9 @@ def exact_index(section,op):
     return [indexes[2*i] for i in range(len(indexes)//2)]
 
 def func_dict(string):
-    """Used to interpret i.e. (a=3,b=6) as {"a":3,"b":6}"""
     def dict_format(temp,commas,section,old_section_length,start,adjust):
         """For formatting (a=3) into {"a":3}"""
-        comma=commas[commas <= temp].iloc[0]
+        comma=commas[commas <= temp].iloc[0] # the min it can be is 0 so... does this matter?
         # getting (no temp + 1 here because we want to exclude the '=')
         temp_string="".join(section[comma+1-adjust:temp-adjust])
         # formatting
@@ -413,22 +412,28 @@ def func_dict(string):
                 section,adjust=dict_format(eq[i],commas,section,old_section_length,start,adjust)
                 continue
             is_double_eq=True
-        diff=eq[length] - eq[length-1]
+        try:
+            diff=eq[length] - eq[length-1]
+        except: # incase of len(eq) == 0
+            return string_ls
         if diff != 1:
             section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
-        #if diff == 0: # for some reason it differs?
-            
         # if changes were made then it must be a dict format
         if old_section_length != len(section):
             string_ls[start:end+1]=["{"]+section[:-1]+["}"]
         return string_ls
     # get the bracket information
-    df = bracket_up(string)
-    df = df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
+    def get_brackets(ls):
+        df = bracket_up("".join(ls))
+        return df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
     # format the string
     string_ls=list(string)
-    for start,end in zip(df["start"],df["end"]):
-        dict_format_check(start,end,string_ls)
+    old_string_length = len(string_ls)
+    # because the string length keeps changing we need to keep track of changes
+    df=get_brackets("".join(string_ls))
+    while len(df) > 0:
+        string_ls=dict_format_check(df["start"].iloc[0],df["end"].iloc[0],string_ls)
+        df=get_brackets(string_ls)
     return "".join(string_ls)
 ############################
 
