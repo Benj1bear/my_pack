@@ -378,6 +378,7 @@ def exact_index(section,op):
     return [indexes[2*i] for i in range(len(indexes)//2)]
 
 def func_dict(string):
+    """Used to interpret i.e. (a=3,b=6) as {"a":3,"b":6}"""
     def dict_format(temp,commas,section,old_section_length,start,adjust):
         """For formatting (a=3) into {"a":3}"""
         comma=commas[commas < temp].iloc[0]
@@ -412,7 +413,6 @@ def func_dict(string):
                 section,adjust=dict_format(eq[i],commas,section,old_section_length,start,adjust)
                 continue
             is_double_eq=True
-        print(section)
         diff=eq[length] - eq[length-1]
         if diff != 1:
             section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
@@ -420,8 +420,7 @@ def func_dict(string):
             
         # if changes were made then it must be a dict format
         if old_section_length != len(section):
-            section=[" "]+section # for some reason it works now ?
-            string_ls[start:end+1]=["{"]+section[1:-1]+["}"]
+            string_ls[start:end+1]=["{"]+section[:-1]+["}"]
         return string_ls
     # get the bracket information
     df = bracket_up(string)
