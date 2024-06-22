@@ -378,6 +378,7 @@ def exact_index(section,op):
     return [indexes[2*i] for i in range(len(indexes)//2)]
 
 def func_dict(string):
+    """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """
     def dict_format(temp,commas,section,old_section_length,start,adjust):
         """For formatting (a=3) into {"a":3}"""
         comma=commas[commas <= temp].iloc[0] # the min it can be is 0 so... does this matter?
