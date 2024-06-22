@@ -421,7 +421,7 @@ def func_dict(string):
             section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
         # if changes were made then it must be a dict format
         if old_section_length != len(section):
-            string_ls[start:end+1]=["{"]+section[:-1]+["}"]
+            string_ls[start:end+1]=[" "]+["{"]+section[:-1]+["}"]
         return string_ls
     # get the bracket information
     def get_brackets(ls):
