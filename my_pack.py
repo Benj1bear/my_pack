@@ -381,7 +381,7 @@ def func_dict(string):
     """Used to interpret i.e. (a=3,b=6) as {"a":3,"b":6}"""
     def dict_format(temp,commas,section,old_section_length,start,adjust):
         """For formatting (a=3) into {"a":3}"""
-        comma=commas[commas < temp].iloc[0]
+        comma=commas[commas <= temp].iloc[0]
         # getting (no temp + 1 here because we want to exclude the '=')
         temp_string="".join(section[comma+1-adjust:temp-adjust])
         # formatting
