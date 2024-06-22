@@ -426,7 +426,10 @@ def func_dict(string):
     # get the bracket information
     def get_brackets(ls):
         df = bracket_up("".join(ls))
-        return df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
+        try:
+            return df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
+        except: # in case of len(df) == 0
+            return df
     # format the string
     string_ls=list(string)
     old_string_length = len(string_ls)
