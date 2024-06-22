@@ -380,35 +380,26 @@ def exact_index(section,op):
 def func_dict(string):
     def dict_format(temp,commas,section,old_section_length,start,adjust):
         """For formatting (a=3) into {"a":3}"""
-        ### problems are occuring here ###
-        # we need to use adjust because the length of the section keeps changing
         comma=commas[commas < temp].iloc[0]
-        ########################################## here
-        print("adjust: ",adjust)
-        temp_string="".join(section[comma+adjust:temp+adjust])
-        print("temp_string: ",temp_string)
+        # getting (no temp + 1 here because we want to exclude the '=')
+        temp_string="".join(section[comma+1-adjust:temp-adjust])
+        # formatting
         temp_string='"'+re.sub(" ","",temp_string)+'":'
-        if comma != 1:
+        if comma != 0:
             temp_string=','+temp_string
-        print("temp_string: ",temp_string)
-        # section is okay
-        print("section: ",section[start+comma:start+temp],"\n")
-        section[start+comma-adjust:start+temp-adjust]=list(temp_string)
-        print("".join(section))
+        # assigning
+        section[comma-adjust:temp+1-adjust]=list(temp_string)
+        # we need to use adjust because the length of the section keeps changing
         adjust=old_section_length-len(section)
         return section,adjust
-    # get the bracket information
-    df = bracket_up(string)
-    df = df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
-    # format the string
-    string_ls=list(string)
-    for start,end in zip(df["start"],df["end"]):
+    def dict_format_check(start,end,string_ls):
+        """Checks a string and modifies it into a dict format as specified"""
         # get relevant data
         adjust=0
         section=list(string_ls[start:end+1])
         old_section_length=len(section)
         eq=exact_index(section,"=")
-        commas=pd.Series([1]+exact_index(section,",")).sort_values(ascending=False,ignore_index=True)
+        commas=pd.Series([0]+exact_index(section,",")).sort_values(ascending=False,ignore_index=True)
         # determine which are single, and format these
         is_double_eq=False
         length=len(eq)-1
@@ -418,19 +409,25 @@ def func_dict(string):
                 continue
             elif eq[i+1] - eq[i] > 1:
                 # format the string
-                print("".join(section))
-                dict_format(eq[i],commas,section,old_section_length,start,adjust)
+                section,adjust=dict_format(eq[i],commas,section,old_section_length,start,adjust)
                 continue
             is_double_eq=True
         if eq[length] - eq[length-1] > 1:
-            dict_format(eq[length],commas,section,old_section_length,start,adjust)
+            section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
         # if changes were made then it must be a dict format
-        
-        # should be fine now??
-        print("".join(["{"]+section[1:-1]+["}"]))
         if old_section_length != len(section):
             string_ls[start:end+1]=["{"]+section[1:-1]+["}"]
-    return string_ls
+        return string_ls
+    # get the bracket information
+    df = bracket_up(string)
+    df = df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
+    # format the string
+    string_ls=list(string)
+    for start,end in zip(df["start"],df["end"]):
+        print(start,end)
+        print("".join(dict_format_check(start,end,string_ls)))
+        return
+    #return string_ls
 ############################
 
 
