@@ -412,10 +412,15 @@ def func_dict(string):
                 section,adjust=dict_format(eq[i],commas,section,old_section_length,start,adjust)
                 continue
             is_double_eq=True
-        if eq[length] - eq[length-1] > 1:
+        print(section)
+        diff=eq[length] - eq[length-1]
+        if diff != 1:
             section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
+        #if diff == 0: # for some reason it differs?
+            
         # if changes were made then it must be a dict format
         if old_section_length != len(section):
+            section=[" "]+section # for some reason it works now ?
             string_ls[start:end+1]=["{"]+section[1:-1]+["}"]
         return string_ls
     # get the bracket information
@@ -424,10 +429,8 @@ def func_dict(string):
     # format the string
     string_ls=list(string)
     for start,end in zip(df["start"],df["end"]):
-        print(start,end)
-        print("".join(dict_format_check(start,end,string_ls)))
-        return
-    #return string_ls
+        dict_format_check(start,end,string_ls)
+    return "".join(string_ls)
 ############################
 
 
