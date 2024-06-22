@@ -436,6 +436,13 @@ def func_dict(string):
         string_ls=dict_format_check(df["start"].iloc[0],df["end"].iloc[0],string_ls)
         df=get_brackets(string_ls)
     return "".join(string_ls)
+
+def pipe_func_dict(string):
+    """prep dicts used in piping"""
+    string = func_dict(string)
+    ls=string.split(" ")
+    ls_new=[i+"," if str(unstr(i)) != i else i for i in ls]
+    return "".join(ls_new)
 ############################
 
 
