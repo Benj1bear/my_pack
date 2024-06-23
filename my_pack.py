@@ -413,10 +413,9 @@ def func_dict(string):
                 section,adjust=dict_format(eq[i],commas,section,old_section_length,start,adjust)
                 continue
             is_double_eq=True
-        try:
-            diff=eq[length] - eq[length-1]
-        except: # incase of len(eq) == 0
+        if length == -1:
             return string_ls
+        diff=eq[length] - eq[length-1]
         if diff != 1:
             section,adjust=dict_format(eq[length],commas,section,old_section_length,start,adjust)
         # if changes were made then it must be a dict format
@@ -424,11 +423,13 @@ def func_dict(string):
             string_ls[start:end+1]=[" "]+["{"]+section[:-1]+["}"]
         return string_ls
     # get the bracket information
-    def get_brackets(ls):
+    def get_brackets(ls,filter_out=""):
         df = bracket_up("".join(ls))
+        if filter_out != "":
+            df = df[df["start"] != filter_out]
         try:
             return df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
-        except: # in case of len(df) == 0
+        except: # len(df) == 0
             return df
     # format the string
     string_ls=list(string)
@@ -436,8 +437,12 @@ def func_dict(string):
     # because the string length keeps changing we need to keep track of changes
     df=get_brackets("".join(string_ls))
     while len(df) > 0:
+        filter_out=""
+        previous=string_ls
         string_ls=dict_format_check(df["start"].iloc[0],df["end"].iloc[0],string_ls)
-        df=get_brackets(string_ls)
+        if previous == string_ls:
+            filter_out = df["start"].iloc[0]
+        df=get_brackets(string_ls,filter_out)
     return "".join(string_ls)
 
 def pipe_func_dict(string):
