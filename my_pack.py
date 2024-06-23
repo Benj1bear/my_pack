@@ -361,9 +361,9 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
     ls=[]
     in_string=0
     for i in string:
-        if i == start:
+        if i in start:
             left+=[indx]
-        elif i == end:
+        elif i in end:
             ls+=[[left[-1],indx,in_string]]
             left=left[:-1]
         if i in avoid:
