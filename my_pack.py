@@ -284,6 +284,10 @@ def prep(line,FUNC,operator):
 
        The final formatting will just be many functions applied to a string.
     """
+    ################################################################# needs testing
+    # make sure there's space and format the i.e. (a=3,b=2)
+    #line=pipe_func_dict(line_sep(line,operator,sep=" |> "))
+    #################################################################
     # split the = into sections where each section gets interpreted
     assignments=line.split("=")
     indx=0
