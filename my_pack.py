@@ -454,9 +454,7 @@ def func_dict(string):
 def pipe_func_dict(string):
     """prep dicts used in piping"""
     string = func_dict(string)
-    display(string)
     ls=string.split(" ")
-    display(ls)
     ls_new=[]
     for i in range(len(ls)):
         temp=ls[i]
