@@ -312,6 +312,7 @@ def line_sep(string,op,sep="",index=False,avoid="\"'"):
     req=len(op)
     count=0
     ls=list(string)
+    current_str=""
     if sep == "":
         ls2=[]
     for i in ls:
