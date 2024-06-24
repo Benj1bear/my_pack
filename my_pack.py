@@ -304,7 +304,7 @@ def indx_split(indx=[],string=""):
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
 
-### need to fix because of cases: "'" or '"'
+
 def line_sep(string,op,sep="",index=False,avoid="\"'"):
     """separates lines in code by op avoiding op in strings"""
     in_string=0
@@ -320,7 +320,12 @@ def line_sep(string,op,sep="",index=False,avoid="\"'"):
         else:
             count=0
         if i in avoid:
-            in_string=(in_string+1) % 2
+            if i == current_str or current_str == "":
+                in_string=(in_string+1) % 2
+                if current_str !="" and in_string == 0:
+                    current_str=""
+                else:
+                    current_str=i
         elif count == req:
             if in_string==False:
                 if sep == "":
