@@ -451,7 +451,6 @@ def func_dict(string):
     return "".join(string_ls)
 
 
-### just needs fix for '*' e.g. args option ###
 def pipe_func_dict(string):
     """prep dicts used in piping"""
     string = func_dict(string)
@@ -462,13 +461,18 @@ def pipe_func_dict(string):
     for i in range(len(ls)):
         temp=ls[i]
         try:
+            asterisk=""
+            if temp[-1] == "*":
+                temp=temp[:-1]
+                asterisk="*"
             if hasattr(unstr(temp),"__call__") == True:
                 if type(unstr(ls[i+1])) == dict:
-                    ls_new+=[temp+","]
+                    ls_new+=[temp+","+asterisk]
                     continue
         except:
             None
-        ls_new+=[temp]
+        # we can't use temp because the except statement will keep the modifications up to the exception
+        ls_new+=[ls[i]]
     return "".join(ls_new)
 ############################
 
