@@ -346,8 +346,7 @@ def line_sep(string,op,sep="",index=False,avoid="\"'"):
         return ls2
     # if needing to slice it
     if sep == "":
-        ls = indx_split([0]+ls2,string)
-        return ls
+        return indx_split([0]+ls2,string)
     # since it's already formatted
     return "".join(ls)
 
