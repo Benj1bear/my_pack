@@ -448,8 +448,18 @@ def func_dict(string):
 def pipe_func_dict(string):
     """prep dicts used in piping"""
     string = func_dict(string)
+    display(string)
     ls=string.split(" ")
-    ls_new=[i+"," if str(unstr(i)) != i else i for i in ls]
+    display(ls)
+    ls_new=[]
+    for i in ls:
+        try:
+            if hasattr(unstr(i),"__call__") == True:
+                ls_new+=[i+","]
+                continue
+        except:
+            None
+        ls_new+=[i]
     return "".join(ls_new)
 ############################
 
