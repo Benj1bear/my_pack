@@ -371,6 +371,7 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
     left=[]
     ls=[]
     in_string=0
+    current_str=""
     for i in string:
         if i in start:
             left+=[indx]
@@ -378,7 +379,12 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
             ls+=[[left[-1],indx,in_string]]
             left=left[:-1]
         if i in avoid:
-            in_string = (in_string+1) % 2
+            if i == current_str or current_str == "":
+                in_string=(in_string+1) % 2
+                if current_str !="" and in_string == 0:
+                    current_str=""
+                else:
+                    current_str=i
         indx+=1
     return pd.DataFrame(ls,columns=["start","end","in_string"])
 
