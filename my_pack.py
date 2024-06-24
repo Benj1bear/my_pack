@@ -376,7 +376,7 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
         if i in start:
             left+=[indx]
         elif i in end:
-            ls+=[[left[-1],indx,in_string]]
+            ls+=[[left[-1],indx,in_string,len(left)-1]]
             left=left[:-1]
         if i in avoid:
             if i == current_str or current_str == "":
@@ -386,7 +386,7 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
                 else:
                     current_str=i
         indx+=1
-    return pd.DataFrame(ls,columns=["start","end","in_string"])
+    return pd.DataFrame(ls,columns=["start","end","in_string","encapsulation_number"])
 
 ### needs testing but seems okay ###
 def exact_index(section,op):
