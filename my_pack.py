@@ -303,7 +303,8 @@ def prep(line,FUNC,operator):
 def indx_split(indx=[],string=""):
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
-                
+
+### need to fix because of cases: "'" or '"'
 def line_sep(string,op,sep="",index=False,avoid="\"'"):
     """separates lines in code by op avoiding op in strings"""
     in_string=0
@@ -469,7 +470,7 @@ def pipe_func_dict(string):
 
 
 
-
+####### not sure if this works... will check later ##############
 def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     start=line_sep(string,start,index=True)
     end=line_sep(string,end,index=True)
@@ -486,7 +487,7 @@ def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     for i in range(len(start)//2):
         enclosing+=[start[2*i],end[2*i+1]]
     return indx_split([0]+enclosing,string)
-
+###################################################################
 
 
 def interpret(code,checks=[],operators=[]):
@@ -511,8 +512,6 @@ def interpret(code,checks=[],operators=[]):
         indx=0
         for line in lines:
             if operator in line:
-                # for handling (a=..,b=..)
-                #line = line_enclose(line,"(",")",FUNC=enclose_dict)
                 # get the number of indentations at the start of the line
                 lines[indx]=get_indents(line)+prep(line,check,operator)
             indx+=1
