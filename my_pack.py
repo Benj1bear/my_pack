@@ -450,6 +450,8 @@ def func_dict(string):
         df=get_brackets(string_ls,filter_out)
     return "".join(string_ls)
 
+
+### needs more work done ###
 def pipe_func_dict(string):
     """prep dicts used in piping"""
     string = func_dict(string)
