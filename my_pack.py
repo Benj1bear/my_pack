@@ -495,7 +495,7 @@ def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     return indx_split([0]+enclosing,string)
 ###################################################################
 
-
+#### need to fix for multi-line open bracket expressions ###
 def interpret(code,checks=[],operators=[]):
     """Checks code against a custom set of rules for how code should be formated"""
     # make sure they're lists
@@ -526,7 +526,7 @@ def interpret(code,checks=[],operators=[]):
         return "\n".join(lines)
     except:
         return lines[0]
-
+############################################################################
 
 
 
