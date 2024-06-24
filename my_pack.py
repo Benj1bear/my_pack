@@ -451,7 +451,7 @@ def func_dict(string):
     return "".join(string_ls)
 
 
-### needs more work done ###
+### just needs fix for '*' e.g. args option ###
 def pipe_func_dict(string):
     """prep dicts used in piping"""
     string = func_dict(string)
@@ -459,14 +459,16 @@ def pipe_func_dict(string):
     ls=string.split(" ")
     display(ls)
     ls_new=[]
-    for i in ls:
+    for i in range(len(ls)):
+        temp=ls[i]
         try:
-            if hasattr(unstr(i),"__call__") == True:
-                ls_new+=[i+","]
-                continue
+            if hasattr(unstr(temp),"__call__") == True:
+                if type(unstr(ls[i+1])) == dict:
+                    ls_new+=[temp+","]
+                    continue
         except:
             None
-        ls_new+=[i]
+        ls_new+=[temp]
     return "".join(ls_new)
 ############################
 
