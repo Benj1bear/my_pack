@@ -376,7 +376,7 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
         indx+=1
     return pd.DataFrame(ls,columns=["start","end","in_string"])
 
-### fixing at the moment ###
+### needs testing but seems okay ###
 def exact_index(section,op):
     """To get it's index since the indexes get returned with start and end"""
     indexes=line_sep(section,op,index=True)
