@@ -476,7 +476,8 @@ def pipe_func_dict(string):
                 temp=temp[:-1]
                 asterisk="*"
             if hasattr(unstr(temp),"__call__") == True:
-                if type(unstr(ls[i+1])) == dict:
+                temp_check = ls[i+1]
+                if temp_check[0] == "{" or temp_check[0:2] == "*{" or temp_check[0:3] == "**{":
                     ls_new+=[temp+","+asterisk]
                     continue
         except:
