@@ -507,9 +507,20 @@ def line_enclose(string,start,end,FUNC="",sep="",separate=False):
     return indx_split([0]+enclosing,string)
 ###################################################################
 
-#### need to fix for multi-line open bracket expressions ###
+### seems to work but needs testing ###
 def interpret(code,checks=[],operators=[]):
     """Checks code against a custom set of rules for how code should be formated"""
+    # to allow for multi-line open bracket expressions
+    df=bracket_up(code,start="({[",end="]})")
+    df=df[(df["encapsulation_number"] == 0) & (df["in_string"] == 0)]
+    # remove newline characters in multiline open brackets
+    lines=list(code)
+    old_length = len(lines)
+    adjust=0
+    for start,end in zip(df["start"],df["end"]):
+        lines[start-adjust:end-adjust] = line_sep("".join(lines[start-adjust:end-adjust]),"\n",split=False)
+        adjust = old_length-len(lines)
+    code="".join(lines)
     # make sure they're lists
     if type(checks) != list:
         checks=[checks]
