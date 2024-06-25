@@ -305,7 +305,7 @@ def indx_split(indx=[],string=""):
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
 
 
-def line_sep(string,op,sep="",index=False,avoid="\"'"):
+def line_sep(string,op,sep="",split=True,index=False,exact_index=False,avoid="\"'"):
     """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
@@ -329,7 +329,7 @@ def line_sep(string,op,sep="",index=False,avoid="\"'"):
                     current_str=i
         elif count == req:
             if in_string==False:
-                if sep == "":
+                if sep == "" and split == True:
                     if req > 1:
                         ls2+=[indx-req+1]
                     else:
@@ -342,13 +342,18 @@ def line_sep(string,op,sep="",index=False,avoid="\"'"):
                         ls[indx]=sep
             count=0
         indx+=1
+    if exact_index==True:
+        return [ls2[2*i] for i in range(len(ls2)//2)]
     if index==True:
         return ls2
     # if needing to slice it
-    if sep == "":
+    if sep == "" and split == True:
+        if type(string) == list:
+            string = "".join(string)
         return indx_split([0]+ls2,string)
     # since it's already formatted
     return "".join(ls)
+
 
 def get_indents(line):
     """Gets the number of python valid indentations for a line and then scales indentation accordingly"""
@@ -388,10 +393,6 @@ def bracket_up(string,start="(",end=")",avoid="\"'"):
     return pd.DataFrame(ls,columns=["start","end","in_string","encapsulation_number"])
 
 ### needs testing but seems okay ###
-def exact_index(section,op):
-    """To get it's index since the indexes get returned with start and end"""
-    indexes=line_sep(section,op,index=True)
-    return [indexes[2*i] for i in range(len(indexes)//2)]
 
 def func_dict(string):
     """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """
@@ -415,8 +416,8 @@ def func_dict(string):
         adjust=0
         section=list(string_ls[start:end+1])
         old_section_length=len(section)
-        eq=exact_index(section,"=")
-        commas=pd.Series([0]+exact_index(section,",")).sort_values(ascending=False,ignore_index=True)
+        eq=line_sep(section,"=",exact_index=True)
+        commas=pd.Series([0]+line_sep(section,",",exact_index=True)).sort_values(ascending=False,ignore_index=True)
         # determine which are single, and format these
         is_double_eq=False
         length=len(eq)-1
