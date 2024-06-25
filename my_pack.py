@@ -49,19 +49,25 @@ Jupyter.notebook.select_next();
     line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
     line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
     line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
+    printing_start="""\\nJupyter.notebook.select_prev();"""
+    printing_start+="""\\nlet cell = Jupyter.notebook.get_selected_cell();"""
+    printing_start+="""\\nlet txt = cell.get_text();"""
+    printing_start+="""\\nlet string = ".js loaded";"""
+    printing_start+="""\\ncell.set_text("print(\\\'"""
+    printing_end="""\\ncell.execute();"""
+    printing_end+="""\\ncell = Jupyter.notebook.get_selected_cell();"""
+    printing_end+="""\\ncell.set_text(txt);"""
+    printing_end+="""\\nJupyter.notebook.select_next();"""
+    printing_end+="""\\nJupyter.notebook.delete_cell();"""
+    line+="""\nstring+='"""+printing_start+file+"""\\\'+\\\'.js loaded\\\')");"""+printing_end+"""';"""
     line+="\nstring+='\\n\"\"\"))';"
+    line+="""\nstring+='\\nelse:';"""
+    line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\" "+printing_start+file
+    line+="""\\\'+\\\'.js already loaded\\\')");"""+printing_end+"\"\"\"))';"
     line+="\nstring='from IPython.display import Javascript\\n'+string;"
     log="""
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
-Jupyter.notebook.delete_cell();
-Jupyter.notebook.select_prev();
-let txt = original_cell.get_text();
-string = '"""+file+"""'+'.js loaded';
-original_cell.set_text("print('"+string+"')");
-original_cell.execute();
-original_cell.set_text(txt);
-Jupyter.notebook.select_next();
 """
     display(Javascript(get+line+log))
 
