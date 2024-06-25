@@ -55,9 +55,15 @@ Jupyter.notebook.select_next();
 Jupyter.notebook.get_selected_cell().set_text(string);
 Jupyter.notebook.get_selected_cell().execute();
 Jupyter.notebook.delete_cell();
+Jupyter.notebook.select_prev();
+let txt = original_cell.get_text();
+string = '"""+file+"""'+'.js loaded';
+original_cell.set_text("print('"+string+"')");
+original_cell.execute();
+original_cell.set_text(txt);
+Jupyter.notebook.select_next();
 """
     display(Javascript(get+line+log))
-    print(file+".js loaded")
 
 def get_requirements(filename,unique=True):
     """Reads a .py file and tells you what requirements are used (ideally)"""
