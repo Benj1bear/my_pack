@@ -85,9 +85,9 @@ def get_requirements(filename,unique=True):
     if filename.split(".")[1] == "ipynb":
         filtered = pd.Series(read_ipynb(filename))
     else:
-        # .py file
-        with open(filename, "r") as file:
-            filtered = pd.Series(file.readlines())
+        # .py file; we need to read as bytes due to an error that sometimes occurs
+        with open(filename, "rb") as file:
+            filtered = pd.Series(file.readlines()).apply(lambda x:x.decode("utf-8"))
     # get the libraries, remove comments if any, and remove the first word (will be an import or from statement)
     regex=r"^(?:from|import)\s+.*?"
     filtered = filtered[filtered.str.contains(regex)].str.split("#").str[0].apply(lambda x:re.sub(regex,"",x))
@@ -106,7 +106,7 @@ def get_requirements(filename,unique=True):
     # return as a list
     return list(filtered)
 
-def req_search(directory):
+def req_search(directory,allowed_extensions=["py","ipynb"]):
     """Searches a directory and all its' subdirectories
        for .py files that are then checked for their requirements
     """
@@ -123,7 +123,7 @@ def req_search(directory):
                 next_target+=glob.glob(i+"/*")
                 continue
             # .py file
-            elif file[1] == "py":
+            elif file[1] in allowed_extensions:
                 requirements+=get_requirements(i)
         target = next_target
     # return only the unique requirements
