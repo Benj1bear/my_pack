@@ -83,11 +83,11 @@ Jupyter.notebook.get_selected_cell().execute();
 def get_requirements(filename,unique=True):
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
     if filename.split(".")[1] == "ipynb":
-        lines = pd.Series(read_ipynb(filename))
+        filtered = pd.Series(read_ipynb(filename))
     else:
         with open(filename, "rb") as file:
             # convert bytes into usable strings
-            lines = pd.Series(file.readlines()).apply(lambda x:x.decode("utf-8"))
+            filtered = pd.Series(file.readlines()).apply(lambda x:x.decode("utf-8"))
     # get the libraries, remove comments if any, and remove the first word (will be an import or from statement)
     regex=r"^(?:from|import)\s+.*?"
     filtered = filtered[filtered.str.contains(regex)].str.split("#").str[0].apply(lambda x:re.sub(regex,"",x))
