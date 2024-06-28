@@ -85,9 +85,9 @@ def get_requirements(filename,unique=True):
     if filename.split(".")[1] == "ipynb":
         filtered = pd.Series(read_ipynb(filename))
     else:
-        with open(filename, "rb") as file:
+        with open(filename, "r") as file:
             # convert bytes into usable strings
-            filtered = pd.Series(file.readlines()).apply(lambda x:x.decode("utf-8"))
+            filtered = pd.Series(file.readlines())
     # get the libraries, remove comments if any, and remove the first word (will be an import or from statement)
     regex=r"^(?:from|import)\s+.*?"
     filtered = filtered[filtered.str.contains(regex)].str.split("#").str[0].apply(lambda x:re.sub(regex,"",x))
