@@ -28,7 +28,7 @@ from inspect import getfile
 import sys
 
 def req_file(directory=""):
-    """writes a requirements .txt file for .py files with modules version 
+    """writes a requirements .txt file for .py and .ipynb files with modules version 
        
        version numbers are only reasonable when the project developers use this function
        and they are the versions used globally on their machines, conda environments need
