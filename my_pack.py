@@ -27,6 +27,15 @@ import shutil
 from inspect import getfile
 import sys
 
+def read_ipynb(filename):
+    """readlines a jupyter notebook"""
+    with open(filename, "r") as file:
+        lines = json.load(file)
+    ls=[]
+    for cell in lines["cells"]:
+        ls+=cell["source"]
+    return ls
+
 def import_js(file,id=""):
     """For importing javascript files while avoiding duplicating from appending scripts
        To remove them, refresh the page, since the scripts are only during the session
