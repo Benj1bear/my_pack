@@ -108,7 +108,7 @@ def get_requirements(filename,unique=True):
 
 def req_search(directory,allowed_extensions=["py","ipynb"]):
     """Searches a directory and all its' subdirectories
-       for .py files that are then checked for their requirements
+       for .py or .ipynb files that are then checked for their requirements
     """
     requirements = []
     target = glob.glob(directory+"*")
