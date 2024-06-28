@@ -27,6 +27,25 @@ import shutil
 from inspect import getfile
 import sys
 
+def req_file(directory=""):
+    """writes a requirements .txt file for .py files with modules version 
+       
+       version numbers are only reasonable when the project developers use this function
+       and they are the versions used globally on their machines, conda environments need
+       implementation.
+    """
+    required = ""
+    for module in req_search(directory):
+        required+=module+": "
+        try:
+            required+=__import__(module).__version__+"\n"
+        except:
+            required+="\n"
+    print("\nwriting modules to requirements.txt...")
+    with open("requirements.txt","w") as file:
+        file.write(required)
+    print("done")
+
 def read_ipynb(filename):
     """readlines a jupyter notebook"""
     with open(filename, "r") as file:
