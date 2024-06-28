@@ -81,9 +81,12 @@ Jupyter.notebook.get_selected_cell().execute();
     display(Javascript(get+line+log))
 
 def get_requirements(filename,unique=True):
-    """Reads a .py file and tells you what requirements are used (ideally)"""
-    with open(filename, "rb") as file:
-        lines = pd.Series(file.readlines())
+    """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
+    if filename.split(".")[1] == "ipynb":
+        lines = pd.Series(read_ipynb(filename))
+    else:
+        with open(filename, "rb") as file:
+            lines = pd.Series(file.readlines())
     # convert bytes into usable strings
     filtered = lines.apply(lambda x:x.decode("utf-8"))
     # get the libraries, remove comments if any, and remove the first word (will be an import or from statement)
