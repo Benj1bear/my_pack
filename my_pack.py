@@ -86,7 +86,7 @@ def get_requirements(filename,unique=True):
     ## remove secondary " import ...", remove the methods to get just the name of the module, and remove the newline characters
     filtered = filtered.apply(lambda x:re.sub(r" import .*","",x)).str.split(".").str[0].str.split("\n").str[0].str.split("\r").str[0]
     # for imports on the same line, to remove whitespace, and get only the unique imports
-    filtered = filtered.str.split(",").explode().str.strip("")
+    filtered = filtered.str.split(",").explode().str.strip()
     filtered = filtered[filtered.str.len() > 0]
     if unique==True:
         filtered = pd.Series(filtered.unique())
