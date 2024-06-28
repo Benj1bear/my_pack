@@ -125,7 +125,7 @@ def get_requirements(filename,unique=True):
     # return as a list
     return list(filtered)
 
-def req_search(directory,allowed_extensions=["py","ipynb"]):
+def req_search(directory="",allowed_extensions=["py","ipynb"]):
     """Searches a directory and all its' subdirectories
        for .py or .ipynb files that are then checked for their requirements
     """
