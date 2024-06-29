@@ -27,6 +27,29 @@ import shutil
 from inspect import getfile
 import sys
 
+
+### how to extend a class by another class ###
+@property # basically this just means we can do ._str rather than ._str() e.g. it's a property, 
+# otherwise we have to constantly wrap in our custom object to instantize it
+def _str(data,*args,**kwargs):
+    """Converts a pd.DataFrame into whatever object we want and then 
+       use any methods desired. 
+       
+       In this case we are going to instantize our own custom class that 
+       is similar to pd.Series.str but for dataframes.
+    """
+    return str_df(data)
+    
+# add new property
+pd.DataFrame.str = _str
+
+# define your new methods; we should just be able to inherit and use simple methods
+# when we inherit from pd.DataFrame that becomes the 'self' so self is the dataframe
+# we'll be manipulating
+class str_df(pd.DataFrame):
+    def __getitem__(self,index):
+        return self.map(lambda x:x[index])
+#########################################
 def req_file(directory=""):
     """writes a requirements .txt file for .py and .ipynb files with modules version 
        
