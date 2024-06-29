@@ -35,12 +35,13 @@ def _str(data):
     """Converts a pd.DataFrame into whatever object we want and then 
        use any methods desired. 
        
-       In this case we are going to instantize our own custom class that 
+       For example, we are going to instantize our own custom class that 
        is similar to pd.Series.str but for dataframes.
     """
-    return str_df(data)
-    
+    global CLASS
+    return CLASS(data)
 # add new property
+CLASS=str_df
 pd.DataFrame.str = _str
 
 # define your new methods; we should just be able to inherit and use simple methods
