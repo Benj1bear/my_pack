@@ -49,6 +49,9 @@ pd.DataFrame.str = _str
 class str_df(pd.DataFrame):
     def __getitem__(self,index):
         return self.map(lambda x:x[index])
+# example:
+# df=pd.DataFrame([["hi there","hi there"],["hi yes","hi yes"]])
+# df.str[0:6]
 #########################################
 def req_file(directory=""):
     """writes a requirements .txt file for .py and .ipynb files with modules version 
