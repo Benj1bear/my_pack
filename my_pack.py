@@ -41,8 +41,7 @@ def _str(data):
     global CLASS
     return CLASS(data)
 # add new property
-CLASS=str_df
-pd.DataFrame.str = _str
+CLASS,pd.DataFrame.str=str_df,_str
 
 # define your new methods; we should just be able to inherit and use simple methods
 # when we inherit from pd.DataFrame that becomes the 'self' so self is the dataframe
