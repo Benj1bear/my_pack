@@ -32,25 +32,17 @@ import sys
 # define your new methods; we should just be able to inherit and use simple methods
 # when we inherit from pd.DataFrame that becomes the 'self' so self is the dataframe
 # we'll be manipulating
+@property # basically this just means we can do ._str rather than ._str() e.g. it's a property, 
+# otherwise we have to constantly wrap in our custom object to instantize it
 class str_df(pd.DataFrame):
     def __getitem__(self,index):
         return self.map(lambda x:x[index])
 # example:
 # df=pd.DataFrame([["hi there","hi there"],["hi yes","hi yes"]])
 # df.str[0:6]
-@property # basically this just means we can do ._str rather than ._str() e.g. it's a property, 
-# otherwise we have to constantly wrap in our custom object to instantize it
-def class_extend(data):
-    """Converts a pd.DataFrame into whatever object we want and then 
-       use any methods desired. 
-       
-       For example, we are going to instantize our own custom class that 
-       is similar to pd.Series.str but for dataframes.
-    """
-    global CLASS
-    return CLASS(data)
+
 # add new property
-CLASS,pd.DataFrame.str=str_df,class_extend
+pd.DataFrame.str=str_df
 
 
 #########################################
