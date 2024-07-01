@@ -29,14 +29,18 @@ import sys
 
 
 ### how to extend a class by another class ###
-# define your new methods; we should just be able to inherit and use simple methods
-# when we inherit from pd.DataFrame that becomes the 'self' so self is the dataframe
-# we'll be manipulating
+
 @property # basically this just means we can do ._str rather than ._str() e.g. it's a property, 
 # otherwise we have to constantly wrap in our custom object to instantize it
-class str_df(pd.DataFrame):
+class str_df:
+    # define your new methods
+    def __init__(self, df):
+        self._df = df # save df
+    # use df in methods
     def __getitem__(self,index):
-        return self.map(lambda x:x[index])
+        return self._df.map(lambda x:x[index])
+    def split(self,sep=None):
+        return self._df.map(lambda x:x.split(sep))
 # example:
 # df=pd.DataFrame([["hi there","hi there"],["hi yes","hi yes"]])
 # df.str[0:6]
