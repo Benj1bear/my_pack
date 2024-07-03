@@ -28,14 +28,14 @@ from inspect import getfile
 import sys
 
 def inherit(class_name:str,*args:object)->object:
-    """Adds inheritence to a choosen classname"""
+    """Adds inheritence to an existing classname"""
     # get the names
-    cls=""#tuple()
+    cls=class_name.__name__+","#tuple()
     for arg in args:
         cls+=arg.__name__+"," #(arg.__name__,) can add tuples like this
     # define / redefine class with inheritance
-    exec(compile(f"class {class_name}(*("+cls[:-1]+")):pass","","exec"))  #str(cls).replace("'","")[1:-1]
-    globals()[class_name] = locals()[class_name]
+    exec(compile(f"class temp(*("+cls[:-1]+")):pass","","exec"))  #str(cls).replace("'","")[1:-1]
+    globals()[class_name.__name__] = locals()["temp"]
 
 
 ### how to extend a class by another class ###
