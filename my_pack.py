@@ -30,11 +30,11 @@ import sys
 def inherit(class_name:str,*args:object)->object:
     """Adds inheritence to a choosen classname"""
     # get the names
-    cls=tuple()
+    cls=""#tuple()
     for arg in args:
-        cls+=(arg.__name__,)
+        cls+=arg.__name__+"," #(arg.__name__,) can add tuples like this
     # define / redefine class with inheritance
-    exec(compile(f"class {class_name}(*("+str(cls).replace("'","")[1:-1]+")):pass","","exec"))
+    exec(compile(f"class {class_name}(*("+cls[:-1]+")):pass","","exec"))  #str(cls).replace("'","")[1:-1]
     globals()[class_name] = locals()[class_name]
 
 
