@@ -27,16 +27,20 @@ import shutil
 from inspect import getfile
 import sys
 
-def inherit(class_name:str,*args:object)->object:
-    """Adds inheritence to a choosen classname"""
+def inherit(class_name:object,*args:object)->object:
+    """Adds inheritence to a choosen classname. This works for nested classes as well"""
     # get the names
-    name = class_name.__name__
+    def get_name(x):
+        """gets the literal name of the variable that's passed in"""
+        return x.split("__main__.")[1][:-2]
+    name = get_name(str(C.A.B))
     cls=name+","
     for arg in args:
-        cls+=arg.__name__+","
+        cls+=get_name(str(arg))+","
     # define / redefine class with inheritance
-    exec(compile(f"class {name}(*("+cls[:-1]+")):pass","","exec"))
-    globals()[name] = locals()[name]
+    exec(compile(f"class temp(*("+cls[:-1]+")):pass","","exec"))
+    class_name = locals()["temp"]
+    return class_name
 
 
 ### how to extend a class by another class ###
