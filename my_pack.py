@@ -27,6 +27,16 @@ import shutil
 from inspect import getfile
 import sys
 
+def inherit(class_name:str,*args:object)->object:
+    """Adds inheritence to a choosen classname"""
+    # get the names
+    cls=tuple()
+    for arg in args:
+        cls+=(arg.__name__,)
+    # define / redefine class with inheritance
+    exec(compile(f"class {class_name}(*("+str(cls).replace("'","")[1:-1]+")):pass","","exec"))
+    globals()[class_name] = locals()[class_name]
+
 
 ### how to extend a class by another class ###
 
