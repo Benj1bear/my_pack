@@ -27,6 +27,7 @@ import shutil
 from inspect import getfile
 import sys
 
+# needs fix in case ran multiple times
 def inherit(class_name:str,*args:object)->object:
     """Adds inheritence to an existing classname"""
     # get the names
