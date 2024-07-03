@@ -46,12 +46,12 @@ def inherit(class_name:str,*args:object)->object:
 class str_df:
     # define your new methods
     def __init__(self, df):
-        self._df = df # save df
+        self.__df = df # save df as private variable
     # use df in methods
     def __getitem__(self,index):
-        return self._df.map(lambda x:x[index])
+        return self.__df.map(lambda x:x[index])
     def split(self,sep=None):
-        return self._df.map(lambda x:x.split(sep))
+        return self.__df.map(lambda x:x.split(sep))
 # example:
 # df=pd.DataFrame([["hi there","hi there"],["hi yes","hi yes"]])
 # df.str[0:6]
