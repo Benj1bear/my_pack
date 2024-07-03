@@ -27,16 +27,16 @@ import shutil
 from inspect import getfile
 import sys
 
-# needs fix in case ran multiple times
 def inherit(class_name:str,*args:object)->object:
-    """Adds inheritence to an existing classname"""
+    """Adds inheritence to a choosen classname"""
     # get the names
-    cls=class_name.__name__+","#tuple()
+    name = class_name.__name__
+    cls=name+","
     for arg in args:
-        cls+=arg.__name__+"," #(arg.__name__,) can add tuples like this
+        cls+=arg.__name__+","
     # define / redefine class with inheritance
-    exec(compile(f"class temp(*("+cls[:-1]+")):pass","","exec"))  #str(cls).replace("'","")[1:-1]
-    globals()[class_name.__name__] = locals()["temp"]
+    exec(compile(f"class {name}(*("+cls[:-1]+")):pass","","exec"))
+    globals()[name] = locals()[name]
 
 
 ### how to extend a class by another class ###
