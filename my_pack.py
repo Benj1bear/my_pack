@@ -39,7 +39,8 @@ def inherit(class_name:object,*args:object)->object:
         cls+=get_name(str(arg))+","
     # define / redefine class with inheritance
     exec(compile(f"class temp(*("+cls[:-1]+")):pass","","exec"))
-    return locals()["temp"]
+    class_name = locals()["temp"] # we have to define as variable due to nested classes
+    return class_name
 
 
 ### how to extend a class by another class ###
