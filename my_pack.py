@@ -33,7 +33,7 @@ def inherit(class_name:object,*args:object)->object:
     def get_name(x):
         """gets the literal name of the variable that's passed in"""
         return x.split("__main__.")[1][:-2]
-    name = get_name(str(C.A.B))
+    name = get_name(str(class_name))
     cls=name+","
     for arg in args:
         cls+=get_name(str(arg))+","
