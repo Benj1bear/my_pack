@@ -29,11 +29,11 @@ import shutil
 from inspect import getfile
 import sys
 
-def to_module(name,code):
+def to_module(module_name,code):
     """converts a string to a python module object
        reference: https://stackoverflow.com/questions/13888655/how-do-i-create-a-in-line-module?rq=3
     """
-    sys.modules[name] = module = ModuleType(name)
+    sys.modules[module_name] = module = ModuleType(module_name)
     exec(code, module.__dict__)
     return module
 
