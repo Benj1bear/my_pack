@@ -29,6 +29,22 @@ import shutil
 from inspect import getfile
 import sys
 
+def get_functions(code):
+    # get starting indexes for all 'def ' statements made
+    indexes=my_pack.line_sep(code,"def ",exact_index=True)
+    # get ending indexes for the end of the function
+    end=[]
+    for start in indexes:
+        temp=code[start:]
+        for indx in range(len(temp)):
+            if temp[indx] == "\n":
+                temp2=temp[indx:indx+6]
+                if len(temp2[:5].strip()) != 0 and len(temp2[-1:].strip()) != 0 or len(temp2) < 6:
+                    end+=[start+indx] # since it's relative
+                    break
+    return indexes,end
+
+
 def to_module(module_name,code):
     """converts a string to a python module object
        reference: https://stackoverflow.com/questions/13888655/how-do-i-create-a-in-line-module?rq=3
