@@ -20,12 +20,23 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 import time
+###########
+from types import ModuleType
 ########### for installing editable local libraries and figuring out what modules python scripts use
 import re
 import glob
 import shutil
 from inspect import getfile
 import sys
+
+def to_module(name,code):
+    """converts a string to a python module object
+       reference: https://stackoverflow.com/questions/13888655/how-do-i-create-a-in-line-module?rq=3
+    """
+    sys.modules[name] = module = ModuleType(name)
+    exec(code, module.__dict__)
+    return module
+
 
 def inherit(class_name:object,*args:object)->object:
     """Adds inheritence to a choosen classname. This works for nested classes as well"""
@@ -83,13 +94,17 @@ def req_file(directory=""):
         file.write(required)
     print("done")
 
-def read_ipynb(filename):
+def read_ipynb(filename,join=False):
     """readlines a jupyter notebook"""
+    if filename[-6:] != ".ipynb":
+        filename+=".ipynb"
     with open(filename, "r") as file:
         lines = json.load(file)
     ls=[]
     for cell in lines["cells"]:
         ls+=cell["source"]
+    if join == True:
+        return "\n".join(ls)
     return ls
 
 def import_js(file,id=""):
