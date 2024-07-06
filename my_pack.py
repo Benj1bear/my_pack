@@ -29,7 +29,7 @@ import shutil
 from inspect import getfile
 import sys
 
-def check_and_get(packages=[])->None:
+def check_and_get(packages:list[str]=[])->None:
     """Gets packages that are currently not installed"""
     # first check the builtins then the pypi libraries
     standard_library = sys.stdlib_module_names
@@ -60,9 +60,9 @@ def all_packs()->pd.DataFrame:
     ls = [re.split(r"\s{2,}",i) for i in ls]
     return pd.DataFrame(ls[1:],columns=ls[0])
 
-def get_functions(code):
+def get_functions(code:str)->(list[int],list[int]):
     # get starting indexes for all 'def ' statements made
-    indexes=my_pack.line_sep(code,"def ",exact_index=True)
+    indexes=line_sep(code,"def ",exact_index=True)
     # get ending indexes for the end of the function
     end=[]
     for start in indexes:
@@ -76,7 +76,7 @@ def get_functions(code):
     return indexes,end
 
 
-def to_module(module_name,code):
+def to_module(module_name:str,code:str)->ModuleType:
     """converts a string to a python module object
        reference: https://stackoverflow.com/questions/13888655/how-do-i-create-a-in-line-module?rq=3
     """
@@ -106,12 +106,12 @@ def inherit(class_name:object,*args:object)->object:
 # otherwise we have to constantly wrap in our custom object to instantize it
 class str_df:
     # define your new methods
-    def __init__(self, df):
+    def __init__(self, df:pd.DataFrame)->None:
         self.__df = df # save df as private variable
     # use df in methods
-    def __getitem__(self,index):
+    def __getitem__(self,index)->pd.DataFrame:
         return self.__df.map(lambda x:x[index])
-    def split(self,sep=None):
+    def split(self,sep:str=None)->pd.DataFrame:
         return self.__df.map(lambda x:x.split(sep))
 # example:
 # df=pd.DataFrame([["hi there","hi there"],["hi yes","hi yes"]])
@@ -122,7 +122,7 @@ pd.DataFrame.str=str_df
 
 
 #########################################
-def req_file(directory=""):
+def req_file(directory:str="")->None:
     """writes a requirements .txt file for .py and .ipynb files with modules version 
        
        version numbers are only reasonable when the project developers use this function
@@ -141,11 +141,11 @@ def req_file(directory=""):
         file.write(required)
     print("done")
 
-def read_ipynb(filename,join=False):
+def read_ipynb(filename:str,join=False)->list[str]|str:
     """readlines a jupyter notebook"""
     if filename[-6:] != ".ipynb":
         filename+=".ipynb"
-    with open(filename, "r") as file:
+    with open(filename, "rb") as file:
         lines = json.load(file)
     ls=[]
     for cell in lines["cells"]:
@@ -154,7 +154,7 @@ def read_ipynb(filename,join=False):
         return "\n".join(ls)
     return ls
 
-def import_js(file,id=""):
+def import_js(file:str,id:str="")->None:
     """For importing javascript files while avoiding duplicating from appending scripts
        To remove them, refresh the page, since the scripts are only during the session
     """
@@ -200,7 +200,7 @@ Jupyter.notebook.get_selected_cell().execute();
 """
     display(Javascript(get+line+log))
 
-def get_requirements(filename,unique=True):
+def get_requirements(filename:str,unique=True)->list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
     if filename.split(".")[1] == "ipynb":
         filtered = pd.Series(read_ipynb(filename))
@@ -226,7 +226,7 @@ def get_requirements(filename,unique=True):
     # return as a list
     return list(filtered)
 
-def req_search(directory="",allowed_extensions=["py","ipynb"]):
+def req_search(directory:str="",allowed_extensions:list[str]=["py","ipynb"])->list[str]:
     """Searches a directory and all its' subdirectories
        for .py or .ipynb files that are then checked for their requirements
     """
@@ -249,7 +249,7 @@ def req_search(directory="",allowed_extensions=["py","ipynb"]):
     # return only the unique requirements
     return list(set(requirements))
         
-def install(library_name,directory="",setup=True,get_requirements=True,defaults=True,default_config="PYTHON_SETUP_DEFAULTS.pkl"):
+def install(library_name:str,directory:str="",setup=True,get_requirements=True,defaults=True,default_config:str="PYTHON_SETUP_DEFAULTS.pkl")->None:
     """Creates necessary files for a library that can be accessed globally 
        on your local machine created in the same directory as the script 
        choosen to become a library.
@@ -320,7 +320,7 @@ setup(
         os.chdir(current_dir)
         print(e)
 
-def uninstall(library_name,keep_setup=True):
+def uninstall(library_name:str,keep_setup=True)->None:
     """Runs pip uninstall library_name 
        with the option of removing the
        setup files stuff as well.
@@ -370,7 +370,7 @@ def uninstall(library_name,keep_setup=True):
         print("if the module name and directory is correct you may need to restart the kernel if the import doesn't work")
 ###########
 
-def git_clone(url=[],directory=[],repo=True):
+def git_clone(url:list[str]|str=[],directory:list[str]|str=[],repo=True)->None:
     """For cloning multiple github repos or files into choosen directories"""
     if type(directory) == str:
         directory=[directory]
@@ -406,7 +406,7 @@ def git_clone(url=[],directory=[],repo=True):
                 print(e)
 
 
-def unstr(x):
+def unstr(x:str)->Any:
     """Allows simple conversion of a string of a type to its type
        globals()[x] gets deleted to free the memory so that all
        variables within this function are strictly only temporary.
@@ -414,7 +414,7 @@ def unstr(x):
     exec("temp="+x)
     return locals()["temp"]
 
-def prep(line,FUNC,operator):
+def prep(line:str,FUNC,operator:str)->str:
     """Takes a line splits on binary operator and rewrites with the relevant function
        If wanting all custom code interpretations you may omit all the code here and just
        define your custom functions that will perform all the desired operations and then
@@ -440,12 +440,12 @@ def prep(line,FUNC,operator):
         return "=".join(assignments)
     return assignments[0]
 
-def indx_split(indx=[],string=""):
+def indx_split(indx:list[int]=[],string:str="")->list[str]:
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
 
 
-def line_sep(string,op,sep="",split=True,index=False,exact_index=False,avoid="\"'"):
+def line_sep(string:str,op:str,sep:str="",split=True,index=False,exact_index=False,avoid:str="\"'")->list[int]|str|list[str]:
     """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
@@ -495,7 +495,7 @@ def line_sep(string,op,sep="",split=True,index=False,exact_index=False,avoid="\"
     return "".join(ls)
 
 
-def get_indents(line):
+def get_indents(line:str)->str:
     """Gets the number of python valid indentations for a line and then scales indentation accordingly"""
     n_white_space=0
     for char in line:
@@ -509,7 +509,7 @@ def get_indents(line):
 
 
 
-def bracket_up(string,start="(",end=")",avoid="\"'"):
+def bracket_up(string:str,start:str="(",end:str=")",avoid:str="\"'")->pd.DataFrame:
     """ For pairing bracket indexes """
     indx=0
     left=[]
@@ -649,7 +649,7 @@ def line_enclose(string,start,end,FUNC="",sep="",separate=False):
 ###################################################################
 
 ### seems to work but needs testing ###
-def interpret(code,checks=[],operators=[]):
+def interpret(code:str,checks=[],operators:str=[])->str:
     """Checks code against a custom set of rules for how code should be formated"""
     # to allow for multi-line open bracket expressions
     df=bracket_up(code,start="({[",end="]})")
@@ -694,7 +694,7 @@ def interpret(code,checks=[],operators=[]):
 
 
 
-def str_anti_join(string1,string2):
+def str_anti_join(string1:str,string2:str):
     """anti_joins strings sequentially e.g. assuming appendment"""
     diff=len(string2) - len(string1)
     if diff != 0:
