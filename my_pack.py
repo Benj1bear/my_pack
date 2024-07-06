@@ -411,10 +411,8 @@ def unstr(x):
        globals()[x] gets deleted to free the memory so that all
        variables within this function are strictly only temporary.
     """
-    exec("globals()[x]="+x)
-    temp = globals()[x]
-    del globals()[x]
-    return temp
+    exec("temp="+x)
+    return locals()["temp"]
 
 def prep(line,FUNC,operator):
     """Takes a line splits on binary operator and rewrites with the relevant function
