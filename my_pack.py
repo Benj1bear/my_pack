@@ -29,6 +29,29 @@ import shutil
 from inspect import getfile
 import sys
 
+def check_and_get(packages=[])->None:
+    """Gets packages that are currently not installed"""
+    # first check the builtins
+    standard_library = sys.stdlib_module_names
+    pypi = all_packs()["Package"]
+    for package in packages:
+        # check standard library
+        if len([i for i in standard_library if i == package]) == 1:
+            print(package+" is in the standard library")
+            continue
+        # check current pypi
+        if len(pypi[pypi == package]) == 1:
+            print(package+" is in the pip local python library")
+            continue
+        # if not in these then
+        process=subprocess.run("pip install "+package,capture_output=True)
+        if process.returncode != 0:
+            print("Error with package: "+package+"\n\n")
+            print(process.stdout.decode("utf-8"))
+            print("-"*20)
+        else:
+            print(package+" successfully installed\n")
+
 def all_packs()->pd.DataFrame:
     """Retrieves all packages and returns as a pd.DataFrame"""
     ls=subprocess.run("pip list",capture_output=True).stdout.decode("utf-8")
