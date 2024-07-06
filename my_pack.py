@@ -31,7 +31,7 @@ import sys
 
 def check_and_get(packages=[])->None:
     """Gets packages that are currently not installed"""
-    # first check the builtins
+    # first check the builtins then the pypi libraries
     standard_library = sys.stdlib_module_names
     pypi = all_packs()["Package"]
     for package in packages:
