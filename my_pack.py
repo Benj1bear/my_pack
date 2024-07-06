@@ -158,6 +158,8 @@ def import_js(file,id=""):
     """For importing javascript files while avoiding duplicating from appending scripts
        To remove them, refresh the page, since the scripts are only during the session
     """
+    if file[-3:] == ".js":
+        file = file[:-3]
     get="""
 Jupyter.notebook.select_prev();
 Jupyter.notebook.insert_cell_below();
