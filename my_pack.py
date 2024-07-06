@@ -140,9 +140,12 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
         lines = json.load(file)
     ls=[]
     for cell in lines["cells"]:
-        ls+=cell["source"]
+        lines=cell["source"]
+        if len(lines) == 0:
+            ls+=[""]
+        else:
+            ls+=[line[:-1] for line in lines[:-1]]+[lines[-1]]
     if join == True:
-        # '\n' is needed even though it will increase the number of lines
         return "\n".join(ls)
     return ls
 
