@@ -89,8 +89,8 @@ def to_module(code:str)->Callable[..., Any]:
         def __init__(self, module_name: str, source: str) -> None:
             self.module_name = module_name
             self.source = source
-        # there must be a get_source method that can be 
-        # overrided in the getsource function
+        # there must be a get_source method used
+        # in the getsource function
         def get_source(self, module_name: str) -> str:
             if module_name != self.module_name:
                 raise ImportError(module_name)
