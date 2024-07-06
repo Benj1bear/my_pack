@@ -82,7 +82,8 @@ def get_functions(code:str)->(list[int],list[int]):
 def to_module(code:str)->Callable[..., Any]:
     """
     converts a string to a python module object that associates with a temporary file for getting source code
-    # code reference: https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5
+    # code reference: Sottile, A., (2020) https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5,CC BY-SA,
+    # changes made: combined into one function, used while loop to ensure uniqueness of filename, shortened code, implemented my comments
     """
     class Module:
         def __init__(self, module_name: str, source: str) -> None:
