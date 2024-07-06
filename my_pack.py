@@ -30,7 +30,7 @@ from inspect import getfile
 import sys
 
 def all_packs()->pd.DataFrame:
-    """Retrieves all packages and returns as a list"""
+    """Retrieves all packages and returns as a pd.DataFrame"""
     ls=subprocess.run("pip list",capture_output=True).stdout.decode("utf-8")
     ls = ls.split("\r\n")
     ls = [ls[0]]+ls[2:]
