@@ -77,13 +77,31 @@ def get_functions(code:str)->(list[int],list[int]):
                     break
     return indexes,end
 
-def to_module(module_name:str,code:str)->ModuleType:
+def to_module(code:str)->Callable[..., Any]:
+     """
+    converts a string to a python module object that associates with a temporary file for getting source code
+    # code reference: https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5
     """
-    converts a string to a python module object
-    reference: https://stackoverflow.com/questions/13888655/how-do-i-create-a-in-line-module?rq=3
-    """
-    sys.modules[module_name] = module = ModuleType(module_name)
-    exec(code, module.__dict__)
+    class Module:
+        def __init__(self, module_name: str, source: str) -> None:
+            self.module_name = module_name
+            self.source = source
+        # there must be a get_source method that can be 
+        # overrided in the getsource function
+        def get_source(self, module_name: str) -> str:
+            if module_name != self.module_name:
+                raise ImportError(module_name)
+            return self.source
+    # create temporary file and unique module name
+    while True:
+        temp = tempfile.mktemp(suffix='.py')
+        module_name = temp.split(".")[0].split("\\")[-1]
+        if module_name not in sys.modules:break
+    # create module with specialized loader e.g. to override the get_source method
+    module = module_from_spec(spec_from_loader(module_name, Module(module_name, code), origin=temp))
+    exec(compile(code, temp,"exec"), module.__dict__)
+    # needs to be added to sys modules else it doesn't register
+    sys.modules[module_name] = module
     return module
 
 def inherit(class_name:object,*args:object)->object:
