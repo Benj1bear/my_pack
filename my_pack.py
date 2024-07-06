@@ -22,7 +22,9 @@ lock=RLock()
 import time
 ###########
 from types import ModuleType
-from typing import Any
+from typing import Any, Callable
+import tempfile
+from importlib.util import module_from_spec, spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
 import re
 import glob
