@@ -386,24 +386,23 @@ def git_clone(url=[],directory=[],repo=True):
         raise Exception("Length mismatch between the number of supplied urls: "+str(url_length)+", and directories: "+str(dir_length))
     if repo == True:
         for file,path in zip(url,directory):
-            try:
-                if path == "":
-                    subprocess.run("git clone "+file)
-                else:
-                    current=os.getcwd()
-                    os.chdir(path)
-                    subprocess.run("git clone "+file)
-                    os.chdir(current)
-            except Exception as e:
-                print("Failed retrieving "+file)
-                print(e)
+            if path == "":
+                process=subprocess.run("git clone "+file,capture_output=True)
+            else:
+                current=os.getcwd()
+                os.chdir(path)
+                process=subprocess.run("git clone "+file,capture_output=True)
+                os.chdir(current)
+            if process.returncode != 0:
+                print("Failed retrieving "+file+":\n\n")
+                print(process.stdout.decode('utf-8'))
         return
     else:
         for file,path in zip(url,directory):
             try:
                 open(path+file.split("/")[-1], "wb").write(requests.get(file).content)
             except Exception as e:
-                print("Failed retrieving "+file)
+                print("Failed retrieving "+file+":\n\n")
                 print(e)
 
 
