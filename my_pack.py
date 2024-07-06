@@ -29,6 +29,14 @@ import shutil
 from inspect import getfile
 import sys
 
+def all_packs()->pd.DataFrame:
+    """Retrieves all packages and returns as a list"""
+    ls=subprocess.run("pip list",capture_output=True).stdout.decode("utf-8")
+    ls = ls.split("\r\n")
+    ls = [ls[0]]+ls[2:]
+    ls = [re.split(r"\s{2,}",i) for i in ls]
+    return pd.DataFrame(ls[1:],columns=ls[0])
+
 def get_functions(code):
     # get starting indexes for all 'def ' statements made
     indexes=my_pack.line_sep(code,"def ",exact_index=True)
