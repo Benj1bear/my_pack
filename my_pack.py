@@ -142,7 +142,7 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
     for cell in lines["cells"]:
         ls+=cell["source"]
     if join == True:
-        return "\n".join(ls)
+        return "".join(ls)
     return ls
 
 def import_js(file:str,id:str="")->None:
