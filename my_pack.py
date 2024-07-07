@@ -50,10 +50,11 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
         if full_consent == False:
             ## ask for consent ##
             while True:
+                print("")
                 response=input(package+" not installed. Do you want to proceed to install?: y/n --")
                 if response == "y" or response == "n":
                     break
-                #clear_output()
+                clear_output(wait=True)
             if response == "n":
                 continue
         process=subprocess.run("pip install "+package,capture_output=True)
