@@ -53,7 +53,7 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
                 response=input(package+" not installed. Do you want to proceed to install?: y/n --")
                 if response == "y" or response == "n":
                     break
-                clear_output()
+                #clear_output()
             if response == "n":
                 continue
         process=subprocess.run("pip install "+package,capture_output=True)
