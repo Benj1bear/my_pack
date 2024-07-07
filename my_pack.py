@@ -50,7 +50,7 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
         if full_consent == False:
             ## ask for consent ##
             while True:
-                response=input(package+" not installed. Do you want to proceed to install them?: y/n --")
+                response=input(package+" not installed. Do you want to proceed to install?: y/n --")
                 if response == "y" or response == "n":
                     break
             if response == "n":
