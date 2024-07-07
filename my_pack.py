@@ -32,7 +32,7 @@ import shutil
 from inspect import getfile
 import sys
 
-def check_and_get(packages:list[str]=[])->None:
+def check_and_get(packages:list[str]=[],full_consent = False)->None:
     """Gets packages that are currently not installed"""
     # first check the builtins then the pypi libraries
     standard_library = sys.stdlib_module_names
@@ -47,6 +47,14 @@ def check_and_get(packages:list[str]=[])->None:
             print(package+" is in the pip local python library")
             continue
         # if not in these then
+        if full_consent == False:
+            ## ask for consent ##
+            while True:
+                response=input(package+" not installed. Do you want to proceed to install them?: y/n")
+                if response == "y" or response == "n":
+                    break
+            if response == "n":
+                continue
         process=subprocess.run("pip install "+package,capture_output=True)
         if process.returncode != 0:
             print("Error with package: "+package+"\n\n")
