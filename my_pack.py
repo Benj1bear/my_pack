@@ -32,30 +32,45 @@ import shutil
 from inspect import getfile
 import sys
 
+def list_loop(ls: str,FUNC=lambda x:x):
+    """
+    loops through a list of elements applying some function to each element
+    """
+    if type(ls) != list:
+        ls=[ls]
+    returns=[]
+    for item in ls:
+        print(item)
+        returns+=[FUNC(item)]
+    if len(returns) == 1:
+        return returns[0]
+    return returns
+
+def in_valid(prompt,check,clear=False):
+    """
+    Input validation assurance
+    """
+    print(end="\r")
+    while True:
+        response=input(prompt)
+        if check(response):break
+    if clear==False:
+        display(prompt+response)
+    return response
+    
 class input_ext:
-    """my extensions for the input function"""
+    """
+    extension to the input function for inputting and/or validating more than one prompt
+    """
     def __init__(self,prompts=""):
-        """It accepts lists as well, looping over it in the check function"""
         self.prompts=prompts
+    def __call__(self):
+        return list_loop(self.prompts)
     def check(self,check=lambda x: 1,clear=False):
         """
         For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
         """
-        if type(self.prompts) != list:
-            self.prompts = [self.prompts]
-        responses=[]
-        for prompt in self.prompts:
-            print(end="\r")
-            while True:
-                response=input(prompt)
-                if check(response):
-                    break
-            if clear==False:
-                display(prompt+response)
-            responses+=[response]
-        if len(responses) == 1:
-            return responses[0]
-        return responses 
+        return list_loop(self.prompts,in_valid)
 
 def check_and_get(packages:list[str]=[],full_consent = False)->None:
     """Gets packages that are currently not installed"""
