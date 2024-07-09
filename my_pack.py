@@ -64,9 +64,10 @@ class input_ext:
     """
     def __init__(self,prompts: Any="")->None:
         self.prompts=prompts
-    def __call__(self)->list[Any]|Any:
+    @property
+    def loop(self)->list[Any]|Any:
         return list_loop(self.prompts)
-    def check(self,check=lambda x: 1,clear=False):
+    def check(self,check=lambda x: 1,clear=False)->list[Any]|Any:
         """
         For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
         """
