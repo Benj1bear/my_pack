@@ -33,6 +33,7 @@ from inspect import getfile
 import sys
 
 class input_ext:
+    """my extensions for the input function"""
     def __init__(self,prompt=""):
         self.prompt=prompt
     def check(self,check,clear=False):
