@@ -67,7 +67,7 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
         # if not in these then
         if full_consent == False:
             ## ask for consent ##
-            response=input_ext("asfd not installed. Do you want to proceed to install?: y/n --")\
+            response=input_ext(package+" not installed. Do you want to proceed to install?: y/n --")\
             .check(lambda response: 1 if response == "y" or response == "n" else 0)
             if response == "n":
                 continue
