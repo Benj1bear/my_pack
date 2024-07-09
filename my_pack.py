@@ -66,7 +66,7 @@ class input_ext:
         self.prompts=prompts
     @property
     def loop(self)->list[Any]|Any:
-        return list_loop(self.prompts)
+        return list_loop(self.prompts,input)
     def check(self,check=lambda x: 1,clear=False)->list[Any]|Any:
         """
         For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
