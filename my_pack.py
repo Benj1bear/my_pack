@@ -31,6 +31,7 @@ import glob
 import shutil
 from inspect import getfile
 import sys
+from functools import partial
 
 def list_loop(ls: str,FUNC=lambda x:x):
     """
@@ -56,7 +57,7 @@ def in_valid(prompt,check,clear=False):
     if clear==False:
         display(prompt+response)
     return response
-    
+
 class input_ext:
     """
     extension to the input function for inputting and/or validating more than one prompt
@@ -69,7 +70,7 @@ class input_ext:
         """
         For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
         """
-        return list_loop(self.prompts,in_valid)
+        return list_loop(self.prompts,partial(in_valid,**{"check":check,"clear":clear}))
 
 def check_and_get(packages:list[str]=[],full_consent = False)->None:
     """Gets packages that are currently not installed"""
