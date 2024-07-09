@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def list_loop(ls: Any,FUNC=lambda x:x):
+def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
     """
     loops through a list of elements applying some function to each element
     """
@@ -46,7 +46,7 @@ def list_loop(ls: Any,FUNC=lambda x:x):
         return returns[0]
     return returns
 
-def in_valid(prompt,check,clear=False):
+def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
     """
     Input validation assurance
     """
@@ -62,9 +62,9 @@ class input_ext:
     """
     extension to the input function for inputting and/or validating more than one prompt
     """
-    def __init__(self,prompts=""):
+    def __init__(self,prompts: Any="")->None:
         self.prompts=prompts
-    def __call__(self):
+    def __call__(self)->list[Any]|Any:
         return list_loop(self.prompts)
     def check(self,check=lambda x: 1,clear=False):
         """
