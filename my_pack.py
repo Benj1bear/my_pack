@@ -40,7 +40,6 @@ def list_loop(ls: str,FUNC=lambda x:x):
         ls=[ls]
     returns=[]
     for item in ls:
-        print(item)
         returns+=[FUNC(item)]
     if len(returns) == 1:
         return returns[0]
