@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def list_loop(ls: str,FUNC=lambda x:x):
+def list_loop(ls: Any,FUNC=lambda x:x):
     """
     loops through a list of elements applying some function to each element
     """
