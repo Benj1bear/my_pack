@@ -32,6 +32,23 @@ import shutil
 from inspect import getfile
 import sys
 
+class input_ext:
+    def __init__(self,prompt=""):
+        self.prompt=prompt
+    def check(self,check,clear=False):
+        """ 
+        For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
+        """
+        print(end="\r")
+        while True:
+            response=input(self.prompt)
+            if check(response):
+                break
+        clear_output()
+        if clear==False:
+            print(self.prompt+response)
+        return response
+
 def check_and_get(packages:list[str]=[],full_consent = False)->None:
     """Gets packages that are currently not installed"""
     # first check the builtins then the pypi libraries
@@ -49,14 +66,10 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
         # if not in these then
         if full_consent == False:
             ## ask for consent ##
-            print("",end="\r") # works
-            while True:
-                response=input(package+" not installed. Do you want to proceed to install?: y/n --")
-                if response == "y" or response == "n":
-                    break
+            response=input_ext("asfd not installed. Do you want to proceed to install?: y/n --")
+            response=response.check(lambda response: 1 if response == "y" or response == "n" else 0)
             if response == "n":
                 continue
-        clear_output() # until I figure out how it works
         process=subprocess.run("pip install "+package,capture_output=True)
         if process.returncode != 0:
             print("Error with package: "+package+"\n\n")
