@@ -34,21 +34,28 @@ import sys
 
 class input_ext:
     """my extensions for the input function"""
-    def __init__(self,prompt=""):
-        self.prompt=prompt
-    def check(self,check,clear=False):
-        """ 
+    def __init__(self,prompts=""):
+        """It accepts lists as well, looping over it in the check function"""
+        self.prompts=prompts
+    def check(self,check=lambda x: 1,clear=False):
+        """
         For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
         """
-        print(end="\r")
-        while True:
-            response=input(self.prompt)
-            if check(response):
-                break
-        clear_output()
-        if clear==False:
-            print(self.prompt+response)
-        return response
+        if type(self.prompts) != list:
+            self.prompts = [self.prompts]
+        responses=[]
+        for prompt in self.prompts:
+            print(end="\r")
+            while True:
+                response=input(prompt)
+                if check(response):
+                    break
+            if clear==False:
+                display(prompt+response)
+            responses+=[response]
+        if len(responses) == 1:
+            return responses[0]
+        return responses 
 
 def check_and_get(packages:list[str]=[],full_consent = False)->None:
     """Gets packages that are currently not installed"""
