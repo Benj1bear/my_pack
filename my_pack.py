@@ -56,6 +56,7 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
                     break
             if response == "n":
                 continue
+        clear_output() # until I figure out how it works
         process=subprocess.run("pip install "+package,capture_output=True)
         if process.returncode != 0:
             print("Error with package: "+package+"\n\n")
