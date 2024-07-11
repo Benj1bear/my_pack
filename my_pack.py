@@ -227,7 +227,7 @@ def check_js(file:str)->str:
 def import_js(file:str,id:str="")->None:
     """
     For importing javascript files while avoiding duplicating from appending scripts
-    To remove them use the remove_js function with the same inputs used for import_js
+    To remove them use the unload_js function with the same inputs used for import_js
     """
     file=check_js(file)
     get="""
@@ -262,16 +262,15 @@ Jupyter.notebook.select_next();
 """
     display(Javascript(get))
 
-def remove_js(file:str="",id:str="",script=False)->None:
+def unload_js(file:str="",id:str="")->None:
+    remove_js(check_js(file)+id)
+
+def remove_js(id:str="")->None:
     """
     For removing html elements by id 
-    (though intended for unloading .js files with the file variable included) if you
-    need to use '.js' as the extension to the files filename extension then add script=True
-    """
-    if script == True:
-        file=check_js(file)
-    display(Javascript(f"document.getElementById('{file+id}').remove();"))
-    print(f"removed element: {file+id}")
+    """ 
+    display(Javascript(f"document.getElementById('{id}').remove();"))
+    print(f"removed element: {id}")
 
 def get_requirements(filename:str,unique=True)->list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
