@@ -33,6 +33,30 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def generate_cell_ids(reload=False):
+    if reload:
+        del os.environ["__generate_cell_ids__"]
+        print("Note: make sure you've saved and reloaded the page for reloading to work\n")
+    if os.getenv("__generate_cell_ids__",False) == False:
+        print("Jupyter notebook will now generate cell ids for all code cells")
+        print("to retrieve use: document.querySelectorAll('[code_cell_id]')")
+        display(Javascript("""var number_of_code_cells=0;
+function update_cell_id(){
+    let cells=$(".cell.code_cell")
+    let length=cells.length
+    if (length != number_of_code_cells){
+        // renumber all cell ids so that they are in index order
+        number_of_code_cells=length
+        for (let i = 0; i < number_of_code_cells; i++){
+            cells[i].setAttribute("code_cell_id", i)
+        }
+    }
+}
+setInterval(update_cell_id, 100);"""))
+        os.environ["__generate_cell_ids__"]="True"
+    else:
+        print("notebook already generating cell ids")
+
 def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
     """
     loops through a list of elements applying some function to each element
