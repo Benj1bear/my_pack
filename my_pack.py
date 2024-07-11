@@ -34,6 +34,10 @@ import sys
 from functools import partial
 
 def generate_cell_ids(reload=False):
+    """
+    Generates cell ids for all code cells in the jupyter notebook it's used in
+    to remove the javascript save and reload the notebook
+    """
     if reload:
         del os.environ["__generate_cell_ids__"]
         print("Note: make sure you've saved and reloaded the page for reloading to work\n")
