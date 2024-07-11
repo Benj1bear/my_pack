@@ -217,15 +217,19 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
         return "\n".join(ls)
     return ls
 
+def check_js(file:str)->str:
+    if len(file.split(".")[0]) == 0:
+        raise Exception(f"Invalid filename: '{file}'")
+    if file[-3:] == ".js":
+        file = file[:-3]
+    return file
+
 def import_js(file:str,id:str="")->None:
     """
     For importing javascript files while avoiding duplicating from appending scripts
     To remove them use the remove_js function with the same inputs used for import_js
     """
-    if len(file.split(".")[0]) == 0:
-        raise Exception(f"Invalid filename: '{file}'")
-    if file[-3:] == ".js":
-        file = file[:-3]
+    file=check_js(file)
     get="""
 let string=document.getElementById('"""+file+id+"""');
 console.log(string)
@@ -263,10 +267,7 @@ def remove_js(file:str="",id:str="")->None:
     For removing html elements by id 
     (though intended for unloading .js files with the file variable included)
     """
-    if len(file.split(".")[0]) == 0:
-        raise Exception(f"Invalid filename: '{file}'")
-    if file[-3:] == ".js":
-        file = file[:-3]
+    file=check_js(file)
     display(Javascript(f"document.getElementById('{file+id}').remove();"))
     print(f"removed element: {file+id}")
 
