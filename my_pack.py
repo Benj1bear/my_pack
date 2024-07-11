@@ -265,7 +265,8 @@ Jupyter.notebook.select_next();
 def remove_js(file:str="",id:str="",script=False)->None:
     """
     For removing html elements by id 
-    (though intended for unloading .js files with the file variable included)
+    (though intended for unloading .js files with the file variable included) if you
+    need to use '.js' as the extension to the files filename extension then add script=True
     """
     if script == True:
         file=check_js(file)
