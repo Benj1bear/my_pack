@@ -222,47 +222,41 @@ def import_js(file:str,id:str="")->None:
     For importing javascript files while avoiding duplicating from appending scripts
     To remove them, refresh the page, since the scripts are only during the session
     """
+    if len(file.split(".")[0]) == 0:
+        raise Exception(f"Invalid filename: '{file}'")
     if file[-3:] == ".js":
         file = file[:-3]
     get="""
-Jupyter.notebook.select_prev();
-Jupyter.notebook.insert_cell_below();
-
-let original_cell = Jupyter.notebook.get_selected_cell();
 let string=document.getElementById('"""+file+id+"""');
+console.log(string)
 if (string == null){
-    string="0";
+    const script = document.createElement('script');
+    script.id = '"""+file+id+"""';
+    script.src = '"""+file+""".js';
+    document.body.appendChild(script);
+    Jupyter.notebook.select_prev();
+    let cell = Jupyter.notebook.get_selected_cell();
+    let txt = cell.get_text();
+    let string='"""+file+id+"""'+'.js loaded'
+    cell.set_text("print('"+string+"')");
+    cell.execute();
+    cell = Jupyter.notebook.get_selected_cell();
+    cell.set_text(txt);
+    console.log(string);
 } else{
-    string=string.outerHTML.toString().length.toString();
+    Jupyter.notebook.select_prev();
+    let cell = Jupyter.notebook.get_selected_cell();
+    let txt = cell.get_text();
+    let string = '"""+file+id+"""'+'.js already loaded'
+    cell.set_text("print('"+string+"')");
+    cell.execute();
+    cell = Jupyter.notebook.get_selected_cell();
+    cell.set_text(txt);
+    console.log(string);
 }
 Jupyter.notebook.select_next();
 """
-    line="""\nstring='if int("'+string+'") == 0:';"""
-    line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\"const script = document.createElement(\"script\");';"
-    line+="""\nstring+='\\nscript.id = \""""+file+id+"""\";';"""
-    line+="""\nstring+='\\nscript.src = \""""+file+""".js";';"""
-    line+="""\nstring+='\\ndocument.body.appendChild(script);';"""
-    printing_start="""\\nJupyter.notebook.select_prev();"""
-    printing_start+="""\\nlet cell = Jupyter.notebook.get_selected_cell();"""
-    printing_start+="""\\nlet txt = cell.get_text();"""
-    printing_start+="""\\nlet string = ".js loaded";"""
-    printing_start+="""\\ncell.set_text("print(\\\'"""
-    printing_end="""\\ncell.execute();"""
-    printing_end+="""\\ncell = Jupyter.notebook.get_selected_cell();"""
-    printing_end+="""\\ncell.set_text(txt);"""
-    printing_end+="""\\nJupyter.notebook.select_next();"""
-    printing_end+="""\\nJupyter.notebook.delete_cell();"""
-    line+="""\nstring+='"""+printing_start+file+"""\\\'+\\\'.js loaded\\\')");"""+printing_end+"""';"""
-    line+="\nstring+='\\n\"\"\"))';"
-    line+="""\nstring+='\\nelse:';"""
-    line+="\nstring+='\\n\\tdisplay(Javascript(\"\"\" "+printing_start+file
-    line+="""\\\'+\\\'.js already loaded\\\')");"""+printing_end+"\"\"\"))';"
-    line+="\nstring='from IPython.display import Javascript\\n'+string;"
-    log="""
-Jupyter.notebook.get_selected_cell().set_text(string);
-Jupyter.notebook.get_selected_cell().execute();
-"""
-    display(Javascript(get+line+log))
+    display(Javascript(get))
 
 def get_requirements(filename:str,unique=True)->list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
@@ -804,9 +798,10 @@ def background_process(FUNC=stand_by,*args,**kwargs):
 
 current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
 def capture(interpret_code=True):
-    """Function to capture the inputs in real time (only works in jupyter notebook because of the 'In' variable)
-       The only issues with it is that because it runs on a thread it therefore can only work one cell at a time
-       so the display may come out unexpectedly
+    """
+    Function to capture the inputs in real time (only works in jupyter notebook because of the 'In' variable)
+    The only issues with it is that because it runs on a thread it therefore can only work one cell at a time
+    so the display may come out unexpectedly
     """
     global current_execution
     last_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
@@ -838,11 +833,11 @@ def capture(interpret_code=True):
         current_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
 
 def partition(number_of_subsets,interval):
-    """Creates the desired number of partitions on a range.
-       Accepts integers for the number_of_subsets but will 
-       only produce reasonable partitions for values within
-       the interval (0,interval]
-       
+    """
+    Creates the desired number of partitions on a range.
+    Accepts integers for the number_of_subsets but will 
+    only produce reasonable partitions for values within
+    the interval (0,interval]
     """
     partitions = [0]
     for i in range(1,number_of_subsets+1):
