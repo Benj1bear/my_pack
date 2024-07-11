@@ -262,12 +262,13 @@ Jupyter.notebook.select_next();
 """
     display(Javascript(get))
 
-def remove_js(file:str="",id:str="")->None:
+def remove_js(file:str="",id:str="",script=False)->None:
     """
     For removing html elements by id 
     (though intended for unloading .js files with the file variable included)
     """
-    file=check_js(file)
+    if script == True:
+        file=check_js(file)
     display(Javascript(f"document.getElementById('{file+id}').remove();"))
     print(f"removed element: {file+id}")
 
