@@ -262,6 +262,10 @@ Jupyter.notebook.select_next();
 """
     display(Javascript(get))
 
+def reload_js(file:str="",id:str="")->None:
+    unload_js(file,id)
+    import_js(file,id)
+
 def unload_js(file:str="",id:str="")->None:
     remove_html_el(check_js(file)+id)
 
