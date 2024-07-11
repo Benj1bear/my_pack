@@ -258,6 +258,18 @@ Jupyter.notebook.select_next();
 """
     display(Javascript(get))
 
+def remove_js(file:str="",id:str="")->None:
+    """
+    For removing html elements by id 
+    (though intended for unloading .js files with the file variable included)
+    """
+    if len(file.split(".")[0]) == 0:
+        raise Exception(f"Invalid filename: '{file}'")
+    if file[-3:] == ".js":
+        file = file[:-3]
+    display(Javascript(f"document.getElementById('{file+id}').remove();"))
+    print(f"removed element: {file+id}")
+
 def get_requirements(filename:str,unique=True)->list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
     if filename.split(".")[1] == "ipynb":
