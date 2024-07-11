@@ -263,9 +263,9 @@ Jupyter.notebook.select_next();
     display(Javascript(get))
 
 def unload_js(file:str="",id:str="")->None:
-    remove_js(check_js(file)+id)
+    remove_html_el(check_js(file)+id)
 
-def remove_js(id:str="")->None:
+def remove_html_el(id:str="")->None:
     """
     For removing html elements by id 
     """ 
