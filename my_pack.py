@@ -220,7 +220,7 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
 def import_js(file:str,id:str="")->None:
     """
     For importing javascript files while avoiding duplicating from appending scripts
-    To remove them, refresh the page, since the scripts are only during the session
+    To remove them use the remove_js function with the same inputs used for import_js
     """
     if len(file.split(".")[0]) == 0:
         raise Exception(f"Invalid filename: '{file}'")
