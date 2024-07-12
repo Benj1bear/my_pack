@@ -92,7 +92,7 @@ const observers = promptNodes.map(element => {
         observer.disconnect();
         // make necessary changes while disconnected
         if(done==true){
-            el.setAttribute("exec_status","done")
+            el.setAttribute("exec_status","Done")
         }else{
             el.setAttribute("exec_status","Executing")
             el.setAttribute("exec_id",exec_id)
