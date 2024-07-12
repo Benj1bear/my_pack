@@ -34,7 +34,7 @@ import sys
 from functools import partial
 
 def refresh():
-    """Refreshes jupyter notebook"""
+    """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
 def generate_cell_ids(reload=False):
