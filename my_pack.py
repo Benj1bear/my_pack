@@ -153,7 +153,7 @@ def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
     """
     Input validation assurance
     """
-    print(end="\r")
+    print(end="\r") ### - will swap out for something more robust soon ###
     while True:
         response=input(prompt)
         if check(response):break
