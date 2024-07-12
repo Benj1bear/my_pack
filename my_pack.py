@@ -48,7 +48,7 @@ def refresh()->None:
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
-def dynamic_js_wrapper(func: Callable[bool])->None:
+def dynamic_js_wrapper(func: Callable[bool,...])->None:
     """wrapper function for dynamically created javascript functions to save code"""
     def wrapper(reload: bool=False):
         """wrapper ensures no appending of duplicate scripts and reloading if necessary"""
