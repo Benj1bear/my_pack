@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def refresh():
+def refresh(keep_modules=True):
     """Refreshes jupyter notebook"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
@@ -259,7 +259,7 @@ def check_js(file:str)->str:
 def import_js(file:str,id:str="")->None:
     """
     For importing javascript files while avoiding duplicating from appending scripts
-    To remove them use the unload_js function with the same inputs used for import_js
+    To remove them use refresh()
     """
     file=check_js(file)
     get="""
@@ -293,13 +293,6 @@ if (string == null){
 Jupyter.notebook.select_next();
 """
     display(Javascript(get))
-
-def reload_js(file:str="",id:str="")->None:
-    unload_js(file,id)
-    import_js(file,id)
-
-def unload_js(file:str="",id:str="")->None:
-    remove_html_el(check_js(file)+id)
 
 def remove_html_el(id:str="")->None:
     """
