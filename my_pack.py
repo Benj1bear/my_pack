@@ -33,6 +33,17 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def ipynb_id_setup(reload: bool=False)->None:
+    """For setting up cell_id and exec_id/exec_status for all code cells"""
+    if reload==True:
+        try:
+            del os.environ["__generate_cell_ids__"]
+            del os.environ["__generate_exec_ids__"]
+            refresh()
+        except:None
+    generate_cell_ids()
+    generate_exec_ids()
+
 def refresh()->None:
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
