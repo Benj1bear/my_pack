@@ -88,7 +88,7 @@ const observers = promptNodes.map(element => {
         start_obs(el)
     }
     const observer = new MutationObserver((mutations) => {
-        // if attribute or status changed then ignore else set id and status on execution else change status
+        // set id and status on execution else change status
         if((element.hasAttribute("exec_id") == false) || (element.innerHTML == '<bdi>In</bdi>&nbsp;[*]:')){
             // the mutation observer will likely pick up these changes 
             // therefore we disconnect the observer while changes occur
