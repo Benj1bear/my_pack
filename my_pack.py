@@ -37,18 +37,79 @@ def refresh():
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
+def dynamic_js_wrapper(func):
+    def wrapper(reload=False):
+        name = str(func).split()[1]
+        if reload:
+            try:del os.environ[f"__{name}__"]
+            except:None
+            return refresh()
+        temp = name.replace("_"," ")
+        if os.getenv(f"__{name}__",False) == False:    
+            print(f"Jupyter notebook will now {temp} for all code cells")
+            temp=func.__doc__.split("to retrieve use: ")[-1].strip()
+            print(f"to retrieve use: {temp}")
+            func(reload)
+            os.environ[f"__{name}__"]="True"
+        else:
+            print(f"notebook can already {temp}")
+    return wrapper
+
+@dynamic_js_wrapper
+def generate_exec_ids(reload=False):
+    """
+    For generating cell ids in jupyter notebook
+    
+    to retrieve use: document.querySelectorAll("[exec_id],[exec_status]")
+    """
+    display(Javascript("""var exec_id=0;
+const promptNodes = Array.from(document.querySelectorAll('.prompt.input_prompt'));
+// foreach node
+const observers = promptNodes.map(element => {
+    function start_obs(el){
+        observer.observe(el, {
+            attributes: true,
+            characterData: true,
+            childList: true,
+            subtree: false
+        });
+    }
+    function ignore_set(el,done=false){
+        observer.disconnect();
+        // make necessary changes while disconnected
+        if(done==true){
+            el.exec_status = "done"
+        }else{
+            el.setAttribute("exec_status","Executing")
+            el.setAttribute("exec_id",exec_id)
+        }
+        start_obs(el)
+    }
+    const observer = new MutationObserver((mutations) => {
+        // if attribute or status changed then ignore else set id and status on execution else change status
+        if((element.hasAttribute("exec_id") == false) || (element.innerHTML == '<bdi>In</bdi>&nbsp;[*]:')){
+            // the mutation observer will likely pick up these changes 
+            // therefore we disconnect the observer while changes occur
+            ignore_set(element)
+            console.log('exec_id ',element.cell_id,' status:  Executing');
+            exec_id+=1
+        }else if(element.hasAttribute("exec_id") == true){
+            ignore_set(element,true)
+            console.log('exec_id ',element.cell_id,' status:  Done');
+        }
+    });
+    start_obs(element)
+    return observer;
+});"""))
+
+@dynamic_js_wrapper
 def generate_cell_ids(reload=False):
     """
-    Generates cell ids for all code cells in the jupyter notebook it's used in
-    to remove the javascript save and reload the notebook
+    For generating cell ids in jupyter notebook
+    
+    to retrieve use: document.querySelectorAll('[code_cell_id]')
     """
-    if reload:
-        del os.environ["__generate_cell_ids__"]
-        print("Note: make sure you've saved and reloaded the page for reloading to work\n")
-    if os.getenv("__generate_cell_ids__",False) == False:
-        print("Jupyter notebook will now generate cell ids for all code cells")
-        print("to retrieve use: document.querySelectorAll('[code_cell_id]')")
-        display(Javascript("""var number_of_code_cells=0;
+    display(Javascript("""var number_of_code_cells=0;
 function update_cell_id(){
     let cells=$(".cell.code_cell")
     let length=cells.length
@@ -61,9 +122,6 @@ function update_cell_id(){
     }
 }
 setInterval(update_cell_id, 100);"""))
-        os.environ["__generate_cell_ids__"]="True"
-    else:
-        print("notebook already generating cell ids")
 
 def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
     """
@@ -297,7 +355,7 @@ Jupyter.notebook.select_next();
 def remove_html_el(id:str="")->None:
     """
     For removing html elements by id 
-    """ 
+    """
     display(Javascript(f"document.getElementById('{id}').remove();"))
     print(f"removed element: {id}")
 
