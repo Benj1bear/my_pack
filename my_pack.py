@@ -34,7 +34,7 @@ import sys
 from functools import partial
 
 def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
-    """"For retrieving the current cell execution in jupyter notebook"""
+    """"For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation"""
     # in case not done so already
     ipynb_id_setup()
     display(Javascript("""
