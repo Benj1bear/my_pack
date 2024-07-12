@@ -33,6 +33,10 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def refresh():
+    """Refreshes jupyter notebook"""
+    display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
+
 def generate_cell_ids(reload=False):
     """
     Generates cell ids for all code cells in the jupyter notebook it's used in
