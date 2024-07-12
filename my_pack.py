@@ -36,7 +36,7 @@ from functools import partial
 def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
     """"For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation"""
     # in case not done so already
-    ipynb_id_setup() ## doesn't work if directly after its import ##
+    ipynb_id_setup()
     display(Javascript("""
 // get the elements
 let running=document.querySelectorAll("[exec_id],[exec_status]")
@@ -53,7 +53,6 @@ var cell_id = running.parentElement.parentElement.parentElement
 cell_id = parseInt(cell_id.getAttribute("cell_id"))
 """+appending_script))
 
-## doesn't work if directly after its import ##
 def ipynb_id_setup(reload: bool=False)->None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
     if reload==True:
@@ -63,8 +62,7 @@ def ipynb_id_setup(reload: bool=False)->None:
             return refresh()
         except:None
     generate_cell_ids()
-    generate_exec_ids() ## bug is somewhere in here ##
-###############################################
+    generate_exec_ids()
 
 def refresh()->None:
     """Refreshes jupyter notebook; it will save the current page as well"""
@@ -94,6 +92,9 @@ def dynamic_js_wrapper(func: Callable[bool,...])->None:
 def generate_exec_ids(reload: bool=False)->None:
     """
     For generating execution order ids and status in jupyter notebook
+
+    Note: if it causes crashes then it's because the kernel was restarted
+    but the page was not refreshed, hence the script will get appended
     
     to retrieve use: document.querySelectorAll("[exec_id],[exec_status]")
     """
