@@ -68,7 +68,8 @@ def dynamic_js_wrapper(func: Callable[bool,...])->None:
             print(f"notebook can already {temp}")
     return wrapper
 
-########## may need some more testing ##########
+########## needs testing on initial load; for some reason it doesn't detect when it's   ##########
+########## initialization finishes otherwise it works as intended and there's no issues ##########
 @dynamic_js_wrapper
 def generate_exec_ids(reload: bool=False)->None:
     """
