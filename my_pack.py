@@ -33,11 +33,11 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def refresh():
+def refresh()->None:
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
-def dynamic_js_wrapper(func):
+def dynamic_js_wrapper(func: Callable[bool])->None:
     def wrapper(reload=False):
         name = str(func).split()[1]
         if reload:
@@ -56,7 +56,7 @@ def dynamic_js_wrapper(func):
     return wrapper
 
 @dynamic_js_wrapper
-def generate_exec_ids(reload=False):
+def generate_exec_ids(reload: bool=False)->None:
     """
     For generating cell ids in jupyter notebook
     
@@ -103,7 +103,7 @@ const observers = promptNodes.map(element => {
 });"""))
 
 @dynamic_js_wrapper
-def generate_cell_ids(reload=False):
+def generate_cell_ids(reload: bool=False)->None:
     """
     For generating cell ids in jupyter notebook
     
