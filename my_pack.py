@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def get_executing_cell(appending_script:str="console.log(cell_id);"):
+def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
     """"For retrieving the current cell execution in jupyter notebook"""
     # in case not done so already
     ipynb_id_setup()
