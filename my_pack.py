@@ -33,6 +33,26 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def get_executing_cell(appending_script:str="console.log(cell_id);"):
+    """"For retrieving the current cell execution in jupyter notebook"""
+    # in case not done so already
+    ipynb_id_setup()
+    display(Javascript("""
+// get the elements
+let running=document.querySelectorAll("[exec_id],[exec_status]")
+// filter to those that are executing
+running=Array.from(running).filter(el => el.getAttribute('exec_status') === 'Executing');
+// get the element with the lowest exec_id
+running = running.reduce((min, current) => {
+  let current_exec_id = parseInt(current.getAttribute('exec_id'));
+  let min_exec_id = parseInt(min.getAttribute('exec_id'));
+  return current_exec_id < min_exec_id ? current : min;
+});
+// get cell id
+var cell_id = running.parentElement.parentElement.parentElement
+cell_id = parseInt(cell_id.getAttribute("cell_id"))
+"""+appending_script))
+
 def ipynb_id_setup(reload: bool=False)->None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
     if reload==True:
