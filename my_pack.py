@@ -33,6 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
+## may need testing ##
 def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
     """"For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation"""
     # in case not done so already
