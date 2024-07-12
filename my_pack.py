@@ -68,6 +68,7 @@ def dynamic_js_wrapper(func: Callable[bool,...])->None:
             print(f"notebook can already {temp}")
     return wrapper
 
+########## may need some more testing ##########
 @dynamic_js_wrapper
 def generate_exec_ids(reload: bool=False)->None:
     """
@@ -114,6 +115,7 @@ const observers = promptNodes.map(element => {
     start_obs(element)
     return observer;
 });"""))
+################################################
 
 @dynamic_js_wrapper
 def generate_cell_ids(reload: bool=False)->None:
