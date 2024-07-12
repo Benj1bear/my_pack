@@ -104,11 +104,11 @@ const observers = promptNodes.map(element => {
             // the mutation observer will likely pick up these changes 
             // therefore we disconnect the observer while changes occur
             ignore_set(element)
-            console.log('exec_id ',element.parentElement.parentElement.parentElement.code_cell_id,' status:  Executing');
+            console.log('exec_id ',element.exec_id,' status:  Executing');
             exec_id+=1
         }else if(element.hasAttribute("exec_id") == true){
             ignore_set(element,true)
-            console.log('exec_id ',element.parentElement.parentElement.parentElement.code_cell_id,' status:  Done');
+            console.log('exec_id ',element.exec_id,' status:  Done');
         }
     });
     start_obs(element)
