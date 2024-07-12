@@ -39,7 +39,7 @@ def refresh()->None:
 
 def dynamic_js_wrapper(func: Callable[bool])->None:
     """wrapper function for dynamically created javascript functions to save code"""
-    def wrapper(reload=False):
+    def wrapper(reload: bool=False):
         """wrapper ensures no appending of duplicate scripts and reloading if necessary"""
         name = str(func).split()[1]
         if reload:
