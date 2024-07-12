@@ -51,6 +51,7 @@ running = running.reduce((min, current) => {
 // get cell id
 var cell_id = running.parentElement.parentElement.parentElement
 cell_id = parseInt(cell_id.getAttribute("cell_id"))
+Jupyter.notebook.get_cell(cell_id)
 """+appending_script))
 
 def ipynb_id_setup(reload: bool=False)->None:
