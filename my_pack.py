@@ -68,15 +68,14 @@ def dynamic_js_wrapper(func: Callable[bool,...])->None:
             print(f"notebook can already {temp}")
     return wrapper
 
-########## needs testing on initial load; for some reason it doesn't detect when it's   ##########
-########## initialization finishes otherwise it works as intended and there's no issues ##########
 @dynamic_js_wrapper
 def generate_exec_ids(reload: bool=False)->None:
     """
-    For generating cell ids in jupyter notebook
+    For generating execution order ids and status in jupyter notebook
     
     to retrieve use: document.querySelectorAll("[exec_id],[exec_status]")
     """
+    # on keyboard interrupt all executing needs to change
     display(Javascript("""var exec_id=0;
 const promptNodes = Array.from(document.querySelectorAll('.prompt.input_prompt'));
 // foreach node
@@ -93,30 +92,31 @@ const observers = promptNodes.map(element => {
         observer.disconnect();
         // make necessary changes while disconnected
         if(done==true){
-            el.exec_status = "done"
+            el.setAttribute("exec_status","done")
         }else{
             el.setAttribute("exec_status","Executing")
             el.setAttribute("exec_id",exec_id)
         }
         start_obs(el)
+        return el 
     }
     const observer = new MutationObserver((mutations) => {
-        // set id and status on execution else change status
+        // set id and status on execution then change status on finish
         if((element.hasAttribute("exec_id") == false) || (element.innerHTML == '<bdi>In</bdi>&nbsp;[*]:')){
             // the mutation observer will likely pick up these changes 
             // therefore we disconnect the observer while changes occur
-            ignore_set(element)
-            console.log('exec_id ',element.exec_id,' status:  Executing');
+            element=ignore_set(element)
+            console.log('exec_id ',element.getAttribute('exec_id'),' status:  Executing');
             exec_id+=1
-        }else if(element.hasAttribute("exec_id") == true){
-            ignore_set(element,true)
-            console.log('exec_id ',element.exec_id,' status:  Done');
+        }
+        if((element.hasAttribute("exec_id") == true) && (element.innerHTML != '<bdi>In</bdi>&nbsp;[*]:')){
+            element=ignore_set(element,true)
+            console.log('exec_id ',element.getAttribute('exec_id'),' status:  Done');
         }
     });
     start_obs(element)
     return observer;
 });"""))
-################################################
 
 @dynamic_js_wrapper
 def generate_cell_ids(reload: bool=False)->None:
