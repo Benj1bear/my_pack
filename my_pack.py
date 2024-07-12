@@ -63,7 +63,7 @@ def ipynb_id_setup(reload: bool=False)->None:
             return refresh()
         except:None
     generate_cell_ids()
-    generate_exec_ids()
+    generate_exec_ids() ## bug is somewhere in here ##
 ###############################################
 
 def refresh()->None:
