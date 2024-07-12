@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def refresh(keep_modules=True):
+def refresh():
     """Refreshes jupyter notebook"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
