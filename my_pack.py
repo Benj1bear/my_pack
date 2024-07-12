@@ -33,11 +33,10 @@ from inspect import getfile
 import sys
 from functools import partial
 
-## may need testing ##
 def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
     """"For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation"""
     # in case not done so already
-    ipynb_id_setup()
+    ipynb_id_setup() ## doesn't work if directly after its import ##
     display(Javascript("""
 // get the elements
 let running=document.querySelectorAll("[exec_id],[exec_status]")
@@ -54,6 +53,7 @@ var cell_id = running.parentElement.parentElement.parentElement
 cell_id = parseInt(cell_id.getAttribute("cell_id"))
 """+appending_script))
 
+## doesn't work if directly after its import ##
 def ipynb_id_setup(reload: bool=False)->None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
     if reload==True:
@@ -64,6 +64,7 @@ def ipynb_id_setup(reload: bool=False)->None:
         except:None
     generate_cell_ids()
     generate_exec_ids()
+###############################################
 
 def refresh()->None:
     """Refreshes jupyter notebook; it will save the current page as well"""
