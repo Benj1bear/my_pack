@@ -39,7 +39,7 @@ def ipynb_id_setup(reload: bool=False)->None:
         try:
             del os.environ["__generate_cell_ids__"]
             del os.environ["__generate_exec_ids__"]
-            refresh()
+            return refresh()
         except:None
     generate_cell_ids()
     generate_exec_ids()
@@ -121,19 +121,21 @@ const observers = promptNodes.map(element => {
 @dynamic_js_wrapper
 def generate_cell_ids(reload: bool=False)->None:
     """
-    For generating cell ids in jupyter notebook
+    For generating execution order ids and status in jupyter notebook
+
+    For use via the jupyter notebook api use: Jupyter.notebook.get_cell(cell_id)
     
     to retrieve use: document.querySelectorAll('[code_cell_id]')
     """
-    display(Javascript("""var number_of_code_cells=0;
+    display(Javascript("""var number_of_cells=0;
 function update_cell_id(){
-    let cells=$(".cell.code_cell")
+    let cells=$(".cell")
     let length=cells.length
-    if (length != number_of_code_cells){
+    if (length != number_of_cells){
         // renumber all cell ids so that they are in index order
-        number_of_code_cells=length
-        for (let i = 0; i < number_of_code_cells; i++){
-            cells[i].setAttribute("code_cell_id", i)
+        number_of_cells=length
+        for (let i = 0; i < number_of_cells; i++){
+            cells[i].setAttribute("cell_id", i)
         }
     }
 }
