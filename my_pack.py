@@ -33,26 +33,46 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def clear_line(line: int=-1)->None:
+    """
+    For clearing lines in jupyter notebook output areas
+    Make sure ipynb_id_setup() has been ran first since its required and it 
+    will only be active on a new mutation of a notebook cell not during.
+    """
+    # get output_areas, remove select line
+    append=f"""var cell_stdout=runnin.parentElement.parentElement.parentElement.childNodes[1].childNodes[1].childNodes;
+// remove the last output
+Array.from(cell_stdout).at({line-1}).remove();
+// remove the html created
+Array.from(cell_stdout).at({line}).remove();
+"""
+    get_executing_cell(append)
+
 def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
-    """"For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation"""
-    # in case not done so already
-    ipynb_id_setup()
-    display(Javascript("""
+    """"
+    For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation
+    
+    Make sure ipynb_id_setup() has been ran first since its required and it 
+    will only be active on a new mutation of a notebook cell not during.
+    
+    // to get cell id
+    var cell_id = runnin.parentElement.parentElement.parentElement
+    cell_id = parseInt(cell_id.getAttribute("cell_id"))
+    Jupyter.notebook.get_cell(cell_id)
+    """
+    display(HTML("""<script id="get_executing_cell">
 // get the elements
-let running=document.querySelectorAll("[exec_id],[exec_status]")
+var runnin=document.querySelectorAll("[exec_id],[exec_status]")
 // filter to those that are executing
-running=Array.from(running).filter(el => el.getAttribute('exec_status') === 'Executing');
+runnin=Array.from(runnin).filter(el => el.getAttribute('exec_status') === 'Executing');
 // get the element with the lowest exec_id
-running = running.reduce((min, current) => {
+runnin = runnin.reduce((min, current) => {
   let current_exec_id = parseInt(current.getAttribute('exec_id'));
   let min_exec_id = parseInt(min.getAttribute('exec_id'));
   return current_exec_id < min_exec_id ? current : min;
 });
-// get cell id
-var cell_id = running.parentElement.parentElement.parentElement
-cell_id = parseInt(cell_id.getAttribute("cell_id"))
-Jupyter.notebook.get_cell(cell_id)
-"""+appending_script))
+"""+appending_script+"""
+</script>"""))
 
 def ipynb_id_setup(reload: bool=False)->None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
@@ -182,10 +202,12 @@ def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
     """
     Input validation assurance
     """
-    print(end="\r") ### - will swap out for something more robust soon ###
+    print(end="\r")
     while True:
         response=input(prompt)
         if check(response):break
+        # need to see if ipynb_ids_setup will run within a function before this can work
+        #clear_line() ### for jupyter notebook (need to add an option for regular python CI) ###
     if clear==False:
         display(prompt+response)
     return response
