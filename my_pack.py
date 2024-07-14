@@ -77,11 +77,7 @@ runnin = runnin.reduce((min, current) => {
 def ipynb_id_setup(reload: bool=False)->None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
     if reload==True:
-        try:
-            del os.environ["__generate_cell_ids__"]
-            del os.environ["__generate_exec_ids__"]
-            return refresh()
-        except:None
+        return refresh()
     generate_cell_ids()
     generate_exec_ids()
 
@@ -91,87 +87,78 @@ def refresh()->None:
 
 def dynamic_js_wrapper(func: Callable[bool,...])->None:
     """wrapper function for dynamically created javascript functions to save code"""
-    def wrapper(reload: bool=False):
+    def wrapper(reload: bool=False)->None:
         """wrapper ensures no appending of duplicate scripts and reloading if necessary"""
         name = str(func).split()[1]
         if reload:
-            try:del os.environ[f"__{name}__"]
-            except:None
             return refresh()
-        temp = name.replace("_"," ")
-        if os.getenv(f"__{name}__",False) == False:    
-            print(f"Jupyter notebook will now {temp} for all code cells")
-            temp=func.__doc__.split("to retrieve use: ")[-1].strip()
-            print(f"to retrieve use: {temp}")
-            func(reload)
-            os.environ[f"__{name}__"]="True"
-        else:
-            print(f"notebook can already {temp}")
+        script,call=func(reload)
+        check=f"""{script}
+if(document.querySelectorAll("[id={name}]").length == 1){{
+    {call}
+}}else{{
+    console.log('{name} already exists')
+}}"""
+        display(HTML(f"<script id='{name}'>{check}</script>"))
     return wrapper
 
 @dynamic_js_wrapper
 def generate_exec_ids(reload: bool=False)->None:
-    """
-    For generating execution order ids and status in jupyter notebook
-
-    Note: if it causes crashes then it's because the kernel was restarted
-    but the page was not refreshed, hence the script will get appended
-    
-    to retrieve use: document.querySelectorAll("[exec_id],[exec_status]")
-    """
-    # on keyboard interrupt all executing needs to change
-    display(Javascript("""var exec_id=0;
-const promptNodes = Array.from(document.querySelectorAll('.prompt.input_prompt'));
-// foreach node
-const observers = promptNodes.map(element => {
-    function start_obs(el){
-        observer.observe(el, {
-            attributes: true,
-            characterData: true,
-            childList: true,
-            subtree: false
-        });
+    script="""var exec_id=0;
+const observer = new MutationObserver((mutations) => {
+    for(const mutation of mutations){
+        let element=mutation.target
+        if(element.className == "prompt input_prompt"){
+            // set id and status on execution then change status on finish
+            if((element.hasAttribute("exec_id") == false) || (element.innerHTML == '<bdi>In</bdi>&nbsp;[*]:')){
+                if(element.getAttribute("exec_status") == "Executing"){continue;}
+                // the mutation observer will likely pick up these changes 
+                // therefore we disconnect the observer while changes occur
+                element=ignore_set(element);
+                console.log('exec_id ',element.getAttribute('exec_id'),' status:  Executing');
+                exec_id+=1;
+                if(element.innerHTML != '<bdi>In</bdi>&nbsp;[*]:'){
+                    element=ignore_set(element,true);
+                    console.log('exec_id ',element.getAttribute('exec_id'),' status:  Done');
+                }
+            }else if(element.getAttribute("exec_status") == "Executing"){
+                element=ignore_set(element,true);
+                console.log('exec_id ',element.getAttribute('exec_id'),' status:  Done');
+            }
+        }
     }
-    function ignore_set(el,done=false){
-        observer.disconnect();
-        // make necessary changes while disconnected
-        if(done==true){
-            el.setAttribute("exec_status","Done")
-        }else{
-            el.setAttribute("exec_status","Executing")
-            el.setAttribute("exec_id",exec_id)
-        }
-        start_obs(el)
-        return el 
+});
+function ignore_set(el,done=false){
+    observer.disconnect();
+    // make necessary changes while disconnected
+    if(done==true){
+        el.setAttribute("exec_status","Done")
+    }else{
+        el.setAttribute("exec_status","Executing")
+        el.setAttribute("exec_id",exec_id)
     }
-    const observer = new MutationObserver((mutations) => {
-        // set id and status on execution then change status on finish
-        if((element.hasAttribute("exec_id") == false) || (element.innerHTML == '<bdi>In</bdi>&nbsp;[*]:')){
-            // the mutation observer will likely pick up these changes 
-            // therefore we disconnect the observer while changes occur
-            element=ignore_set(element)
-            console.log('exec_id ',element.getAttribute('exec_id'),' status:  Executing');
-            exec_id+=1
-        }
-        if((element.hasAttribute("exec_id") == true) && (element.innerHTML != '<bdi>In</bdi>&nbsp;[*]:')){
-            element=ignore_set(element,true)
-            console.log('exec_id ',element.getAttribute('exec_id'),' status:  Done');
-        }
+    start_obs(el)
+    return el
+}
+function start_obs(){
+    observer.observe(document.getElementById("notebook-container"), {
+        childList: true,
+        subtree: true
     });
-    start_obs(element)
-    return observer;
-});"""))
+}"""
+    call="start_obs()"
+    return script,call
 
 @dynamic_js_wrapper
 def generate_cell_ids(reload: bool=False)->None:
     """
     For generating execution order ids and status in jupyter notebook
-
-    For use via the jupyter notebook api use: Jupyter.notebook.get_cell(cell_id)
     
     to retrieve use: document.querySelectorAll('[code_cell_id]')
+    
+    For use via the jupyter notebook api use: Jupyter.notebook.get_cell(cell_id)
     """
-    display(Javascript("""var number_of_cells=0;
+    script="""var number_of_cells=0;
 function update_cell_id(){
     let cells=$(".cell")
     let length=cells.length
@@ -182,8 +169,39 @@ function update_cell_id(){
             cells[i].setAttribute("cell_id", i)
         }
     }
-}
-setInterval(update_cell_id, 100);"""))
+}"""
+    call="setInterval(update_cell_id, 100);"
+    return script,call
+
+def check_js(file:str)->str:
+    if len(file.split(".")[0]) == 0:
+        raise Exception(f"Invalid filename: '{file}'")
+    if file[-3:] == ".js":
+        file = file[:-3]
+    return file
+
+def import_js(file:str,id:str="")->None:
+    """
+    For importing javascript files while avoiding duplicating from appending scripts
+    To remove them use refresh()
+    """
+    file=check_js(file)
+    load=f"""if (document.getElementById('{file+id}') == null){{
+    const script = document.createElement('script');
+    script.id = '{file+id}';
+    script.src = '{file}.js';
+    document.body.appendChild(script);
+    console.log('{file}.js loaded');
+}}else{{console.log('{file}.js is already loaded');}}
+"""
+    display(Javascript(load))
+
+def remove_html_el(id:str="")->None:
+    """
+    For removing html elements by id 
+    """
+    display(Javascript(f"document.getElementById('{id}').remove();"))
+    print(f"removed element: {id}")
 
 def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
     """
@@ -370,58 +388,6 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
     if join == True:
         return "\n".join(ls)
     return ls
-
-def check_js(file:str)->str:
-    if len(file.split(".")[0]) == 0:
-        raise Exception(f"Invalid filename: '{file}'")
-    if file[-3:] == ".js":
-        file = file[:-3]
-    return file
-
-def import_js(file:str,id:str="")->None:
-    """
-    For importing javascript files while avoiding duplicating from appending scripts
-    To remove them use refresh()
-    """
-    file=check_js(file)
-    get="""
-let string=document.getElementById('"""+file+id+"""');
-console.log(string)
-if (string == null){
-    const script = document.createElement('script');
-    script.id = '"""+file+id+"""';
-    script.src = '"""+file+""".js';
-    document.body.appendChild(script);
-    Jupyter.notebook.select_prev();
-    let cell = Jupyter.notebook.get_selected_cell();
-    let txt = cell.get_text();
-    let string='"""+file+id+"""'+'.js loaded'
-    cell.set_text("print('"+string+"')");
-    cell.execute();
-    cell = Jupyter.notebook.get_selected_cell();
-    cell.set_text(txt);
-    console.log(string);
-} else{
-    Jupyter.notebook.select_prev();
-    let cell = Jupyter.notebook.get_selected_cell();
-    let txt = cell.get_text();
-    let string = '"""+file+id+"""'+'.js already loaded'
-    cell.set_text("print('"+string+"')");
-    cell.execute();
-    cell = Jupyter.notebook.get_selected_cell();
-    cell.set_text(txt);
-    console.log(string);
-}
-Jupyter.notebook.select_next();
-"""
-    display(Javascript(get))
-
-def remove_html_el(id:str="")->None:
-    """
-    For removing html elements by id 
-    """
-    display(Javascript(f"document.getElementById('{id}').remove();"))
-    print(f"removed element: {id}")
 
 def get_requirements(filename:str,unique=True)->list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
