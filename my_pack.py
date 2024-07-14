@@ -104,6 +104,13 @@ if(document.querySelectorAll("[id={name}]").length == 1){{
 
 @dynamic_js_wrapper
 def generate_exec_ids(reload: bool=False)->None:
+    """
+    For generating execution order ids and status in jupyter notebook
+    Note: if it causes crashes then it's because the kernel was restarted
+    but the page was not refreshed, hence the script will get appended
+    
+    to retrieve use: document.querySelectorAll("[exec_id],[exec_status]")
+    """
     script="""var exec_id=0;
 const observer = new MutationObserver((mutations) => {
     for(const mutation of mutations){
