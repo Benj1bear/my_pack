@@ -210,6 +210,13 @@ def remove_html_el(id:str="")->None:
     display(Javascript(f"document.getElementById('{id}').remove();"))
     print(f"removed element: {id}")
 
+def has_IPython():
+    """Checks for IPython"""
+    if get_ipython() == None:
+        return False
+    else:
+        return True
+
 def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
     """
     loops through a list of elements applying some function to each element
@@ -228,11 +235,15 @@ def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
     Input validation assurance
     """
     print(end="\r")
+#    if has_IPython():
+#        line_clear=clear_line
+#    else:
+#        line_clear=(lambda:print("\033[A\033[J\033[A")) # partial(print,"\033[A\033[J\033[A") is also possible
     while True:
         response=input(prompt)
         if check(response):break
         # need to see if ipynb_ids_setup will run within a function before this can work
-        #clear_line() ### for jupyter notebook (need to add an option for regular python CI) ###
+        #line_clear()
     if clear==False:
         display(prompt+response)
     return response
