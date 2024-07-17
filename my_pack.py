@@ -9,7 +9,7 @@ from io import StringIO
 import json
 from bs4 import BeautifulSoup
 import requests
-from IPython.display import display, Markdown,HTML,Javascript,clear_output
+from IPython.display import display,Markdown,HTML,Javascript,clear_output
 from IPython import get_ipython
 import html5lib
 import subprocess
@@ -45,8 +45,7 @@ def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
     # Give R the dataframe
     read_pd_DataFrame=f"df=read.table(text = '{temp}',check.names=FALSE)"
     # store R data into a dataframe for conversion to string data
-    send_string="""
-library(stringr)
+    send_string="""library(stringr)
 to_list=function(item){
   return(paste("[",toString(item) |> str_sub(3, -2),"]"))
 }
