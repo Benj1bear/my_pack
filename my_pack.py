@@ -4,7 +4,7 @@ This module holds all the libraries and functions I use
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-#from plotnine import *
+#from plotnine import * ## For using R's ggplot in python ##
 from io import StringIO
 import json
 from bs4 import BeautifulSoup
@@ -20,11 +20,10 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 import time
-###########
 #from types import ModuleType
-from typing import Any, Callable
+from typing import Any,Callable
 import tempfile
-from importlib.util import module_from_spec, spec_from_loader
+from importlib.util import module_from_spec,spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
 import re
 import glob
@@ -33,13 +32,13 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def display_obj(file: str,height: float|int=500,width: float|int=500,type: str="")->None:
+def display_obj(file: str,height: float|int=500,width: float|int=500,type: str="") -> None:
     """For displaying html objects"""
     render(f"""<object height="{height}" width="{width}" type="{type}" data="{file}">
     Filename Error: Make sure the name of the file is correct
 </object>""")
 
-def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
+def run_r_script(df: pd.DataFrame|pd.Series,script: str="") -> pd.DataFrame:
     """
     For sending and recieving structured data from python to R to python
     e.g. as pd.DataFrame => data.frame => pd.DataFrame
@@ -75,22 +74,21 @@ df |> convert_to_csv()
     # convert to pandas dataframe
     return pd.DataFrame(list(tup[1:]),index=tup[0]).T
 
-def clear_line(line: int=-1)->None:
+def clear_line(line: int=-1) -> None:
     """
     For clearing lines in jupyter notebook output areas
     Make sure ipynb_id_setup() has been ran first since its required and it 
     will only be active on a new mutation of a notebook cell not during.
     """
     # get output_areas, remove select line
-    append=f"""var cell_stdout=runnin.parentElement.parentElement.parentElement.childNodes[1].childNodes[1].childNodes;
-// remove the last output
+    get_executing_cell(f"""var cell_stdout=runnin.parentElement.parentElement.parentElement.childNodes[1].childNodes[1].childNodes;
+// remove the selected line in the output area
 Array.from(cell_stdout).at({line-1}).remove();
 // remove the html created
 Array.from(cell_stdout).at({line}).remove();
-"""
-    get_executing_cell(append)
+""")
 
-def get_executing_cell(appending_script: str="console.log(cell_id);")->None:
+def get_executing_cell(appending_script: str="console.log(cell_id);") -> None:
     """"
     For retrieving the currently executing cells id in jupyter notebook for enabling cell manipulation
     
@@ -116,18 +114,18 @@ runnin = runnin.reduce((min, current) => {
 """+appending_script+"""
 </script>"""))
 
-def ipynb_id_setup(reload: bool=False)->None:
+def ipynb_id_setup(reload: bool=False) -> None:
     """For setting up cell_id and exec_id/exec_status for all code cells"""
     if reload==True:
         return refresh()
     generate_cell_ids()
     generate_exec_ids()
 
-def refresh()->None:
+def refresh() -> None:
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
-def dynamic_js_wrapper(func: Callable[bool,...])->None:
+def dynamic_js_wrapper(func: Callable[bool,...]) -> None:
     """wrapper function for dynamically created javascript functions to save code"""
     def wrapper(reload: bool=False)->None:
         """wrapper ensures no appending of duplicate scripts and reloading if necessary"""
@@ -145,7 +143,7 @@ if(document.querySelectorAll("[id={name}]").length == 1){{
     return wrapper
 
 @dynamic_js_wrapper
-def generate_exec_ids(reload: bool=False)->None:
+def generate_exec_ids(reload: bool=False) -> None:
     """
     For generating execution order ids and status in jupyter notebook
     Note: if it causes crashes then it's because the kernel was restarted
@@ -199,7 +197,7 @@ function start_obs(){
     return script,call
 
 @dynamic_js_wrapper
-def generate_cell_ids(reload: bool=False)->None:
+def generate_cell_ids(reload: bool=False) -> None:
     """
     For generating execution order ids and status in jupyter notebook
     
@@ -222,14 +220,14 @@ function update_cell_id(){
     call="setInterval(update_cell_id, 100);"
     return script,call
 
-def check_js(file:str)->str:
+def check_js(file: str) -> str:
     if len(file.split(".")[0]) == 0:
         raise Exception(f"Invalid filename: '{file}'")
     if file[-3:] == ".js":
         file = file[:-3]
     return file
 
-def import_js(file:str,id:str="")->None:
+def import_js(file: str,id: str="") -> None:
     """
     For importing javascript files while avoiding duplicating from appending scripts
     To remove them use refresh()
@@ -245,21 +243,21 @@ def import_js(file:str,id:str="")->None:
 """
     display(Javascript(load))
 
-def remove_html_el(id:str="")->None:
+def remove_html_el(id: str="") -> None:
     """
     For removing html elements by id 
     """
     display(Javascript(f"document.getElementById('{id}').remove();"))
     print(f"removed element: {id}")
 
-def has_IPython():
+def has_IPython() -> bool:
     """Checks for IPython"""
     if get_ipython() == None:
         return False
     else:
         return True
 
-def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
+def list_loop(ls: Any,FUNC: Callable=lambda x:x) -> list[Any]|Any:
     """
     loops through a list of elements applying some function to each element
     """
@@ -272,7 +270,7 @@ def list_loop(ls: Any,FUNC: Callable=lambda x:x)->list[Any]|Any:
         return returns[0]
     return returns
 
-def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
+def in_valid(prompt: str,check: Callable,clear: bool=False) -> str:
     """
     Input validation assurance
     """
@@ -291,21 +289,20 @@ def in_valid(prompt: str,check: Callable,clear: bool=False)->str:
     return response
 
 class input_ext:
-    """
-    extension to the input function for inputting and/or validating more than one prompt
-    """
-    def __init__(self,prompts: Any="")->None:
+    """extension to the input function for inputting and/or validating more than one prompt"""
+    def __init__(self,prompts: Any="") -> None:
+        """gets the prompts"""
         self.prompts=prompts
-    @property
-    def loop(self)->list[Any]|Any:
+        
+    def loop(self) -> list[Any]|Any:
+        """goes through each prompt for inputs"""
         return list_loop(self.prompts,input)
-    def check(self,check=lambda x: 1,clear=False)->list[Any]|Any:
-        """
-        For jupyter notebook (I guess there's a bug or something I don't know of when using print(end="\r")?)
-        """
+
+    def check(self,check: Callable=lambda x: 1,clear: bool=False) -> list[Any]|Any:
+        """For validating inputs"""
         return list_loop(self.prompts,partial(in_valid,**{"check":check,"clear":clear}))
 
-def check_and_get(packages:list[str]=[],full_consent = False)->None:
+def check_and_get(packages: list[str]=[],full_consent: bool=False) -> None:
     """Gets packages that are currently not installed"""
     # first check the builtins then the pypi libraries
     standard_library = sys.stdlib_module_names
@@ -334,7 +331,7 @@ def check_and_get(packages:list[str]=[],full_consent = False)->None:
         else:
             print(package+" successfully installed\n")
 
-def all_packs()->pd.DataFrame:
+def all_packs() -> pd.DataFrame:
     """Retrieves all packages and returns as a pd.DataFrame"""
     ls=subprocess.run("pip list",capture_output=True).stdout.decode("utf-8")
     ls = ls.split("\r\n")
@@ -342,7 +339,7 @@ def all_packs()->pd.DataFrame:
     ls = [re.split(r"\s{2,}",i) for i in ls]
     return pd.DataFrame(ls[1:],columns=ls[0])
 
-def get_functions(code:str)->(list[int],list[int]):
+def get_functions(code: str) -> (list[int],list[int]):
     """finds function definitions in strings"""
     # get starting indexes for all 'def ' statements made
     indexes=line_sep(code,"def ",exact_index=True)
@@ -358,7 +355,7 @@ def get_functions(code:str)->(list[int],list[int]):
                     break
     return indexes,end
 
-def to_module(code:str)->Callable[..., Any]:
+def to_module(code: str) -> Callable[..., Any]:
     """
     converts a string to a python module object that associates with a temporary file for getting source code
     # code reference: Sottile, A., (2020) https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5,CC BY-SA,
@@ -386,7 +383,7 @@ def to_module(code:str)->Callable[..., Any]:
     sys.modules[module_name] = module
     return module
 
-def inherit(class_name:object,*args:object)->object:
+def inherit(class_name: object,*args: object) -> object:
     """Adds inheritence to a choosen classname. This works for nested classes as well"""
     # get the names
     def get_name(x):
@@ -402,17 +399,17 @@ def inherit(class_name:object,*args:object)->object:
 
 @property
 class str_df:
-    # define your new methods
-    def __init__(self, df:pd.DataFrame)->None:
+    """String accessor extension for pd.DataFrame"""
+    def __init__(self,df: pd.DataFrame) -> None:
         self.__df = df # save df as private variable
     # use df in methods
-    def __getitem__(self,index)->pd.DataFrame:
+    def __getitem__(self,index: list) -> pd.DataFrame:
         return self.__df.map(lambda x:x[index])
-    def split(self,sep:str=None)->pd.DataFrame:
+    def split(self,sep: str=None) -> pd.DataFrame:
         return self.__df.map(lambda x:x.split(sep))
 pd.DataFrame.str=str_df
 
-def req_file(directory:str="")->None:
+def req_file(directory: str="") -> None:
     """
     writes a requirements .txt file for .py and .ipynb files with modules version 
        
@@ -432,7 +429,7 @@ def req_file(directory:str="")->None:
         file.write(required)
     print("done")
 
-def read_ipynb(filename:str,join=False)->list[str]|str:
+def read_ipynb(filename: str,join: bool=False) -> list[str]|str:
     """readlines a jupyter notebook"""
     if filename[-6:] != ".ipynb":
         filename+=".ipynb"
@@ -449,7 +446,7 @@ def read_ipynb(filename:str,join=False)->list[str]|str:
         return "\n".join(ls)
     return ls
 
-def get_requirements(filename:str,unique=True)->list[str]:
+def get_requirements(filename: str,unique: bool=True) -> list[str]:
     """Reads a .py or .ipynb file and tells you what requirements are used (ideally)"""
     if filename.split(".")[1] == "ipynb":
         filtered = pd.Series(read_ipynb(filename))
@@ -475,7 +472,7 @@ def get_requirements(filename:str,unique=True)->list[str]:
     # return as a list
     return list(filtered)
 
-def req_search(directory:str="",allowed_extensions:list[str]=["py","ipynb"])->list[str]:
+def req_search(directory: str="",allowed_extensions: list[str]=["py","ipynb"]) -> list[str]:
     """
     Searches a directory and all its' subdirectories
     for .py or .ipynb files that are then checked for their requirements
@@ -499,7 +496,7 @@ def req_search(directory:str="",allowed_extensions:list[str]=["py","ipynb"])->li
     # return only the unique requirements
     return list(set(requirements))
         
-def install(library_name:str,directory:str="",setup=True,get_requirements=True,defaults=True,default_config:str="PYTHON_SETUP_DEFAULTS.pkl")->None:
+def install(library_name: str,directory: str="",setup: bool=True,get_requirements: bool=True,defaults: bool=True,default_config: str="PYTHON_SETUP_DEFAULTS.pkl") -> None:
     """
     Creates necessary files for a library that can be accessed globally 
     on your local machine created in the same directory as the script 
@@ -570,7 +567,7 @@ setup(
         os.chdir(current_dir)
         print(e)
 
-def uninstall(library_name:str,keep_setup=True)->None:
+def uninstall(library_name: str,keep_setup: bool=True) -> None:
     """
     Runs pip uninstall library_name 
     with the option of removing the
@@ -619,7 +616,7 @@ def uninstall(library_name:str,keep_setup=True)->None:
         print(e)
         print("if the module name and directory is correct you may need to restart the kernel if the import doesn't work")
 
-def git_clone(url:list[str]|str=[],directory:list[str]|str=[],repo=True)->None:
+def git_clone(url: list[str]|str=[],directory: list[str]|str=[],repo: bool=True) -> None:
     """For cloning multiple github repos or files into choosen directories"""
     if type(directory) == str:
         directory=[directory]
@@ -654,7 +651,7 @@ def git_clone(url:list[str]|str=[],directory:list[str]|str=[],repo=True)->None:
                 print("Failed retrieving "+file+":\n\n")
                 print(e)
 
-def unstr(x:str)->Any:
+def unstr(x: str) -> Any:
     """
     Allows simple conversion of a string of a type to its type
     globals()[x] gets deleted to free the memory so that all
@@ -663,7 +660,7 @@ def unstr(x:str)->Any:
     exec("temp="+x)
     return locals()["temp"]
 
-def prep(line:str,FUNC,operator:str)->str:
+def prep(line: str,FUNC: Callable,operator: str) -> str:
     """
     Takes a line splits on binary operator and rewrites with the relevant function
     If wanting all custom code interpretations you may omit all the code here and just
@@ -690,11 +687,11 @@ def prep(line:str,FUNC,operator:str)->str:
         return "=".join(assignments)
     return assignments[0]
 
-def indx_split(indx:list[int]=[],string:str="")->list[str]:
+def indx_split(indx: list[int]=[],string: str="") -> list[str]:
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
 
-def line_sep(string:str,op:str,sep:str="",split=True,index=False,exact_index=False,avoid:str="\"'")->list[int]|str|list[str]:
+def line_sep(string: str,op: str,sep: str="",split: bool=True,index: bool=False,exact_index: bool=False,avoid :str="\"'") -> list[int]|str|list[str]:
     """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
@@ -743,7 +740,7 @@ def line_sep(string:str,op:str,sep:str="",split=True,index=False,exact_index=Fal
     # since it's already formatted
     return "".join(ls)
 
-def get_indents(line:str)->str:
+def get_indents(line: str) -> str:
     """Gets the number of python valid indentations for a line and then scales indentation accordingly"""
     n_white_space=0
     for char in line:
@@ -755,7 +752,7 @@ def get_indents(line:str)->str:
         raise Exception("indentations must be 4 spaces to be valid:"+line)
     return " "*n_white_space
 
-def bracket_up(string:str,start:str="(",end:str=")",avoid:str="\"'")->pd.DataFrame:
+def bracket_up(string: str,start :str="(",end: str=")",avoid: str="\"'") -> pd.DataFrame:
     """ For pairing bracket indexes """
     indx=0
     left=[]
@@ -779,9 +776,10 @@ def bracket_up(string:str,start:str="(",end:str=")",avoid:str="\"'")->pd.DataFra
     return pd.DataFrame(ls,columns=["start","end","in_string","encapsulation_number"])
 
 ### needs testing but seems okay ###
-def func_dict(string):
+def func_dict(string: str) -> str:
     """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """
-    def dict_format(temp,commas,section,old_section_length,start,adjust):
+
+    def dict_format(temp: int,commas: pd.Series|pd.DataFrame,section: list,old_section_length: int,adjust: int) -> (list,int):
         """For formatting (a=3) into {"a":3}"""
         comma=commas[commas <= temp].iloc[0] # the min it can be is 0 so... does this matter?
         # getting (no temp + 1 here because we want to exclude the '=')
@@ -795,7 +793,8 @@ def func_dict(string):
         # we need to use adjust because the length of the section keeps changing
         adjust=old_section_length-len(section)
         return section,adjust
-    def dict_format_check(start,end,string_ls):
+
+    def dict_format_check(start: int,end: int,string_ls: list) -> list:
         """Checks a string and modifies it into a dict format as specified"""
         # get relevant data
         adjust=0
@@ -824,8 +823,9 @@ def func_dict(string):
         if old_section_length != len(section):
             string_ls[start:end+1]=[" "]+["{"]+section[:-1]+["}"]
         return string_ls
+
     # get the bracket information
-    def get_brackets(ls,filter_out=""):
+    def get_brackets(ls: list,filter_out: str="") -> pd.Series|pd.DataFrame:
         df = bracket_up("".join(ls))
         if filter_out != "":
             df = df[df["start"] != filter_out]
@@ -833,6 +833,7 @@ def func_dict(string):
             return df[df["in_string"] == 0].sort_values("encapsulation_number",ignore_index=True,ascending=False)
         except: # len(df) == 0
             return df
+
     # format the string
     string_ls=list(string)
     old_string_length = len(string_ls)
@@ -847,7 +848,7 @@ def func_dict(string):
         df=get_brackets(string_ls,filter_out)
     return "".join(string_ls)
 
-def pipe_func_dict(string):
+def pipe_func_dict(string: str) -> str:
     """prep dicts used in piping"""
     string = func_dict(string)
     ls=string.split(" ")
@@ -890,7 +891,7 @@ def line_enclose(string,start,end,FUNC="",sep="",separate=False):
 ###################################################################
 
 ### seems to work but needs testing ###
-def interpret(code:str,checks=[],operators:str=[])->str:
+def interpret(code: str,checks: list[Callable]=[],operators: str=[]) -> str:
     """Checks code against a custom set of rules for how code should be formated"""
     # to allow for multi-line open bracket expressions
     df=bracket_up(code,start="({[",end="]})")
@@ -932,7 +933,7 @@ def interpret(code:str,checks=[],operators:str=[])->str:
     except:
         return lines[0]
 
-def str_anti_join(string1:str,string2:str)->str:
+def str_anti_join(string1: str,string2: str) -> str:
     """anti_joins strings sequentially e.g. assuming appendment"""
     diff=len(string2) - len(string1)
     if diff != 0:
@@ -952,28 +953,28 @@ def str_anti_join(string1:str,string2:str)->str:
     return "".join(temp)
 
 ## background processing
-def create_variable(name):
+def create_variable(name: str) -> None:
     globals()[name] = []
 
 standing_by_count=0
-def stand_by():
+def stand_by() -> None:
     global standing_by_count
     time.sleep(1)
     print(standing_by_count)
     standing_by_count+=1   
 
-def stop_process(ID):
+def stop_process(ID: int) -> None:
     globals()["process "+str(ID)]=True
 
-def show_process():
+def show_process() -> None:
     global ids_used
     for i in range(ids_used):
         try:print("process "+str(i+1)+" running...")
         except:None
 
 ids_used=0
-def background_process(FUNC=stand_by,*args,**kwargs):
-    def process():
+def background_process(FUNC: Callable=stand_by,*args,**kwargs) -> None:
+    def process() -> None:
         # create an id
         global ids_used
         ids_used+=1
@@ -989,7 +990,7 @@ def background_process(FUNC=stand_by,*args,**kwargs):
 
 try:current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
 except:None
-def capture(interpret_code=True):
+def capture(interpret_code: bool=True) -> None:
     """
     Function to capture the inputs in real time (only works in jupyter notebook because of the 'In' variable)
     The only issues with it is that because it runs on a thread it therefore can only work one cell at a time
@@ -1024,7 +1025,7 @@ def capture(interpret_code=True):
         # make sure the current execution is updated
         current_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
 
-def partition(number_of_subsets,interval):
+def partition(number_of_subsets: int,interval: int) -> list:
     """
     Creates the desired number of partitions on a range.
     Accepts integers for the number_of_subsets but will 
@@ -1039,10 +1040,11 @@ def partition(number_of_subsets,interval):
         interval_partitions += [[partitions[i],partitions[i+1]]]
     return interval_partitions
 
-def thread_runs():
+def thread_runs() -> bool:
+    """checks if thread is still running"""
     return os.getenv('FORCE_STOP', True) == "False"
 
-def multi_thread(number_of_threads,interval_length,FUNC,part=False):
+def multi_thread(number_of_threads: int,interval_length: int,FUNC: Callable,part: bool=False) -> None|list:
     """
     My own multi-threading function
 
@@ -1083,7 +1085,7 @@ def multi_thread(number_of_threads,interval_length,FUNC,part=False):
     os.environ["FORCE_STOP"] = "False"
     # setup thread_count
     global thread_count,errors
-    def wait():
+    def wait() -> None|list:
         """
         used last to wait for threads to finish and retrieve variables.
         
@@ -1109,7 +1111,7 @@ def multi_thread(number_of_threads,interval_length,FUNC,part=False):
                 del globals()[name]
             return temp
 
-    def template(variable=[],i=[],parts=[]):
+    def template(variable: str=[],i: int=[],parts: list=[]) -> None:
         """Used to prevent duplicate code and for ease of use"""
         global thread_count,threads_stopped,errors
         errors=[]
@@ -1164,7 +1166,7 @@ def multi_thread(number_of_threads,interval_length,FUNC,part=False):
         return wait(),errors # defined twice in case keyboard interrupt occurs
     # once it's out of the loops that means we're waiting on the threads to finish
 
-def skip(iter_val,n):
+def skip(iter_val: iter,n: int) -> None:
     """
     Skips the next n iterations in a for loop
     
@@ -1176,7 +1178,7 @@ def skip(iter_val,n):
     for _ in range(n):
         next(iter_val)
 
-def argmiss(returns,temp,func):
+def argmiss(returns: dict|tuple,temp: dict|tuple,func: Callable) -> Callable[Any,...]:
     """
     Sorts out the combinations of missing arguements
     
@@ -1201,7 +1203,7 @@ def argmiss(returns,temp,func):
             return func(*(*returns,*temp))
         return func(*(*returns,temp))
 
-def pipe(*args,reverse=False):
+def pipe(*args,reverse: bool=False) -> Callable[Any,...]:
     """
     pipe operator for python without class overriding methods (that require additional overhead)
         
@@ -1271,11 +1273,11 @@ def pipe(*args,reverse=False):
         os.environ["REVERSE_PIPE"] = "False"
     return returns
 
-def standardize(x):
-    scaler=StandardScaler()
-    return pd.DataFrame(scaler.fit_transform(x),columns=x.columns)
+def standardize(x: pd.Series|pd.DataFrame) -> pd.DataFrame:
+    """standardize to pd.Dataframe directly"""
+    return pd.DataFrame(StandardScaler().fit_transform(x),columns=x.columns)
 
-def Type(df=[],ls=[],keep=[],this=True,show=False):
+def Type(df: pd.DataFrame=[],ls: list[str]=[],keep: list[str]=[],this: bool=True,show: bool=False) -> pd.DataFrame:
     """
     Takes in (usually) a dataframe and what datatypes you want/don't want (this=True/False),
     Allowing you to keep columns using keep=[], and allowing you to see all current datatypes using show=True
@@ -1290,7 +1292,7 @@ def Type(df=[],ls=[],keep=[],this=True,show=False):
         df = df[[i for i in df.columns if (df[i].dtype == string) == this]]
     return pd.concat([df,keep],axis=1)
 
-def cprop_plot(occ,part,args={"figsize":(15.5,7.5),"alpha":0.4}):
+def cprop_plot(occ: pd.DataFrame,part: pd.DataFrame,args={"figsize":(15.5,7.5),"alpha":0.4}) -> None:
     """for plotting conditional occurance proportions against participation proportions"""
     colours = R_colours(len(occ.columns[1:]))
     plt.figure(figsize=args["figsize"])
@@ -1302,7 +1304,7 @@ def cprop_plot(occ,part,args={"figsize":(15.5,7.5),"alpha":0.4}):
         plt.scatter(part[i],occ[i],alpha=args["alpha"])
     plt.show()
 
-def multi_cprop(df,cols):
+def multi_cprop(df: pd.DataFrame,cols: list) -> (pd.DataFrame,pd.DataFrame,pd.DataFrame):
     """
     cprop but for multi-classes; though drops the target column as you probably shouldn't include it anyway, 
     else it's not difficult to correct e.g. just use cprop on itself.
@@ -1347,7 +1349,7 @@ def multi_cprop(df,cols):
     participation.columns.name = "participation"
     return occurances,participation,cts
 
-def cprop(df,occurance):
+def cprop(df: pd.DataFrame,occurance: pd.DataFrame) -> (pd.DataFrame,pd.DataFrame):
     """
     occurance must be a binary indicator; Try to use categorical variables for better results
     How to use:
@@ -1380,7 +1382,7 @@ def cprop(df,occurance):
     conditions1["part_prop"] = conditions1["part_prop"]/Total_occurance1[0]
     return conditions0,conditions1
 
-def indicator_encode(data,to=[]):
+def indicator_encode(data: pd.DataFrame,to: list=[]) -> pd.DataFrame:
     """encodes data as positive integers by its set; takes a parameter 'to' for custom mapping"""
     encoding = pd.Series(pd.Series.unique(data)).reset_index().rename(columns={0:data.name})
     if len(to) > 0:
@@ -1393,7 +1395,7 @@ def indicator_encode(data,to=[]):
     encoding.name = data.name
     return encoding
 
-def pairs_matrix(ls1,ls2):
+def pairs_matrix(ls1: list,ls2: list) -> pd.DataFrame:
     """Forms a matrix from two lists"""
     df = pd.DataFrame()
     ls2 = pd.Series(ls2,index=ls2)
@@ -1401,7 +1403,7 @@ def pairs_matrix(ls1,ls2):
         df[i] = i+ls2
     return df
 
-def dupes(data,ID,col):
+def dupes(data: pd.DataFrame,ID: str,col: str) -> pd.DataFrame:
     """
     Checks how many categories an ID represents where duplicated IDs are returned from having more than one value it maps to
     Inputs: data,ID,col
@@ -1412,7 +1414,7 @@ def dupes(data,ID,col):
     display(data)
     return data
 
-def full_sim_check(data):
+def full_sim_check(data: pd.DataFrame) -> pd.DataFrame:
     """
     Takes a pd.DataFrame and returns the unique pairs along with their jaccards similarity
 
@@ -1432,15 +1434,15 @@ def full_sim_check(data):
         new_df = pd.concat([new_df,temp_df],axis=1)
     return new_df
 
-def j_sim_ls(lst2):
+def j_sim_ls(lst2: list) -> float:
     """jaccards similarity of two lists"""
     return jaccard_similarity(set(lst2[0]),set(lst2[1]))
 
-def j_sim(lst1):
+def j_sim(lst1: pd.Series) -> pd.Series|pd.DataFrame:
     """jaccards similarity of a pairs pd.Series e.g. use pairs() first if needed"""
     return lst1.str.split(",").apply(j_sim_ls)
 
-def pairs(lst):
+def pairs(lst: list) -> pd.DataFrame:
     """Takes a list and returns a pd.Series of the unique pairs; works quickly on large data"""
     length=len(lst)
     new_lst_1=[]
@@ -1459,14 +1461,14 @@ def pairs(lst):
     # the next iteration so at the last iteration it should not start again
     return df.iloc[:-1]
 
-def time_formatted(num):
+def time_formatted(num: int) -> str:
     num = 0.01*num
     return str(np.floor(num/60))+" hour/s "+str(np.floor(num % 60))+" minute/s "+str(np.floor((num % 1)*60))+" second/s "
 
-def str_split(x,string):
+def str_split(x: str,string: str) -> list:
     return x.split(string)
 
-def run_r_command(command,R='C:/Program Files/R/R-4.3.1/bin/R.exe'):
+def run_r_command(command: str,R: str='C:/Program Files/R/R-4.3.1/bin/R.exe') -> str:
     """
     Returns R terminal output for python interface 
     
@@ -1481,13 +1483,13 @@ def run_r_command(command,R='C:/Program Files/R/R-4.3.1/bin/R.exe'):
         print(output)
         return None
 
-def nas(data):
+def nas(data: pd.DataFrame|pd.Series) -> int:
     """
     Prints the total number of missing values
     """
     print("\nmissing values ",data.isna().sum().sum())
 
-def R_colours(n):
+def R_colours(n: int) -> pd.Series:
     """
     Runs an R script returning its' default pallete as a pandas series
     """
@@ -1495,7 +1497,7 @@ def R_colours(n):
     df = pd.DataFrame(run_r_command(command).split("#")[1:], columns=['colours'])
     return "#"+df['colours'].str[:6]
 
-def gather(data,axis=0):
+def gather(data: pd.DataFrame|pd.Series,axis: int=0) -> pd.DataFrame:
     """
     Is the inverse function to pd.Series.explode except it only works for pd.DataFrame() objects
     
@@ -1510,7 +1512,7 @@ def gather(data,axis=0):
         # if axis = 1 # retain the rows but the cols won't make sense
         return pd.DataFrame({0:[list(data.loc[i,:]) for i in data.index]},index=data.index)
 
-def validate(model):
+def validate(model: str) -> pd.DataFrame:
     """
     Global validation of the Linear model using the gvlma package from R
     
@@ -1534,7 +1536,7 @@ def validate(model):
     k.iloc[:,2] = k.iloc[:,2]+" "+k.iloc[:,3]+" "+k.iloc[:,4].fillna('') ## add the conclusions
     return k.shift(3,axis=1).drop(columns=[k.columns[0],k.columns[1],k.columns[2]]) ## shift to the right, drop the unwanted columns
      
-def scrape(url,form=None,header=""):
+def scrape(url: str,form: str=None,header: str="") -> str:
     """
     Scrapes a webpage returning the response content or prints an error message when the response code is not 200
     
@@ -1555,7 +1557,7 @@ def scrape(url,form=None,header=""):
         return json.loads(response.content)
     return response.content
 
-def render(html,head=':None'):
+def render(html: str,head: str=':None') -> None:
     """
     Formats Beautifulsoup, list, or string to html for display
     
@@ -1570,7 +1572,7 @@ def render(html,head=':None'):
     ### Beautiful soup will close tags to stop it affecting the rest of the note book (else i.e. successive divs are nested as children) 
     exec(compile('display(Markdown(str(BeautifulSoup(html['+head+'], "lxml"))))', '', 'exec'))
 
-def handle_file(name,form='utf8',FUNC=type,head=''):
+def handle_file(name: str,form: str='utf8',FUNC: Callable=type,head: str='') -> str:
     """
     returns the file as file.read()
     
@@ -1601,10 +1603,10 @@ def handle_file(name,form='utf8',FUNC=type,head=''):
     file.close()
     return returns
 
-def my_info(data):
+def my_info(data: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([data.count(),(np.round(data.isnull().mean()*100,2)).astype(str)+"%",data.apply(lambda x: x.dtype)],axis=1).rename(columns={0:"Non-Null count",1:"Pct missing (2 d.p.)",2:"dtype"})
 
-def data_sets(data):
+def data_sets(data: pd.DataFrame) -> pd.DataFrame:
     # explode them
     data_cats = data.agg(pd.unique) # can use set as well
     data_cats = pd.DataFrame(data_cats).T
@@ -1612,7 +1614,7 @@ def data_sets(data):
     display(pd.DataFrame(data_cats.count()).T.rename(index={0:"count"}))
     return data_cats
 
-def preprocess(data,file="",variable=""):
+def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame:
     """ 
     Function for cleaning / preprocessing data 
         
@@ -1660,12 +1662,12 @@ def preprocess(data,file="",variable=""):
     return data
     # missing data? # messy data
 
-def jaccard_similarity(A, B):
+def jaccard_similarity(A: set, B: set) -> float:
     """Jaccards similarity for two sets"""
     return len(A.intersection(B)) / len(A.union(B))
 
 # my function to go through each cell of a column comparing to each other cell
-def shift_check(str1,str2):
+def shift_check(str1: str,str2: str) -> list:
     """
     Takes two strings and compares the amount shift that one string has to take to become the other whilst
     removing characters from the string being compared to ensuring no duplicates
@@ -1677,25 +1679,25 @@ def shift_check(str1,str2):
     else:
         str_smaller = str2 
         str_bigger = str1
-    new_df = []
+    new_ls = []
     for i in range(len(str_smaller)):
-        new_df+=[0]
+        new_ls+=[0]
         j = 0
         # calculates the shift
         while j < len(str_bigger) and str_smaller[i] != str_bigger[j]:
-            new_df[i]+= 1
+            new_ls[i]+= 1
             j+=1
         # reduce the bigger string
         if j == len(str_bigger):
-            new_df[i] = np.nan
+            new_ls[i] = np.nan
         elif str_smaller[i] == str_bigger[j]:
             try:
                 str_bigger = str_bigger[:j]+str_bigger[j+1:]
             except:
                 str_bigger = str_bigger[:j-1]+str_bigger[j:]
-    return new_df
+    return new_ls
 
-def sim_check(data_,mean=10,std=10,j_thr=0.75,l_thr=3,limit=200,dis=False):# make sure all a,b,c are before d=1,e=2,f=3
+def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_thr: int=3,limit: int=200,dis: bool=False) -> None:# make sure all a,b,c are before d=1,e=2,f=3
     """ 
     similarity check used on pd.Series objects to check text data.
     """
@@ -1729,7 +1731,7 @@ def sim_check(data_,mean=10,std=10,j_thr=0.75,l_thr=3,limit=200,dis=False):# mak
                             return
         data = data[data.isin([base]) == False] # to reduce the uneccessary combinations / only get unique ones
 
-def str_strip(x):
+def str_strip(x: str) -> str:
     if isinstance(x,str) == True:
         return x.strip() 
     else: return x
