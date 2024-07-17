@@ -33,6 +33,43 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
+    """
+    For sending and recieving structured data from python to R to python
+    e.g. as pd.DataFrame => data.frame => str[list]
+    
+    Allowing data manipulation via your own custom script
+    """
+    # allow pd.Series objects and remove newlines
+    temp=str(pd.DataFrame(df)).replace("\n","\\n")
+    # Give R the dataframe
+    read_pd_DataFrame=f"df=read.table(text = '{temp}',check.names=FALSE)"
+    # store R data into a dataframe for conversion to string data
+    send_string="""
+library(stringr)
+to_list=function(item){
+  return(paste("[",toString(item) |> str_sub(3, -2),"]"))
+}
+to_lists=function(df){
+  cols=c(df)
+  for(i in df |> colnames()){
+    cols[i]=cols[i] |> to_list()
+  }
+  return(cols)
+}
+convert_to_csv=function(df){
+  header=paste("[",toString(paste("\\"",df |> colnames(),"\\"")),"]")
+  items=df |> to_lists() |> data.frame() |> toString()
+  return(paste(header,",",items,collapse = ','))
+}
+df |> convert_to_csv()
+"""
+    string_data=run_r_command(read_pd_DataFrame+script+send_string).split("\r\n")[-1][4:-1]
+    # we should be able to unstr everything
+    tup=unstr(unstr(string_data))
+    # convert to pandas dataframe
+    return pd.DataFrame(list(tup[1:]),index=tup[0]).T
+
 def clear_line(line: int=-1)->None:
     """
     For clearing lines in jupyter notebook output areas
