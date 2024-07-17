@@ -33,7 +33,7 @@ from inspect import getfile
 import sys
 from functools import partial
 
-def display_obj(file,height=500,width=500,type="application/pdf"):
+def display_obj(file,height=500,width=500,type=""):
     """For displaying html objects"""
     render(f"""<object height="{height}" width="{width}" type="{type}" data="{file}">
     <p>Filename Error: Make sure the name of the file is correct</p>
