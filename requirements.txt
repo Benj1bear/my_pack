@@ -7,4 +7,3 @@ setuptools
 matplotlib
 IPython
 pandas
-html5lib
