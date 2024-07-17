@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 from IPython.display import display,Markdown,HTML,Javascript,clear_output
 from IPython import get_ipython
-import html5lib
+#import html5lib
 import subprocess
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
