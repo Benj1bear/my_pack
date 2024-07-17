@@ -981,7 +981,8 @@ def background_process(FUNC=stand_by,*args,**kwargs):
         del globals()[name]
     Thread(target=process).start()
 
-current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
+try:current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
+except:None
 def capture(interpret_code=True):
     """
     Function to capture the inputs in real time (only works in jupyter notebook because of the 'In' variable)
