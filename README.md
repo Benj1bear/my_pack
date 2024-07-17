@@ -36,6 +36,8 @@ in a jupyter notebook or python shell or otherwise run something similar to eith
 # to install
 var="#egg=my_pack"
 !pip install -e git+https://github.com/Benj1bear/my_pack$var
+# if using the a command line interface like cmd
+pip install -e git+https://github.com/Benj1bear/my_pack#egg=my_pack
 
 # if just wanting to clone the repo then replace the above with:
 !git clone https://github.com/Benj1bear/my_pack
