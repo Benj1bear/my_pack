@@ -41,7 +41,7 @@ def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
     Allowing data manipulation via your own custom script
     """
     # allow pd.Series objects and remove newlines
-    temp=str(pd.DataFrame(df)).replace("\n","\\n")
+    temp=pd.DataFrame(df).to_string().replace("\n","\\n") ## need to check for larger data ##
     # Give R the dataframe
     read_pd_DataFrame=f"df=read.table(text = '{temp}',check.names=FALSE)"
     # store R data into a dataframe for conversion to string data
