@@ -38,7 +38,7 @@ def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
     For sending and recieving structured data from python to R to python
     e.g. as pd.DataFrame => data.frame => pd.DataFrame
     
-    Allowing data manipulation via your own custom script
+    Allowing data manipulation in R via your own custom script
     """
     # allow pd.Series objects and remove newlines
     temp=pd.DataFrame(df).to_string().replace("\n","\\n") ## need to check for larger data ##
