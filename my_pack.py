@@ -35,10 +35,9 @@ from functools import partial
 
 def display_obj(file,height=500,width=500,type="application/pdf"):
     """For displaying html objects"""
-    html=f"""<object height="{height}" width="{width}" type="{type}" data="{file}">
+    render(f"""<object height="{height}" width="{width}" type="{type}" data="{file}">
     <p>Filename Error: Make sure the name of the file is correct</p>
-</object>"""
-    render(html)
+</object>""")
 
 def run_r_script(df: pd.DataFrame|pd.Series,script: str="")->pd.DataFrame:
     """
