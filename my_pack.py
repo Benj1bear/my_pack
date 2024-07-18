@@ -1611,6 +1611,11 @@ def try_except(trying: Any,exception: Any) -> Any:
     try:return trying
     except:return exception
 
+def digit_slice(num: float,places: int) -> float:
+    """rounds down to the nearest n decimal places"""
+    scalar=10**places
+    return np.floor(num*scalar)/scalar
+
 def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame:
     """ 
     Function for cleaning / preprocessing data 
@@ -1651,11 +1656,11 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
-    def try_round(df: pd.Series,places=2) -> pd.Series:
+    def try_digit_slice(cell: Any,places: int=2) -> Any:
         """attempts to round numbers"""
-        try:return np.round(df,places)
-        except:return df
-    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_round))
+        try:return digit_slice(cell,places)
+        except:return cell
+    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_digit_slice))
     # categories
     display(Markdown("**Categorical data:**"))
     objs=Type(data,"O")
