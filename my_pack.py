@@ -1648,7 +1648,6 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
         """
         try:return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
         except:return "Error: "+str(df.dtype)
-    data=pd.DataFrame(df)
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
