@@ -32,6 +32,10 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def unstr_df(string: str) -> pd.DataFrame:
+    """Convert string to pandas dataFrame"""
+    return pd.read_fwf(StringIO(string)).drop("Unnamed: 0",axis=1)
+
 def display_obj(file: str,height: float|int=500,width: float|int=500,type: str="") -> None:
     """For displaying html objects"""
     render(f"""<object height="{height}" width="{width}" type="{type}" data="{file}">
