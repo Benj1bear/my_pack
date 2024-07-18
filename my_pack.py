@@ -1666,7 +1666,7 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
-    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.apply(lambda x:try_except(np.round(x,2),x)))
+    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.apply(lambda x:try_except(np.round(x,2),x))) # needs fixing; for some reason map is not working #
     # categories
     display(Markdown("**Categorical data:**"))
     data = data_sets(data[[i for i in data.columns if data[i].dtype == 'O']])
