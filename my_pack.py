@@ -1575,32 +1575,23 @@ def render(html: str,head: str=':None') -> None:
 def handle_file(name: str,form: str='utf8',FUNC: Callable=type,head: str='') -> str:
     """
     returns the file as file.read()
-    
-    Other functionality:
-    
     handle_file allows you to view a file and execute a function on it returning your operations output if you supply a function input. 
-    
     It will open and close the file for you; using the function given to it during the file being open and returning after file closing
-    
     you can pass an encoding arguement, a function, and head as arguements
     i.e.
-    
     head = 10 to see the first 11 characters, header = None to see the entire file
-    
     form = 'utf8' (by default)
-    
     FUNC = type (by default) but will show regardless and if so returns file.read() unless other functions are used.
     """
-    file = open(name, encoding=form)
-    print("Name of the file: ", file.name,"\n")
-    print("Type: ", type(file),"\n")
-    if head == None or isinstance(head,int) == True:
-        print(file.read()[:head],"\n")
-    if FUNC != type:
-        returns = FUNC(file)
-    else:
-        returns = file.read()
-    file.close()
+    with open(name, encoding=form) as file:
+        print("Name of the file: ", file.name,"\n")
+        print("Type: ", type(file),"\n")
+        if head == None or isinstance(head,int) == True:
+            print(file.read()[:head],"\n")
+        if FUNC != type:
+            returns = FUNC(file)
+        else:
+            returns = file.read()
     return returns
 
 def my_info(data: pd.DataFrame) -> pd.DataFrame:
@@ -1608,7 +1599,7 @@ def my_info(data: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([data.count(),(np.round(data.isnull().mean()*100,2)).astype(str)+"%",data.apply(lambda x: x.dtype)],axis=1).rename(columns={0:"Non-Null count",1:"Pct missing (2 d.p.)",2:"dtype"})
 
 def data_sets(data: pd.DataFrame) -> pd.DataFrame:
-    """Counts and all unique categories and returned as tables"""
+    """Counts and all unique categories returned as tables"""
     # explode them
     data_cats = data.agg(pd.unique) # can use set as well
     data_cats = pd.DataFrame(data_cats).T
@@ -1642,10 +1633,8 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     """
     # display the data, # show notes file 
     display(Markdown("**Preview:**"))
-    try:
-        print(handle_file(file))
-    except:
-        print(variable)
+    try:print(handle_file(file))
+    except:print(variable)
     display(data)
     # show the info #
     display(Markdown("**Type consistency:**"))
@@ -1669,6 +1658,7 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
     def try_round(df: pd.Series,places=2) -> pd.Series:
+        """attempts to round numbers"""
         try:return np.round(df,places)
         except:return df
     display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_round))
