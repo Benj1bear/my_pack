@@ -1647,14 +1647,18 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     plt.show()
     # show description # check continuity # check uniqueness
     display(Markdown("**Numeric data:**"))
-    print("continuity: (integers will return i.e. 0 or 0.0)")
-    def try_mod(x):
+    def try_mod(df: pd.DataFrame) -> pd.Series:
+        """
+        returns the proportion of non-continuous numbers for a variable
+        """
         try:
-            return list(set(x % 1)) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
+            return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
         except:
-            return "Error: "+str(x.dtype)
-    display(data.loc[:,data.describe().columns.values].fillna(0).apply(try_mod).T) # used to be set but was too unreliable # then pd.Series.unique but had an unusual edge case
-    display(data.describe().T)
+            return "Error: "+str(df.dtype)
+    nums=data.describe()
+    continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
+    continuity.name="proportion discrete"
+    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(np.round,decimals=2))
     # categories
     display(Markdown("**Categorical data:**"))
     data = data_sets(data[[i for i in data.columns if data[i].dtype == 'O']])
