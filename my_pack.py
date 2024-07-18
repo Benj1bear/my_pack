@@ -1599,13 +1599,10 @@ def my_info(data: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([data.count(),(np.round(data.isnull().mean()*100,2)).astype(str)+"%",data.apply(lambda x: x.dtype)],axis=1).rename(columns={0:"Non-Null count",1:"Pct missing (2 d.p.)",2:"dtype"})
 
 def data_sets(data: pd.DataFrame) -> pd.DataFrame:
-    """Counts and all unique categories returned as tables"""
-    # explode them
+    """Returns the unique categories"""
     data_cats = data.agg(pd.unique) # can use set as well
     data_cats = pd.DataFrame(data_cats).T
-    data_cats = data_cats.apply(pd.Series.explode, ignore_index=True)
-    display(pd.DataFrame(data_cats.count()).T.rename(index={0:"count"}))
-    return data_cats
+    return data_cats.apply(pd.Series.explode, ignore_index=True)
 
 def try_except(trying: Any,exception: Any) -> Any:
     """
@@ -1649,10 +1646,8 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
         """
         returns the proportion of non-continuous numbers for a variable
         """
-        try:
-            return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
-        except:
-            return "Error: "+str(df.dtype)
+        try:return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
+        except:return "Error: "+str(df.dtype)
     data=pd.DataFrame(df)
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
@@ -1664,7 +1659,9 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_round))
     # categories
     display(Markdown("**Categorical data:**"))
-    data = data_sets(Type(data,"O"))
+    objs=Type(data,"O")
+    display(objs.describe())
+    data = data_sets(objs)
     display(data.head(15))
     return data
     # missing data? # messy data
