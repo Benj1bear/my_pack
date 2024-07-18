@@ -1615,11 +1615,11 @@ def data_sets(data: pd.DataFrame) -> pd.DataFrame:
     return data_cats
 
 def try_except(trying: Any,exception: Any) -> Any:
-    """Functional form of try-except useful for lambda expressions"""
-    try:
-        return trying
-    except:
-        return exception
+    """
+    Functional form of try-except useful for lambda expressions (but may not always work)
+    """
+    try:return trying
+    except:return exception
 
 def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame:
     """ 
@@ -1666,7 +1666,10 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
-    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.apply(lambda x:try_except(np.round(x,2),x))) # needs fixing; for some reason map is not working #
+    def try_round(df: pd.Series,decimal=2):
+        try:return np.round(df,2)
+        except:return df
+    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_round))
     # categories
     display(Markdown("**Categorical data:**"))
     data = data_sets(data[[i for i in data.columns if data[i].dtype == 'O']])
