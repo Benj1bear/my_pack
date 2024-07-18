@@ -1674,7 +1674,7 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_round))
     # categories
     display(Markdown("**Categorical data:**"))
-    data = data_sets(data[[i for i in data.columns if data[i].dtype == 'O']])
+    data = data_sets(Type(data,"O"))
     display(data.head(15))
     return data
     # missing data? # messy data
