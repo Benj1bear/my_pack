@@ -407,7 +407,7 @@ class str_df:
         return self.__df.map(lambda x:x[index])
     def split(self,sep: str=None) -> pd.DataFrame:
         return self.__df.map(lambda x:x.split(sep))
-pd.DataFrame.str=str_df
+pd.DataFrame.str=str_df # we use @property else it expects df which would be cumbersome #
 
 def req_file(directory: str="") -> None:
     """
