@@ -1614,6 +1614,13 @@ def data_sets(data: pd.DataFrame) -> pd.DataFrame:
     display(pd.DataFrame(data_cats.count()).T.rename(index={0:"count"}))
     return data_cats
 
+def try_except(trying: Any,exception: Any) -> Any:
+    """Functional form of try-except useful for lambda expressions"""
+    try:
+        return trying
+    except:
+        return exception
+
 def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame:
     """ 
     Function for cleaning / preprocessing data 
@@ -1648,17 +1655,18 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     # show description # check continuity # check uniqueness
     display(Markdown("**Numeric data:**"))
     def try_mod(df: pd.DataFrame) -> pd.Series:
-        """
-        returns the proportion of non-continuous numbers for a variable
-        """
-        try:
-            return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
-        except:
-            return "Error: "+str(df.dtype)
+    """
+    returns the proportion of non-continuous numbers for a variable
+    """
+    try:
+        return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
+    except:
+        return "Error: "+str(df.dtype)
+    data=pd.DataFrame(df)
     nums=data.describe()
     continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
     continuity.name="proportion discrete"
-    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(np.round,decimals=2))
+    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.apply(lambda x:try_except(np.round(x,2),x)))
     # categories
     display(Markdown("**Categorical data:**"))
     data = data_sets(data[[i for i in data.columns if data[i].dtype == 'O']])
