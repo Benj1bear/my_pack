@@ -33,7 +33,20 @@ import sys
 from functools import partial
 
 def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
-    """Decorator for wrapping functions with other functions"""
+    """
+    Decorator for wrapping functions with other functions
+    i.e.
+    
+    def do2(string):
+        return str(string)
+
+    @wrap(do2)
+    def do(string):
+        return int(string)
+    do(3.0)
+    # should print
+    # '3'
+    """
     def wrap_wrapper(func: Callable): # function to wrap
         def wrapper(*args,**kwargs) -> None: # its args
             return FUNC(func(*args,**kwargs),*wrap_args,**wrap_kwargs)
