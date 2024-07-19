@@ -32,6 +32,12 @@ from inspect import getfile,getsource
 import sys
 from functools import partial
 
+def user_yield_wrapper(func: Callable) -> Callable: # test
+    """wrpper for the user_yield function"""
+    def wrapper(FUNC: Callable,*args,**kwargs) -> None: # *desired function*
+        return user_yield(func(FUNC)(*args,**kwargs))
+    return wrapper
+
 def user_yield(gen: iter,enable_commenting: bool=False) -> None:
     """For user interactive yielding"""
     if enable_commenting == False:
@@ -76,6 +82,7 @@ def source_code(func: Callable,join: bool=True) -> (str,str):
         return getsource(func)
     return slice_occ(getsource(func),"\n")
 
+@user_yield_wrapper
 def test(func: Callable) -> Callable:
     """
     redefines a function for printing and yeild statements 
