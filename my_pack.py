@@ -1526,9 +1526,7 @@ def run_r_command(command: str,R: str='C:/Program Files/R/R-4.3.1/bin/R.exe') ->
     output = process.stdout.decode('utf-8')
     if process.returncode == 0:
         return output[716:-5] # removes the initial stuff you get on first load
-    else:
-        print(output)
-        return None
+    print(output)
 
 def nas(data: pd.DataFrame|pd.Series) -> int:
     """
