@@ -43,6 +43,7 @@ def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     @wrap(do2)
     def do(string):
         return int(string)
+
     do(3.0)
     # should print
     # '3'
