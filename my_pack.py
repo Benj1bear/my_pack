@@ -69,10 +69,17 @@ def test(func: Callable) -> Callable:
     """
     head,body=source_code(func,False)
     lines=[]
-    for line_number,line in enumerate(body[:-1].split("\n    ")[1:]):
-        indentation=get_indents(line)
-        lines+=[line,indentation+f"print('line {line_number}: {line}')",indentation+"yield locals()"]
+    body_lines=body[:-1].split("\n    ")[1:]
+    length=len(body_lines)
+    for indx,line in enumerate(body_lines):
+        if indx < length-1:
+            indentation=get_indents(body_lines[indx+1])
+        else:
+            indentation=get_indents(line)
+        # only if the next has indents
+        lines+=[line,indentation+f"print('line {indx}: {line}')",indentation+"yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
+    print(body)
     exec(head+body)
     return locals()[func.__name__] # call it as you would with inputs if any #
 
