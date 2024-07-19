@@ -73,7 +73,7 @@ def test_generate(func: Callable) -> Callable:
         lines+=[line,f"print('line {line_number}: {line}')","yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
-    return locals()["do"]()
+    return locals()["do"] # call it as you would with inputs if any #
 
 def unstr_df(string: str) -> pd.DataFrame:
     """Convert string to pandas dataFrame"""
