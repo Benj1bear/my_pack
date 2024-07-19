@@ -69,7 +69,7 @@ def test(func: Callable) -> Callable:
     """
     head,body=source_code(func,False)
     lines=[]
-    for line_number,line in enumerate(body.split("\n    ")[1:-1]):
+    for line_number,line in enumerate(body[:-1].split("\n    ")[1:]):
         lines+=[line,f"print('line {line_number}: {line}')","yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
