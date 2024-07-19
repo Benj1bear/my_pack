@@ -30,7 +30,7 @@ import glob
 import shutil
 from inspect import getfile,getsource
 import sys
-from functools import partial
+from functools import partial,wraps
 
 def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     """
@@ -49,15 +49,17 @@ def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     # '3'
     """
     def wrap_wrapper(func: Callable): # function to wrap
+        @wraps(func) # transfers the docstring since the functions redefined as the wrapper
         def wrapper(*args,**kwargs) -> None: # its args
             return FUNC(func(*args,**kwargs),*wrap_args,**wrap_kwargs)
         return wrapper
     return wrap_wrapper
 
-def user_yield_wrapper(func: Callable) -> Callable: # test
+def user_yield_wrapper(FUNC: Callable) -> Callable: # test
     """wrapper for the user_yield function"""
-    def wrapper(FUNC: Callable,*args,**kwargs) -> None: # *desired function*
-        return user_yield(func(FUNC)(*args,**kwargs))
+    @wraps(func)
+    def wrapper(func: Callable,*args,**kwargs) -> None: # *desired function*
+        return user_yield(FUNC(func)(*args,**kwargs))
     return wrapper
 
 def user_yield(gen: iter,enable_commenting: bool=False) -> None:
@@ -228,8 +230,8 @@ def refresh() -> None:
 
 def dynamic_js_wrapper(func: Callable[bool,...]) -> None:
     """wrapper function for dynamically created javascript functions to save code"""
+    @wraps(func)
     def wrapper(reload: bool=False)->None:
-        """wrapper ensures no appending of duplicate scripts and reloading if necessary"""
         if reload:
             return refresh()
         name=str(func).split()[1]
