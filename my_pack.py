@@ -449,11 +449,14 @@ class str_df:
     """String accessor extension for pd.DataFrame"""
     def __init__(self,df: pd.DataFrame) -> None:
         self.__df = df # save df as private variable
+
     # use df in methods
     def __getitem__(self,index: list) -> pd.DataFrame:
         return self.__df.map(lambda x:x[index])
+
     def split(self,sep: str=None) -> pd.DataFrame:
         return self.__df.map(lambda x:x.split(sep))
+
 pd.DataFrame.str=str_df # we use @property else it expects df which would be cumbersome #
 
 def req_file(directory: str="") -> None:
