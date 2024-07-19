@@ -60,8 +60,7 @@ def source_code(func: Callable,join: bool=True) -> (str,str):
     """
     if join == True:
         return getsource(func)
-    head,body=slice_occ(getsource(func),"\n")
-    return head,body
+    return slice_occ(getsource(func),"\n")
 
 def test_generate(func: Callable) -> Callable:
     """
