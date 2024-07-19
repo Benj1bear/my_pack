@@ -62,7 +62,7 @@ def source_code(func: Callable,join: bool=True) -> (str,str):
         return getsource(func)
     return slice_occ(getsource(func),"\n")
 
-def test_generate(func: Callable) -> Callable:
+def test(func: Callable) -> Callable:
     """
     redefines a function for printing and yeild statements 
     at every line allowing testability
