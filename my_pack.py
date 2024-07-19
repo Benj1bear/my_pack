@@ -32,6 +32,20 @@ from inspect import getfile,getsource
 import sys
 from functools import partial
 
+def user_yield(gen: iter,enable_commenting: bool=False) -> None:
+    """For user interactive yielding"""
+    if enable_commenting == False:
+        #ipynb_id_setup() # need to check
+        pass
+    while True:
+        try:next(gen)
+        except StopIteration:break
+        user_input=input(": ")
+        if enable_commenting == False:
+            #clear_line()
+            pass
+        if user_input.lower() == "break":break
+
 def slice_occ(string: str,occurance: str,times: int=1) -> str:
     """
     slices a string at an occurance after a specified number of times occuring
