@@ -9,7 +9,7 @@ from io import StringIO
 import json
 from bs4 import BeautifulSoup
 import requests
-from IPython.display import display,Markdown,HTML,Javascript,clear_output
+from IPython.display import display,Markdown,HTML,Javascript,clear_output,Code
 from IPython import get_ipython
 #import html5lib
 import subprocess
@@ -77,7 +77,7 @@ def test(func: Callable) -> Callable:
         else:
             indentation=get_indents(line)
         # only if the next has indents
-        lines+=[line,indentation+f"print('line {indx+1}: {line}')",indentation+"yield locals()"]
+        lines+=[line,indentation+f"display(Code('line {indx+1}: {line}', language='python'))",indentation+"yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
     return locals()[func.__name__] # call it as you would with inputs if any #
