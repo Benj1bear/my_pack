@@ -36,7 +36,6 @@ def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     """Decorator for wrapping functions with other functions"""
     def wrap_wrapper(func: Callable): # function to wrap
         def wrapper(*args,**kwargs) -> None: # its args
-            print(func,args,kwargs)
             return FUNC(func(*args,**kwargs),*wrap_args,**wrap_kwargs)
         return wrapper
     return wrap_wrapper
