@@ -77,7 +77,7 @@ def test(func: Callable) -> Callable:
         else:
             indentation=get_indents(line)
         # only if the next has indents
-        lines+=[line,indentation+f"print('line {indx}: {line}')",indentation+"yield locals()"]
+        lines+=[line,indentation+f"print('line {indx+1}: {line}')",indentation+"yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
     return locals()[func.__name__] # call it as you would with inputs if any #
