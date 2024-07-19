@@ -70,7 +70,8 @@ def test(func: Callable) -> Callable:
     head,body=source_code(func,False)
     lines=[]
     for line_number,line in enumerate(body[:-1].split("\n    ")[1:]):
-        lines+=[line,f"print('line {line_number}: {line}')","yield locals()"]
+        indentation=get_indents(line)
+        lines+=[line,indentation+f"print('line {line_number}: {line}')",indentation+"yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
     return locals()[func.__name__] # call it as you would with inputs if any #
