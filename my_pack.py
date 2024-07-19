@@ -32,6 +32,50 @@ from inspect import getfile
 import sys
 from functools import partial
 
+def slice_occ(string: str,occurance: str,times: int=1) -> str:
+    """
+    slices a string at an occurance after a specified number of times occuring
+    """
+    count=1
+    for i in range(len(string)):
+        if string[i] == occurance:
+            if count == times:
+                return string[:i],string[i:]
+            count+=1
+    return string
+
+def source_code(func: Callable,join: bool=True) -> (str,str):
+    """
+    my function for breaking up source code
+    (will further develop later once I've
+    figured out how to resolve some issues)
+    
+    If def do():pass then you have to modify
+    the string first else it doesn't work
+    
+    Also true for 
+    def do(a,
+           b,
+           c):
+    """
+    if join == True:
+        return getsource(func)
+    head,body=slice_occ(getsource(func),"\n")
+    return head,body
+
+def test_generate(func: Callable) -> Callable:
+    """
+    redefines a function for printing and yeild statements 
+    at every line allowing testability
+    """
+    head,body=source_code(func,False)
+    lines=[]
+    for line_number,line in enumerate(body.split("\n    ")[1:-1]):
+        lines+=[line,f"print('line {line_number}: {line}')","yield locals()"]
+    body="\n    "+"\n    ".join(lines)+"\n"
+    exec(head+body)
+    return locals()["do"]()
+
 def unstr_df(string: str) -> pd.DataFrame:
     """Convert string to pandas dataFrame"""
     return pd.read_fwf(StringIO(string)).drop("Unnamed: 0",axis=1)
