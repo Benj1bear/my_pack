@@ -28,7 +28,7 @@ from importlib.util import module_from_spec,spec_from_loader
 import re
 import glob
 import shutil
-from inspect import getfile
+from inspect import getfile,getsource
 import sys
 from functools import partial
 
