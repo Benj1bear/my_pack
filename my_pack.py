@@ -71,13 +71,17 @@ def test(func: Callable) -> Callable:
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
+    if has_IPython()==True:
+        printing=lambda code:f"display(Code('{code}', language='python'))"
+    else:
+        printing=lambda code:f"print('{code}')"
     for indx,line in enumerate(body_lines):
         if indx < length-1:
             indentation=get_indents(body_lines[indx+1])
         else:
             indentation=get_indents(line)
         # only if the next has indents
-        lines+=[line,indentation+f"display(Code('line {indx+1}: {line}', language='python'))",indentation+"yield locals()"]
+        lines+=[line,indentation+printing(f"line {indx+1}: {line}"),indentation+"yield locals()"]
     body="\n    "+"\n    ".join(lines)+"\n"
     exec(head+body)
     return locals()[func.__name__] # call it as you would with inputs if any #
