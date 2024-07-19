@@ -71,7 +71,7 @@ def test(func: Callable) -> Callable:
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
-    if has_IPython()==True:
+    if has_IPython():
         printing=lambda code:f"display(Code('{code}', language='python'))"
     else:
         printing=lambda code:f"print('{code}')"
