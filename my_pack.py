@@ -126,7 +126,7 @@ def source_code(func: Callable,join: bool=True) -> (str,str):
 @user_yield_wrapper
 def test(func: Callable) -> Callable:
     """
-    redefines a function for printing and yeild statements 
+    redefines a function for printing and yield statements 
     at every line allowing testability
     i.e.
     def do():
