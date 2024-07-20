@@ -139,6 +139,8 @@ def test(func: Callable) -> Callable:
     
     enter 'break' to break out of the variable access while loop or the program
     (depending on which loop you're in)
+
+    use 'cls' to clear the entire previous output display
     """
     head,body=source_code(func,False)
     lines=[]
