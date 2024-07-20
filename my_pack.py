@@ -32,6 +32,7 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
+## issue with keep: sometimes the functions isn't picked up? ##
 SOURCE_CODES={}
 def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
     """
