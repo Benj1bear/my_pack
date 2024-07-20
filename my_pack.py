@@ -186,10 +186,11 @@ def test(func: Callable,*args: tuple[Any,...]) -> Callable:
     redefines a function for printing and yield statements 
     at every line allowing testability
     i.e.
-    def do(a):
+    def do(a,b):
         while True:
+            b=a
             a+=1
-    test(do,1)
+    test(do,1,2) # or test(do,a=1,b=2)
     additionally allows access to local scope variables as well 
     i.e. by entering 'locals()' and 'locals()["a"]' into the input prompt
     
