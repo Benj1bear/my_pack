@@ -70,6 +70,8 @@ def user_yield(gen: iter) -> None:
         user_input=input(": ")
         if user_input.lower() == "break":
             break
+        elif user_input.strip() == "cls":
+            clear_output()
         elif user_input[:8] == "locals()":
             while True:
                 if user_input[:8] == "locals()":
@@ -84,6 +86,8 @@ def user_yield(gen: iter) -> None:
                 user_input=input(": ")
                 if user_input.lower() == "break":
                     break
+                elif user_input.strip() == "cls":
+                    clear_output()
 
 def slice_occ(string: str,occurance: str,times: int=1) -> str:
     """
