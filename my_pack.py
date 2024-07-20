@@ -57,7 +57,7 @@ def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
 
 def user_yield_wrapper(FUNC: Callable) -> Callable: # test
     """wrapper for the user_yield function"""
-    @wraps(FUNC)
+    @wraps(FUNC) # only needed for the function taken in not the args
     def wrapper(func: Callable,*args,**kwargs) -> None: # *desired function*
         return user_yield(FUNC(func)(*args,**kwargs))
     return wrapper
