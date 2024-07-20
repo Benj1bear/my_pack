@@ -59,10 +59,8 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
             head_body="@"+keep[0]+"\n"+head_body
         # record code
         if FUNC.__name__ not in SOURCE_CODES:
-            SOURCE_CODES[FUNC.__name__]={}
+            SOURCE_CODES[FUNC.__name__]={"original":source}
         set_source=SOURCE_CODES[FUNC.__name__]
-        if "original" not in set_source:
-            set_source["original"]=source
         if key == "" or key == None:
             set_source["new"]=head_body
         else:
