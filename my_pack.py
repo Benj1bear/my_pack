@@ -181,7 +181,7 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
 @user_yield_wrapper
-def test(func: Callable,*args: tuple[Any,...]) -> Callable:
+def test(func: Callable,*args,**kwargs) -> Callable:
     """
     redefines a function for printing and yield statements 
     at every line allowing testability
