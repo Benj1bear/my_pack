@@ -32,6 +32,48 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
+SOURCE_CODES={}
+def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
+    """
+    Redefines functions removing all decorators except those specified to keep
+    Additionally records the original and new source code accesible via the 
+    SOURCE_CODE global variable
+    """
+    global SOURCE_CODES
+    if isinstance(keep,list)==False:
+        keep=[keep.__name__]
+    else:
+        keep=[func.__name__ for func in keep]
+    # get source code split into parts
+    decorators,head,body=source_code(FUNC,False)
+    head_body=head+body
+    source=decorators+head_body
+    # has decorators
+    if len(decorators) > 0: # should work? can also do > 2
+        # apply keep e.g. head_body is the new code
+        length=len(keep)
+        if length > 0:
+            # decorators to keep
+            if length > 1:
+                keep=["\n@".join(keep)] # keep consistent format
+            head_body="@"+keep[0]+"\n"+head_body
+        # record code
+        if FUNC.__name__ not in SOURCE_CODES:
+            SOURCE_CODES[FUNC.__name__]={}
+        set_source=SOURCE_CODES[FUNC.__name__]
+        if "original" not in set_source:
+            set_source["original"]=source
+        if key == "" or key == None:
+            set_source["new"]=head_body
+        else:
+            set_source[key]=head_body
+        # redefine function
+        if inplace==True:
+            return exec(head_body,globals())
+        exec(head_body)
+        return locals()[FUNC.__name__]
+    return FUNC
+
 def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     """
     Decorator for wrapping functions with other functions
@@ -105,7 +147,7 @@ def slice_occ(string: str,occurance: str,times: int=1) -> str:
             count+=1
     return string
 
-def source_code(func: Callable,join: bool=True) -> (str,str):
+def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,str):
     """
     my function for breaking up source code
     (will further develop later once I've
@@ -118,10 +160,26 @@ def source_code(func: Callable,join: bool=True) -> (str,str):
     def do(a,
            b,
            c):
+           
+    key="original","new", or other custom specified key available
     """
+    try:
+        source=getsource(FUNC)
+    except:
+        try:
+            global SOURCE_CODES
+            source=SOURCE_CODES[FUNC.__name__]
+        except:
+            raise Exception("source code not found")
+        try:
+            source=source[key]
+        except:
+            raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
     if join == True:
-        return getsource(func)
-    return slice_occ(getsource(func),"\n")
+        return source
+    head_body=re.sub(r"@(.+?)\n","",source)
+    diff=len(source)-len(head_body)
+    return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
 @user_yield_wrapper
 def test(func: Callable) -> Callable:
@@ -142,7 +200,7 @@ def test(func: Callable) -> Callable:
 
     use 'cls' to clear the entire previous output display
     """
-    head,body=source_code(func,False)
+    head,body=source_code(func,False)[1:]
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
