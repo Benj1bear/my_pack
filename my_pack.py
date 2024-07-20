@@ -128,6 +128,9 @@ def test(func: Callable) -> Callable:
     test(do)
     additionally allows access to local scope variables as well 
     i.e. by entering 'locals()' and 'locals()["a"]' into the input prompt
+    
+    enter 'break' to break out of the variable access while loop or the program
+    (depending on which loop you're in)
     """
     head,body=source_code(func,False)
     lines=[]
