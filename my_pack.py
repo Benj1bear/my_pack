@@ -64,6 +64,10 @@ def user_yield_wrapper(FUNC: Callable) -> Callable: # test
 
 def user_yield(gen: iter) -> None:
     """For user interactive yielding"""
+    if has_IPython():
+        clear_display=clear_output
+    else:
+        clear_display=lambda : print("\033[H\033[J",end="")
     while True:
         try:gen_locals=next(gen)
         except StopIteration:break
@@ -71,7 +75,7 @@ def user_yield(gen: iter) -> None:
         if user_input.lower() == "break":
             break
         elif user_input.strip() == "cls":
-            clear_output()
+            clear_display()
         elif user_input[:8] == "locals()":
             while True:
                 if user_input[:8] == "locals()":
@@ -87,7 +91,7 @@ def user_yield(gen: iter) -> None:
                 if user_input.lower() == "break":
                     break
                 elif user_input.strip() == "cls":
-                    clear_output()
+                    clear_display()
 
 def slice_occ(string: str,occurance: str,times: int=1) -> str:
     """
