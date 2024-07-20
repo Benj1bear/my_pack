@@ -180,6 +180,7 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     diff=len(source)-len(head_body)
     return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
+## need to remove or do something about doc-strings because it's causing an issue for some reason ##
 @user_yield_wrapper
 def test(func: Callable,*args,**kwargs) -> Callable:
     """
