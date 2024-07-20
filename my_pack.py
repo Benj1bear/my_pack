@@ -181,16 +181,15 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
 @user_yield_wrapper
-def test(func: Callable) -> Callable:
+def test(func: Callable,*args: tuple[Any,...]) -> Callable:
     """
     redefines a function for printing and yield statements 
     at every line allowing testability
     i.e.
-    def do():
-        a=0
+    def do(a):
         while True:
             a+=1
-    test(do)
+    test(do,1)
     additionally allows access to local scope variables as well 
     i.e. by entering 'locals()' and 'locals()["a"]' into the input prompt
     
