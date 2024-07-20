@@ -120,6 +120,14 @@ def test(func: Callable) -> Callable:
     """
     redefines a function for printing and yeild statements 
     at every line allowing testability
+    i.e.
+    def do():
+        a=0
+        while True:
+            a+=1
+    test(do)
+    additionally allows access to local scope variables as well 
+    i.e. by entering 'locals()' and 'locals()["a"]' into the input prompt
     """
     head,body=source_code(func,False)
     lines=[]
