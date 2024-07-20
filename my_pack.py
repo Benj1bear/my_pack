@@ -37,7 +37,7 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     """
     Redefines functions removing all decorators except those specified to keep
     Additionally records the original and new source code accesible via the 
-    SOURCE_CODE global variable
+    SOURCE_CODES global variable
     """
     global SOURCE_CODES
     if isinstance(keep,list)==False:
