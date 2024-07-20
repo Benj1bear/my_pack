@@ -62,19 +62,28 @@ def user_yield_wrapper(FUNC: Callable) -> Callable: # test
         return user_yield(FUNC(func)(*args,**kwargs))
     return wrapper
 
-def user_yield(gen: iter,enable_commenting: bool=False) -> None:
+def user_yield(gen: iter) -> None:
     """For user interactive yielding"""
-    if enable_commenting == False:
-        #ipynb_id_setup() # need to check
-        pass
     while True:
-        try:next(gen)
+        try:gen_locals=next(gen)
         except StopIteration:break
         user_input=input(": ")
-        if enable_commenting == False:
-            #clear_line()
-            pass
-        if user_input.lower() == "break":break
+        if user_input.lower() == "break":
+            break
+        elif user_input[:8] == "locals()":
+            while True:
+                if user_input[:8] == "locals()":
+                    if len(user_input) < 9:
+                        print(gen_locals)
+                    elif user_input[8]+user_input[-1] == "[]":
+                        try:
+                            exec("temp=gen_locals"+user_input[8:])
+                            print(locals()["temp"])
+                        except:
+                            None
+                user_input=input(": ")
+                if user_input.lower() == "break":
+                    break
 
 def slice_occ(string: str,occurance: str,times: int=1) -> str:
     """
