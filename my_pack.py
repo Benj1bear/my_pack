@@ -200,6 +200,9 @@ def test(FUNC: Callable,*args,**kwargs) -> Callable:
     (depending on which loop you're in)
 
     use 'cls' to clear the entire previous output display
+
+    Note: This function will not work if there are multiline string expressions
+    but is something I'll work on soon
     """
     head,body=source_code(FUNC,False)[1:]
     doc_string=""
