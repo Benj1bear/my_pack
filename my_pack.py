@@ -181,6 +181,7 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     diff=len(source)-len(head_body)
     return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
+# seems to be a problem when running i.e. test(undecorate,do,keep=override_do) #
 @user_yield_wrapper
 def test(FUNC: Callable,*args,**kwargs) -> Callable:
     """
