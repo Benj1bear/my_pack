@@ -49,8 +49,7 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     # has decorators
     if len(decorators) > 0: # should work? can also do > 2
         # apply keep e.g. head_body is the new code
-        length=len(keep)
-        if length > 0:
+        if len(keep) > 0:
             # decorators to keep
             head_body="@"+"\n@".join([func.__name__ for func in keep])+"\n"+head_body
         # record code
