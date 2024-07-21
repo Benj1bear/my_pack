@@ -36,8 +36,12 @@ SOURCE_CODES={}
 def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
     """
     Redefines functions removing all decorators except those specified to keep
-    Additionally records the original and new source code accesible via the 
-    SOURCE_CODES global variable
+    
+    Ensure that the order of keep is the order of decorators you want i.e. first
+    to last corresponds to top to bottom as it would be for when defining decorators
+    
+    Additionally the original and new source code get recordered and are accesible via 
+    the SOURCE_CODES global variable
     """
     global SOURCE_CODES
     if isinstance(keep,list)==False:
