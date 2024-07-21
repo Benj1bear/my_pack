@@ -180,9 +180,8 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     diff=len(source)-len(head_body)
     return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
 
-## need to remove or do something about doc-strings because it's causing an issue for some reason ##
 @user_yield_wrapper
-def test(func: Callable,*args,**kwargs) -> Callable:
+def test(FUNC: Callable,*args,**kwargs) -> Callable:
     """
     redefines a function for printing and yield statements 
     at every line allowing testability
@@ -200,7 +199,12 @@ def test(func: Callable,*args,**kwargs) -> Callable:
 
     use 'cls' to clear the entire previous output display
     """
-    head,body=source_code(func,False)[1:]
+    head,body=source_code(FUNC,False)[1:]
+    doc_string=""
+    # temporarily remove docstring if it exists
+    if FUNC.__doc__ != None:
+        doc_string=f'"""{FUNC.__doc__}"""'
+        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1)
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
@@ -209,15 +213,20 @@ def test(func: Callable,*args,**kwargs) -> Callable:
     else:
         printing=lambda code:f"print('{code}')"
     for indx,line in enumerate(body_lines):
+        # ensure lines are indented accordingly
         if indx < length-1:
             indentation=get_indents(body_lines[indx+1])
         else:
             indentation=get_indents(line)
-        # only if the next has indents
+        # in case of a return statement (add white space incase of 'return' by itself)
+        line_stripped=line.strip()
+        if line_stripped == "return" or line_stripped.startswith("return "):
+            lines+=[indentation+printing(f"line {indx+1}: {line}"),indentation+"yield locals()",line]
+            continue
         lines+=[line,indentation+printing(f"line {indx+1}: {line}"),indentation+"yield locals()"]
-    body="\n    "+"\n    ".join(lines)+"\n"
+    body="\n    "+doc_string+"\n    ".join(lines)+"\n"
     exec(head+body)
-    return locals()[func.__name__] # call it as you would with inputs if any #
+    return locals()[FUNC.__name__] # call it as you would with inputs if any #
 
 def unstr_df(string: str) -> pd.DataFrame:
     """Convert string to pandas dataFrame"""
