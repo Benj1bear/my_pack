@@ -40,8 +40,6 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     SOURCE_CODES global variable
     """
     global SOURCE_CODES
-    print(keep)
-    print(locals())
     if isinstance(keep,list)==False:
         keep=[keep]
     # get source code split into parts
@@ -66,7 +64,6 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
         # make sure the functions are defined in local scope
         for func in keep:
             locals()[func.__name__]=func
-        print(locals())
         # redefine function
         if inplace==True:
             return exec(head_body,globals())
