@@ -32,7 +32,6 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
-## issue with keep: sometimes the functions isn't picked up? ##
 SOURCE_CODES={}
 def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
     """
@@ -41,10 +40,10 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     SOURCE_CODES global variable
     """
     global SOURCE_CODES
+    print(keep)
+    print(locals())
     if isinstance(keep,list)==False:
-        keep=[keep.__name__]
-    else:
-        keep=[func.__name__ for func in keep]
+        keep=[keep]
     # get source code split into parts
     decorators,head,body=source_code(FUNC,False)
     head_body=head+body
@@ -55,9 +54,7 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
         length=len(keep)
         if length > 0:
             # decorators to keep
-            if length > 1:
-                keep=["\n@".join(keep)] # keep consistent format
-            head_body="@"+keep[0]+"\n"+head_body
+            head_body="@"+"\n@".join([func.__name__ for func in keep])+"\n"+head_body
         # record code
         if FUNC.__name__ not in SOURCE_CODES:
             SOURCE_CODES[FUNC.__name__]={"original":source}
@@ -66,6 +63,10 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
             set_source["new"]=head_body
         else:
             set_source[key]=head_body
+        # make sure the functions are defined in local scope
+        for func in keep:
+            locals()[func.__name__]=func
+        print(locals())
         # redefine function
         if inplace==True:
             return exec(head_body,globals())
