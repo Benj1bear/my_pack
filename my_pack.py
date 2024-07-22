@@ -177,14 +177,16 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
             raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
     if join == True:
         return source
-    head_body=re.sub(r"@(.+?)\n","",source)
+    head_body=source
+    if source[:4]!="def ":
+        head_body=re.sub(r"@(.+?)\n","",source)
     diff=len(source)-len(head_body)
     decorators,head,body=source[:diff],*slice_occ(head_body,"\n")
     doc_string=""
     # temporarily remove docstring if it exists
     if FUNC.__doc__ != None:
         doc_string=f'\n    """{FUNC.__doc__}"""'
-        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1)
+        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1,flags=re.DOTALL) # re.DOTALL incase of new-lines
     return decorators,head,doc_string,body
 
 # seems to be a problem when running i.e. test(undecorate,do,keep=override_do) #
