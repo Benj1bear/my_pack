@@ -40,6 +40,9 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     Ensure that the order of keep is the order of decorators you want i.e. first
     to last corresponds to top to bottom as it would be for when defining decorators
     
+    Note that 'keep' just redefines the decorators (and order they're in), so you can 
+    add new decorators e.g. decorate a function dynamically if desired
+    
     Additionally the original and new source code get recordered and are accesible via 
     the SOURCE_CODES global variable
     """
