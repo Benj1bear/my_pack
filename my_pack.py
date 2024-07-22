@@ -38,10 +38,9 @@ def get_builtins() -> list:
     Gets a list of the builtin functions
     seems to be differences between jupyter notebook and python
     """
-    builtins=__builtins__
     if isinstance(__builtins__,dict) == False:
-        builtins=dir(builtins)
-    return builtins
+        return dir(__builtins__)
+    return __builtins__
 
 def get_variables(code: str) -> list[str]:
     """
