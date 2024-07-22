@@ -47,8 +47,8 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     if isinstance(keep,list)==False:
         keep=[keep]
     # get source code split into parts
-    decorators,head,body=source_code(FUNC,False)
-    head_body=head+body
+    decorators,head,doc_string,body=source_code(FUNC,False)
+    head_body=head+doc_string+body
     source=decorators+head_body
     # has decorators
     if len(decorators) > 0: # should work? can also do > 2
@@ -179,7 +179,13 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
         return source
     head_body=re.sub(r"@(.+?)\n","",source)
     diff=len(source)-len(head_body)
-    return source[:diff],*slice_occ(head_body,"\n") # decorators,head,body
+    decorators,head,body=source[:diff],*slice_occ(head_body,"\n")
+    doc_string=""
+    # temporarily remove docstring if it exists
+    if FUNC.__doc__ != None:
+        doc_string=f'"""{FUNC.__doc__}"""'
+        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1)
+    return decorators,head,doc_string,body
 
 # seems to be a problem when running i.e. test(undecorate,do,keep=override_do) #
 @user_yield_wrapper
@@ -204,12 +210,7 @@ def test(FUNC: Callable,*args,**kwargs) -> Callable:
     Note: This function will not work if there are multiline string expressions
     but is something I'll work on soon
     """
-    head,body=source_code(FUNC,False)[1:]
-    doc_string=""
-    # temporarily remove docstring if it exists
-    if FUNC.__doc__ != None:
-        doc_string=f'"""{FUNC.__doc__}"""'
-        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1)
+    head,doc_string,body=source_code(FUNC,False)[1:]
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
