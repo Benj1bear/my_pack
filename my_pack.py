@@ -33,6 +33,7 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+# __builtin__ is not getting picked up? #
 def get_variables(code: str) -> list[str]:
     """
     Extract only variable names from strings
