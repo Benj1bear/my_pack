@@ -32,7 +32,7 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
-def get_variables(code):
+def get_variables(code: str) -> list[str]:
     """
     Extract only variable names from strings
     
