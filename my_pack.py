@@ -31,6 +31,7 @@ import shutil
 from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
+from keyword import iskeyword
 
 def get_variables(code: str) -> list[str]:
     """
