@@ -33,7 +33,16 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
-# __builtin__ is not getting picked up? #
+def get_builtins() -> list:
+    """
+    Gets a list of the builtin functions
+    seems to be differences between jupyter notebook and python
+    """
+    builtins=__builtins__
+    if isinstance(__builtins__,dict) == False:
+        builtins=dir(builtins)
+    return builtins
+
 def get_variables(code: str) -> list[str]:
     """
     Extract only variable names from strings
@@ -61,7 +70,8 @@ def get_variables(code: str) -> list[str]:
     # filter to identifier and non keywords only with builtins removed 
     # apparently __builtins__ and __builtin__ are the same
     # i.e. [True for i,j in zip(dir(__builtins__),dir(__builtin__)) if i!=j] # should print # []
-    return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in dir(__builtin__)]
+    builtins=get_builtins()
+    return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in builtins]
 
 def str_ascii(obj: str | list) -> list | str:
     """
