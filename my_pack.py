@@ -36,6 +36,13 @@ def str_ascii(obj: str | list) -> list | str:
     """
     for converting a string to list of ascii or list of 
     ints to string according to ascii convention
+    i.e. try the following to see common non-escape ascii 
+    characters:
+    
+    ls=[]
+    for i in range(32,127):
+        ls+=[i]
+    str_ascii(ls)
     """
     if type(obj) == str:
         return list(obj.encode("ascii"))
