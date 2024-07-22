@@ -32,6 +32,15 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
+def str_ascii(obj: str | list) -> list | str:
+    """
+    for converting a string to list of ascii or list of 
+    ints to string according to ascii convention
+    """
+    if type(obj) == str:
+        return list(obj.encode("ascii"))
+    return bytes(obj).decode()
+
 SOURCE_CODES={}
 def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
     """
