@@ -183,7 +183,7 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,
     doc_string=""
     # temporarily remove docstring if it exists
     if FUNC.__doc__ != None:
-        doc_string=f'"""{FUNC.__doc__}"""'
+        doc_string=f'\n    """{FUNC.__doc__}"""'
         body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1)
     return decorators,head,doc_string,body
 
