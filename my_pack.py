@@ -43,6 +43,15 @@ def str_ascii(obj: str | list) -> list | str:
     for i in range(32,127):
         ls+=[i]
     str_ascii(ls)
+
+    or 
+
+    ls=[]
+    for j in [[48,58],[65,91],[97,123]]:
+        for i in range(j[0],j[1]):
+            ls+=[i]
+        ls+=[32]
+    str_ascii(ls)
     """
     if type(obj) == str:
         return list(obj.encode("ascii"))
