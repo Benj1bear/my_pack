@@ -32,6 +32,35 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 
+def get_variables(code):
+    """
+    Extract only variable names from strings
+    
+    Note: only works on raw strings e.g.
+    the kind you may get from reading files
+    else it won't remove strings correctly
+    """
+    def sub(regex,repl=""):
+        """For reducing the amount of code written"""
+        nonlocal code # makes it accessible to a scope one above
+        code=re.sub(regex,repl,code,flags=re.DOTALL)
+    # make sure we can distinguish strings
+    sub(r"\\\"|\\\'")
+    # remove all strings
+    sub(r"\'[^']*\'")
+    sub(r'\"[^"]*\"')
+    # remove all comments
+    code+="\n"
+    sub(r"#(.+?)\n"," ")
+    # get letters and numbers only
+    sub(r"\W+"," ")
+    # get unique names
+    variables=set(code.split(" "))
+    # filter to identifier and non keywords only with builtins removed 
+    # apparently __builtins__ and __builtin__ are the same
+    # i.e. [True for i,j in zip(dir(__builtins__),dir(__builtin__)) if i!=j] # should print # []
+    return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in dir(__builtin__)]
+
 def str_ascii(obj: str | list) -> list | str:
     """
     for converting a string to list of ascii or list of 
