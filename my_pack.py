@@ -68,8 +68,10 @@ class Timer:
     def log(self) -> None:
         """for logging any time differences of importance i.e. checking for bottlenecks"""
         current=time()
-        if current > self.important:
-            print(current)
+        diff=current-self.time
+        if diff > self.important:
+            print(diff)
+        self.time=current
 
 def get_builtins() -> list:
     """
