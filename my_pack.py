@@ -34,23 +34,39 @@ from functools import partial,wraps
 from keyword import iskeyword
 
 class Timer:
+    """
+    How to use
+    from time import sleep
+    timer=Timer()
+    sleep(2)
+    timer.get
+    # should print approximately
+    # 2.0
+    # if instead you replaced timer.get with:
+    timer.get_format
+    # then it should print
+    # 0.0 hour/s 0.0 minute/s 2.0 second/s
+    if instead .log is used you can set the threshold however you
+    like to log only the import events
+    """
     def __init__(self,important: int | float=0) -> None:
         self.time=time()
         self.important=important
     @property
     def get(self) -> None:
+        """Displays the time difference in seconds"""
         current=time()
         print(current-self.time)
         self.time=current
     @property
     def get_format(self) -> None:
-        """get time formatted"""
+        """Displays the time difference formatted"""
         current=time()
         print(time_formatted(current-self.time))
         self.time=current
     @property
     def log(self) -> None:
-        """for logging anything of importance i.e. checking for bottlenecks etc."""
+        """for logging any time differences of importance i.e. checking for bottlenecks"""
         current=time()
         if current > self.important:
             print(current)
