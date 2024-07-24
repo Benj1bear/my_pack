@@ -19,7 +19,7 @@ import datetime # needed at the very least for unstr
 import os
 from threading import Thread,RLock
 lock=RLock()
-import time
+from time import time,sleep
 #from types import ModuleType
 from typing import Any,Callable
 import tempfile
@@ -1278,7 +1278,7 @@ def create_variable(name: str) -> None:
 standing_by_count=0
 def stand_by() -> None:
     global standing_by_count
-    time.sleep(1)
+    sleep(1)
     print(standing_by_count)
     standing_by_count+=1   
 
@@ -1318,7 +1318,7 @@ def capture(interpret_code: bool=True) -> None:
     global current_execution
     last_execution = get_ipython().__getstate__()["_trait_values"]["execution_count"]
     # add some delay to stop interference with the main thread
-    time.sleep(1)
+    sleep(1)
     # wait until cell has been executed
     if current_execution != last_execution:
         code=get_ipython().__getstate__()["_trait_values"]["parent_header"]["content"]["code"]
