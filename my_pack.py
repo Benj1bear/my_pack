@@ -33,6 +33,28 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+class Timer:
+    def __init__(self,important: int | float=0) -> None:
+        self.time=time()
+        self.important=important
+    @property
+    def get(self) -> None:
+        current=time()
+        print(current-self.time)
+        self.time=current
+    @property
+    def get_format(self) -> None:
+        """get time formatted"""
+        current=time()
+        print(time_formatted(current-self.time))
+        self.time=current
+    @property
+    def log(self) -> None:
+        """for logging anything of importance i.e. checking for bottlenecks etc."""
+        current=time()
+        if current > self.important:
+            print(current)
+
 def get_builtins() -> list:
     """
     Gets a list of the builtin functions
@@ -1741,8 +1763,8 @@ def pairs(lst: list) -> pd.DataFrame:
     return df.iloc[:-1]
 
 def time_formatted(num: int) -> str:
-    num = 0.01*num
-    return str(np.floor(num/60))+" hour/s "+str(np.floor(num % 60))+" minute/s "+str(np.floor((num % 1)*60))+" second/s "
+    """Returns the time in hours,minutes,seconds format"""
+    return f"{np.floor(num/3600)} hour/s {np.floor((num/60) %60)} minute/s {np.floor(num%60)} second/s"
 
 def str_split(x: str,string: str) -> list:
     return x.split(string)
