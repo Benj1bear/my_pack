@@ -47,7 +47,7 @@ class Timer:
     # then it should print
     # 0.0 hour/s 0.0 minute/s 2.0 second/s
     if instead .log is used you can set the threshold however you
-    like to log only the import events
+    like to log only the important events
     """
     def __init__(self,important: int | float=0) -> None:
         self.time=time()
