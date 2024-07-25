@@ -33,7 +33,7 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
-def file_size(filename: str,decimals: int=2) -> int | float:
+def file_size(filename: str,decimals: int=2) -> str:
     """Returns the file size formatted according to it's size"""
     unit=" KMGT"
     size=os.path.getsize(filename) # in bytes
