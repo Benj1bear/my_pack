@@ -33,6 +33,13 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def file_size(filename: str,decimals: int=2) -> int | float:
+    """Returns the file size formatted according to it's size"""
+    unit=" KMGT"
+    size=os.path.getsize(filename) # in bytes
+    power=len(str(size))-1
+    return f"{size/10**(int(power/3)*3):.{decimals}f} "+unit[int(power/3)].strip()+"B"
+
 class Timer:
     """
     How to use
