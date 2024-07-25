@@ -59,6 +59,10 @@ class Timer:
     def __init__(self,important: int | float=0) -> None:
         self.time=time()
         self.important=important
+
+    def reset(self,important: int | float=0) -> None:
+        """for resetting the timer and allowing adjusting the threshold of importance"""
+        self.__init__()
     @property
     def get(self) -> None:
         """Displays the time difference in seconds"""
