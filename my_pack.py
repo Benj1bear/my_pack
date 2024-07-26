@@ -67,7 +67,7 @@ class dct_ext:
                 index=key_slice(self.dct,index)
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
-        return {i: self.dct[i] for i in list(set(index))}
+        return {i: self.dct[i] for i in set(list(index))}
 
     def __setitem__(self,*args) -> None:
         try:
