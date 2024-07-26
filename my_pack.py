@@ -44,6 +44,9 @@ class dct_ext:
     # should print
     # {'a': 4, 'b': 5}
     # you can also slice using ["a":"b"] etc.
+    # it also allows multiple assignments i.e.
+    dct_ext(rcParams)['figure.figsize','font.size','figure.dpi','lines.linewidth','axes.facecolor','patch.edgecolor','font.family']=\
+    (0,2.7),3.1,58,42,'colour1','colour2','style1'
     """
     def __init__(self,dct: dict) -> None:
         self.dct=dct
