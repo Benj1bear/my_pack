@@ -33,6 +33,11 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def git_info(repo: str) -> dict:
+    """General info from a github repo"""
+    api_end_point=re.sub("https://github.com","https://api.github.com/repos",repo)
+    return scrape(api_end_point,form="json")
+
 class dct_ext:
     """
     Extension to the dict class whereby you can now slice and assign similarly to 
@@ -1941,7 +1946,7 @@ def validate(model: str) -> pd.DataFrame:
     k.iloc[:,2] = k.iloc[:,2]+" "+k.iloc[:,3]+" "+k.iloc[:,4].fillna('') ## add the conclusions
     return k.shift(3,axis=1).drop(columns=[k.columns[0],k.columns[1],k.columns[2]]) ## shift to the right, drop the unwanted columns
      
-def scrape(url: str,form: str=None,header: str="") -> str:
+def scrape(url: str,form: str=None,header: str="") -> str | dict:
     """
     Scrapes a webpage returning the response content or prints an error message when the response code is not 200
     
