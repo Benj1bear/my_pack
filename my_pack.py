@@ -33,6 +33,19 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def key_slice(ls: list | dict,slce: slice) -> slice:
+    """Converts letter based slicing to numeric based"""
+    start,stop=slce.start,slce.stop # these will be strings
+    for index,key in enumerate(ls):
+        # just go through and find the start and stop
+        if start == key and start != None:
+            start=index
+        if stop == key and stop != None:
+            stop=index
+        if type(start) != str and type(stop) != str:
+            break
+    return slice(start,stop,slce.step)
+
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
     number=str(number)
