@@ -70,12 +70,8 @@ class dct_ext:
         return {i: self.dct[i] for i in index}
 
     def __setitem__(self,*args) -> None:
-        try:
-            for key,value in zip(*args):
-                self.dct[key]=value
-        except:
-            # incase it's just one value
-            self.dct[args[0]]=args[1]
+        for key,value in zip(args[0],args[1]):
+            self.dct[key]=value
 
 def key_slice(ls: list | dict,slce: slice) -> slice:
     """Converts letter based slicing to numeric based"""
