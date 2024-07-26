@@ -67,7 +67,10 @@ class dct_ext:
                 index=key_slice(self.dct,index)
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
-        return {i: self.dct[i] for i in set(list(index))}
+        try:
+            return {i: self.dct[i] for i in set([*index])}
+        except:
+            return {index: self.dct[index]}
 
     def __setitem__(self,*args) -> None:
         try:
