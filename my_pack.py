@@ -48,6 +48,9 @@ class dct_ext:
     from pylab import rcParams
     dct_ext(rcParams)['figure.figsize','font.size','figure.dpi','lines.linewidth','axes.facecolor','patch.edgecolor','font.family']=\
     (0,2.7),3.1,58,42,'colour1','colour2','style1'
+    print(rcParams['figure.figsize'])
+    # should print
+    [0.0, 2.7]
     """
     def __init__(self,dct: dict) -> None:
         self.dct=dct
