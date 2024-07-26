@@ -49,6 +49,7 @@ class dct_ext:
         self.dct=dct
     
     def __repr__(self) -> str:
+        """Makes sure to display a dict and not a memory location"""
         return str(self.dct)
     
     def __getitem__(self,index: list) -> dict:
