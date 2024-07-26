@@ -44,7 +44,7 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
             stop=index
         if type(start) != str and type(stop) != str:
             break
-    return slice(start,stop,slce.step)
+    return slice(start,stop+1,slce.step) # add one to stop to be inclusive
 
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
