@@ -82,9 +82,9 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
     start,stop=slce.start,slce.stop # these will be strings
     for index,key in enumerate(ls):
         # just go through and find the start and stop
-        if start == key and start != None:
+        if start == key and type(start) != int:
             start=index
-        if stop == key and stop != None:
+        if stop == key and type(stop) != int:
             stop=index
         if type(start) != str and type(stop) != str:
             break
