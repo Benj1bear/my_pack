@@ -33,6 +33,37 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+class dct_ext:
+    """
+    Extension to the dict class whereby you can now slice like you would with strings or pd.DataFrame objects
+    i.e.
+    test={"a":3,"b":2}
+    test=dct_ext(test)
+    test["a","b"]=4,5
+    print(test)
+    # should print
+    # {'a': 4, 'b': 5}
+    # you can also slice using ["a":"b"] etc.
+    """
+    def __init__(self,dct: dict) -> None:
+        self.dct=dct
+    
+    def __repr__(self) -> str:
+        return str(self.dct)
+    
+    def __getitem__(self,index: list) -> dict:
+        if type(index) == slice:
+            # get keys as ints if not already
+            if type(index.start) == str or type(index.stop) == str:
+                index=key_slice(self.dct,index)
+            # numeric # convert to list
+            return {i: self.dct[i] for i in list(self.dct)[index]}
+        return {i: self.dct[i] for i in index}
+
+    def __setitem__(self,*args) -> None:
+        for key,value in zip(*args):
+            self.dct[key]=value
+
 def key_slice(ls: list | dict,slce: slice) -> slice:
     """Converts letter based slicing to numeric based"""
     start,stop=slce.start,slce.stop # these will be strings
