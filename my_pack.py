@@ -35,7 +35,8 @@ from keyword import iskeyword
 
 class dct_ext:
     """
-    Extension to the dict class whereby you can now slice like you would with strings or pd.DataFrame objects
+    Extension to the dict class whereby you can now slice and assign similarly to 
+    how you would with strings list or pd.DataFrame objects etc.
     i.e.
     test={"a":3,"b":2}
     test=dct_ext(test)
