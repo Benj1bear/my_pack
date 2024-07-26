@@ -33,12 +33,29 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def digit_format(number: str | int | float) -> str:
+    """Formats numbers using commas"""
+    number=str(number)
+    parts=number.split(".")
+    try:number="."+parts[1]
+    except:number=""
+    count=-1
+    for i in parts[0][::-1]:
+        count+=1
+        if abs(count) % 3 == 0:
+            number=i+","+number
+        else:
+            number=i+number
+    return number[:-1]
+
 def file_size(filename: str,decimals: int=2) -> str:
-    """Returns the file size formatted according to it's size"""
+    """Returns the file size formatted according to its size"""
     unit=" KMGT"
     size=os.path.getsize(filename) # in bytes
     power=len(str(size))-1
-    return f"{size/10**(int(power/3)*3):.{decimals}f} "+unit[int(power/3)].strip()+"B"
+    with open(filename) as file:
+        return f"""file size: {size/10**(int(power/3)*3):.{decimals}f} {unit[int(power/3)].strip()}B
+lines: {digit_format(sum(1 for _ in file))}"""
 
 class Timer:
     """
