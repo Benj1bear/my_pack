@@ -97,21 +97,24 @@ class dct_ext:
                 index=key_slice(self.dct,index)
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
+        if type(index) != tuple:
+            index=(index,)
         keys=list(self.dct.keys())
         condition=lambda i:i if type(i)==str else keys[i]
-        if type(index) == tuple and len(index) > 1:
-            return {condition(i): self.dct[condition(i)] for i in [*index]} # decided not to use set([*index]) to retain ordering
-        return {condition(index): self.dct[condition(index)]}
+        return {condition(i): self.dct[condition(i)] for i in [*index]} # decided not to use set([*index]) to retain ordering
 
     def __setitem__(self,index,args) -> None:
+        if type(args) != tuple:
+            args=(args,)
+        # get keys and set them
         dct=self.__getitem__(index)
         keys=list(dct.keys())
-        # just get the keys and set them
-        if type(args) == tuple:
-            for key,arg in zip(keys,*args):
-                self.dct[key]=arg
-        else:
-            self.dct[keys[0]]=args
+        print(keys,args)
+        # catch errors
+        if len(keys) != len(args):
+            raise Exception("in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned")
+        for key,arg in zip(keys,args):
+            self.dct[key]=arg
 
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
