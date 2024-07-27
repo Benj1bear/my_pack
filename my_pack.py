@@ -1973,7 +1973,7 @@ def scrape(url: str,form: str=None,header: str="") -> str | dict:
     """
     response=requests.get(url,headers=header)
     if response.status_code != 200:
-        return print("Error: ",num," ",response)
+        return print("Error: ",response.status_code," ",response)
     # maybe export this out to a function that deals with form?
     if form == None:
         return response.content
