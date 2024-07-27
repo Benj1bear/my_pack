@@ -43,7 +43,7 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
     if type(slce.step) == str:
         raise Exception("slicing step cannot be a string")
     start,stop=slce.start,slce.stop # these will be strings
-    if type(stop) == int
+    if type(stop) == int:
         if stop < 1: # to ensure negative slicing is as usual
             stop-=1
     for index,key in enumerate(ls):
