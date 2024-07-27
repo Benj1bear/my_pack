@@ -104,7 +104,6 @@ class dct_ext:
         return {condition(index): self.dct[condition(index)]}
 
     def __setitem__(self,index,args) -> None:
-        print(index,args)
         dct=self.__getitem__(index)
         keys=list(dct.keys())
         # just get the keys and set them
