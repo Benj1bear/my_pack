@@ -1971,9 +1971,8 @@ def scrape(url: str,form: str=None,header: str="") -> str | dict:
     
     i.e. form=None | 'html' | 'json' by default form is set as form=None returning response.content
     """
-    response = requests.get(url,headers=header)
-    num = int(str(response).split("[")[1].split("]")[0])
-    if num != 200:
+    response=requests.get(url,headers=header)
+    if response.status_code != 200:
         return print("Error: ",num," ",response)
     # maybe export this out to a function that deals with form?
     if form == None:
