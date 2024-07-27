@@ -43,9 +43,9 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
     if type(slce.step) == str:
         raise Exception("slicing step cannot be a string")
     start,stop=slce.start,slce.stop # these will be strings
-    if type(stop) == int:
-        if stop < 1: # to ensure negative slicing is as usual
-            stop-=1
+    flag=0 # add one to stop to be inclusive for string slicing
+    if type(stop) == str:
+        flag=1
     for index,key in enumerate(ls):
         if start==key and type(start) != int:
             start=index
@@ -61,7 +61,10 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
         for which,value in [("Starting",start),("Ending",stop)]:
             if type(value) == str:
                 raise KeyError(f"in function key_slice: {which} slice '{value}' is not in the dictionaries key values")
-    return slice(start,stop+1,slce.step) # add one to stop to be inclusive
+    if flag: 
+        if stop > 0:
+            stop+=1
+    return slice(start,stop,slce.step)
 
 class dct_ext:
     """
