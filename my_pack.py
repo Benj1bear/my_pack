@@ -38,6 +38,28 @@ def git_info(repo: str) -> dict:
     api_end_point=re.sub("https://github.com","https://api.github.com/repos",repo)
     return scrape(api_end_point,form="json")
 
+def key_slice(ls: list | dict,slce: slice) -> slice:
+    """Converts letter based slicing to numeric based"""
+    if type(slce.step) == str:
+        raise Exception("slicing step cannot be a string")
+    start,stop=slce.start,slce.stop # these will be strings
+    for index,key in enumerate(ls):
+        if start==key and type(start) != int:
+            start=index
+        if stop==key and type(stop) != int:
+            stop=index
+        if type(start) != str and type(stop) != str:
+            break
+    # check for errors
+    if type(start) == str or type(stop) == str:
+        # try to be helpful with the error message
+        if type(start) == str and type(stop) == str:
+            raise Exception("key_slice failed: Both start and end slice arguements are not in the dictionaries key values")
+        for which,value in [("Starting",start),("Ending",stop)]:
+            if type(value) == str:
+                raise KeyError(f"in function key_slice: {which} slice '{value}' is not in the dictionaries key values")
+    return slice(start,stop+1,slce.step) # add one to stop to be inclusive
+# needs testing #
 class dct_ext:
     """
     Extension to the dict class whereby you can now slice and assign similarly to 
@@ -57,6 +79,9 @@ class dct_ext:
     print(rcParams['figure.figsize'])
     # should print
     [0.0, 2.7]
+    # for multiple assignments you can use
+    dct={"cat":3,"dog":5,"mouse":7}
+    *dct_ext(dct),*dct_ext(dct)=1,2,3,4
     """
     def __init__(self,dct: dict) -> None:
         self.dct=dct
@@ -65,38 +90,29 @@ class dct_ext:
         """Makes sure to display a dict and not a memory location"""
         return str(self.dct)
     
-    def __getitem__(self,index: list) -> dict:
+    def __getitem__(self,index: slice) -> dict:
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
                 index=key_slice(self.dct,index)
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
-        try:
-            return {i: self.dct[i] for i in set([*index])}
-        except:
-            return {index: self.dct[index]}
+        keys=list(self.dct.keys())
+        condition=lambda i:i if type(i)==str else keys[i]
+        if type(index) == tuple and len(index) > 1:
+            return {condition(i): self.dct[condition(i)] for i in [*index]} # decided not to use set([*index]) to retain ordering
+        return {condition(index): self.dct[condition(index)]}
 
-    def __setitem__(self,*args) -> None:
-        try:
-            for key,value in zip(*args):
-                self.dct[key]=value
-        except:
-            # incase it's just one value
-            self.dct[args[0]]=args[1]
-
-def key_slice(ls: list | dict,slce: slice) -> slice:
-    """Converts letter based slicing to numeric based"""
-    start,stop=slce.start,slce.stop # these will be strings
-    for index,key in enumerate(ls):
-        # just go through and find the start and stop
-        if start == key and type(start) != int:
-            start=index
-        if stop == key and type(stop) != int:
-            stop=index
-        if type(start) != str and type(stop) != str:
-            break
-    return slice(start,stop+1,slce.step) # add one to stop to be inclusive
+    def __setitem__(self,index,args) -> None:
+        print(index,args)
+        dct=self.__getitem__(index)
+        keys=list(dct.keys())
+        # just get the keys and set them
+        if type(args) == tuple:
+            for key,arg in zip(keys,*args):
+                self.dct[key]=arg
+        else:
+            self.dct[keys[0]]=args
 
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
