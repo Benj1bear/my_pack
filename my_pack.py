@@ -54,7 +54,7 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
     if type(start) == str or type(stop) == str:
         # try to be helpful with the error message
         if type(start) == str and type(stop) == str:
-            raise Exception("key_slice failed: Both start and end slice arguements are not in the dictionaries key values")
+            raise KeyError("key_slice failed: Both start and end slice arguements are not in the dictionaries key values")
         for which,value in [("Starting",start),("Ending",stop)]:
             if type(value) == str:
                 raise KeyError(f"in function key_slice: {which} slice '{value}' is not in the dictionaries key values")
