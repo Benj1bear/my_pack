@@ -43,6 +43,8 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
     if type(slce.step) == str:
         raise Exception("slicing step cannot be a string")
     start,stop=slce.start,slce.stop # these will be strings
+    if stop < 1: # to ensure negative slicing is as usual
+        stop-=1
     for index,key in enumerate(ls):
         if start==key and type(start) != int:
             start=index
@@ -59,7 +61,7 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
             if type(value) == str:
                 raise KeyError(f"in function key_slice: {which} slice '{value}' is not in the dictionaries key values")
     return slice(start,stop+1,slce.step) # add one to stop to be inclusive
-# needs testing #
+
 class dct_ext:
     """
     Extension to the dict class whereby you can now slice and assign similarly to 
@@ -110,8 +112,8 @@ class dct_ext:
         dct=self.__getitem__(index)
         keys=list(dct.keys())
         # catch errors
-        if len(keys) != len(args):
-            raise Exception("in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned")
+        if len(keys)-len(args)!=0:
+            raise Exception(f"in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned\nkeys: {keys}\nargs: {args}")
         for key,arg in zip(keys,args):
             self.dct[key]=arg
 
