@@ -109,7 +109,6 @@ class dct_ext:
         # get keys and set them
         dct=self.__getitem__(index)
         keys=list(dct.keys())
-        print(keys,args)
         # catch errors
         if len(keys) != len(args):
             raise Exception("in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned")
