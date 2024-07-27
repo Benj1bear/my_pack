@@ -61,9 +61,8 @@ def key_slice(ls: list | dict,slce: slice) -> slice:
         for which,value in [("Starting",start),("Ending",stop)]:
             if type(value) == str:
                 raise KeyError(f"in function key_slice: {which} slice '{value}' is not in the dictionaries key values")
-    if flag: 
-        if stop > 0:
-            stop+=1
+    if flag==1 and stop > 0:
+        stop+=1
     return slice(start,stop,slce.step)
 
 class dct_ext:
