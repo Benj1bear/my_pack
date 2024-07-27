@@ -104,8 +104,8 @@ class dct_ext:
         return {condition(i): self.dct[condition(i)] for i in [*index]} # decided not to use set([*index]) to retain ordering
 
     def __setitem__(self,index,args) -> None:
-        if type(args) != tuple:
-            args=(args,)
+        if type(args) != list:
+            args=[args]
         # get keys and set them
         dct=self.__getitem__(index)
         keys=list(dct.keys())
