@@ -254,7 +254,7 @@ def get_variables(code: str) -> list[str]:
     builtins=get_builtins()
     return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in builtins]
 
-def str_ascii(obj: str | list) -> list | str:
+def str_ascii(obj: str | list[int,...]) -> list[int,...] | str:
     """
     for converting a string to list of ascii or list of 
     ints to string according to ascii convention
