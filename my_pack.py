@@ -35,7 +35,7 @@ from keyword import iskeyword
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
     """
-    # code reference: Golubev, A. , (2019) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA,
+    # code reference: Lysakowski, R., Aristide, (2021) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA,
     # changes made: Added flexibility to user input and exception handling, made minor adjustments to type annotations and code style preferences, implemented my comments
     Display pd.DataFrames side by side
     
