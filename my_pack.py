@@ -57,7 +57,7 @@ def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list
     tables=""
     for caption,df in zip(captions, dfs):
         tables+=df.style.set_table_attributes("style='display:inline'")\
-        .set_caption(caption)._repr_html_()+tablespacing * "\xa0"
+        .set_caption(caption)._repr_html_()+spacing * "\xa0"
     display(HTML(tables))
 
 def git_info(repo: str) -> dict:
