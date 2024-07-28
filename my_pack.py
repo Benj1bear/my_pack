@@ -33,6 +33,33 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
+    """
+    # code reference: (user:) Maku, (2019) https://stackoverflow.com/questions/57958432/how-to-add-table-title-in-python-preferably-with-pandas,CC BY-SA,
+    # changes made: Added flexibility to user input and exception handling, made minor adjustments to type annotations and code style preferences, implemented my comments
+    Display pd.DataFrames side by side
+    
+    dfs: list of pandas.DataFrame
+    captions: list of table captions
+    spacing: int number of spaces
+    """
+    # for flexibility and exception handling
+    if type(dfs)!=list:
+        dfs=[dfs]
+    if type(captions)!=list:
+        captions=[captions]
+    length_captions,length_dfs=len(captions),len(dfs)
+    if length_captions>length_dfs:
+        raise Exception(f"The number of catpions '{length_captions}' exceeds the number of data frames '{length_dfs}'")
+    elif length_captions<length_dfs:
+        captions+=[""]*(length_dfs-length_captions)
+    # create tables
+    tables=""
+    for caption,df in zip(captions, dfs):
+        tables+=df.style.set_table_attributes("style='display:inline'")\
+        .set_caption(caption)._repr_html_()+tablespacing * "\xa0"
+    display(HTML(tables))
+
 def git_info(repo: str) -> dict:
     """General info from a github repo"""
     api_end_point=re.sub("https://github.com","https://api.github.com/repos",repo)
