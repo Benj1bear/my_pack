@@ -2099,10 +2099,13 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     # show the info #
     display(Markdown("**Type consistency:**"))
     display(my_info(data))
-    # is there enough data for analysis
-    sns.heatmap(data.isnull())
-    plt.title("Heatmap of missing values")
-    plt.show()
+    try:
+        # is there enough data for analysis
+        sns.heatmap(data.isnull())
+        plt.title("Heatmap of missing values")
+        plt.show()
+    except Exception as e:
+        print(e)
     # show description # check continuity # check uniqueness
     display(Markdown("**Numeric data:**"))
     def try_mod(df: pd.DataFrame) -> pd.Series:
