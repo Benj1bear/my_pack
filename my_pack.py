@@ -2111,20 +2111,27 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
         """
         try:return len(df[df%1==0])/len(df) # we can only return list objects to a pd.Series or pd.DataFrame (as that's what it expects)
         except:return "Error: "+str(df.dtype)
-    nums=data.describe()
-    continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
-    continuity.name="proportion discrete"
-    def try_digit_slice(cell: Any,places: int=2) -> Any:
-        """attempts to round numbers"""
-        try:return digit_slice(cell,places)
-        except:return cell
-    display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_digit_slice))
+    # use try excepts in case no numerical or categorical data to display e.g. no columns
+    try:
+        nums=data.describe()
+        continuity=data.loc[:,nums.columns.values].fillna(0).apply(try_mod)
+        continuity.name="proportion discrete"
+        def try_digit_slice(cell: Any,places: int=2) -> Any:
+            """attempts to round numbers"""
+            try:return digit_slice(cell,places)
+            except:return cell
+        display(pd.concat([nums.iloc[0:1],pd.DataFrame(continuity).T,nums.iloc[1:]]).T.map(try_digit_slice))
+    except Exception as e:
+        print(e)
     # categories
     display(Markdown("**Categorical data:**"))
-    objs=Type(data,"O")
-    display(objs.describe())
-    data = data_sets(objs)
-    display(data.head(15))
+    try:
+        objs=Type(data,"O")
+        display(objs.describe())
+        data = data_sets(objs)
+        display(data.head(15))
+    except Exception as e:
+        print(e)
     return data
     # missing data? # messy data
 
