@@ -33,11 +33,85 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
-##################################################################
-## seems to work but needs testing
-##################################################################
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
-    """Exports code to a string that can then be used to write to a file or for use elsewhere"""
+    """
+    Exports code to a string that can then be used to write to a file or for use elsewhere
+    Example: (save the following into a file called test.py)
+    ##########################################
+    from my_pack import preprocess
+
+    def something():
+        return "asdf;kas \""
+    
+    class func:pass
+    
+    c="asdf;kas \"";func
+    d='\''
+    
+    def hi(b=2):
+        a=3
+        can()
+        so()
+        return
+    def f():
+        return so()
+    def can():
+        f()
+        print(5)
+    def so():
+        print(5)
+    ##########################################
+    Then run:
+
+    from test import hi
+    from my_pack import export
+    export(hi,show=True,to="new.py",option="a")
+    # should print
+    initial section:
+    --------------------
+    def hi(b=2):
+        a=3
+        can()
+        so()
+        return
+    
+    --------------------
+    Recursion: 0:
+    --------------------
+    def hi(b=2):
+        a=3
+        can()
+        so()
+        return
+    
+    def can():
+        f()
+        print(5)
+    
+    def so():
+        print(5)
+    
+    --------------------
+    Recursion: 1:
+    --------------------
+    def hi(b=2):
+        a=3
+        can()
+        so()
+        return
+    
+    def can():
+        f()
+        print(5)
+    
+    def so():
+        print(5)
+    
+    def f():
+        return so()
+
+    --------------------
+    """
     # get source_code if Callable
     FUNC=None
     if isinstance(section,Callable)==True:
@@ -103,9 +177,6 @@ def all_callables(module: str) -> list[str]:
         if isinstance(locals()["temp"],Callable)==True:
             callables+=[locals()["temp"]]
     return callables
-##################################################################
-
-
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
     """
