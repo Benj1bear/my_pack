@@ -37,7 +37,7 @@ from keyword import iskeyword
 ## seems to work but needs testing
 ##################################################################
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit=10) -> str | None:
-    """Exports code to a .py string that can then be used to write to a file or for use elsewhere"""
+    """Exports code to a string that can then be used to write to a file or for use elsewhere"""
     # get source_code if Callable
     FUNC=None
     if isinstance(section,Callable)==True:
@@ -87,9 +87,9 @@ def all_callables(module: str) -> list[str]:
     except:
         try:
             current=os.getcwd()
-            os.chdir(module)
-            module=module.split(".")[0].split("\\")[-1]
-            source=__import__(module)
+            module=module.split(".")[0].split("\\")
+            os.chdir(module[0])
+            source=__import__(module[-1])
             os.chdir(current)
         except Exception as e:
             os.chdir(current)
