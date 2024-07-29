@@ -37,56 +37,69 @@ from keyword import iskeyword
 ## fixing at the moment
 ##################################################################
 #1. get code section and its module location
-def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str) -> str:
+def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # callables, section, and variables can change
+    changes=lambda string="before":print(string+":\n"+"-"*20+"\n"+section+"\n","-"*20) if show else None
     new_exports,remaining_callables=[],[]
     # get which functions 
     for func in callables:
-        if func.isin(variables)==True:
+        if (func.__name__ in variables)==True:##############################################################################
             new_exports+=[func]
         else:
             remaining_callables+=[func]
     if len(new_exports) > 0:
+        changes()
         for func in new_exports:# a list of functions from the module
-            exec(f'temp=__import__("{source}").{func}')
+            exec(f'temp=__import__("{source}").{func.__name__}')
             section+="\n"+source_code(locals()["temp"])
+        changes("after")
+        return
         get_code_requirements(*(section,remaining_callables,get_variables(section)))
     return section
 
 def all_callables(module: str) -> list[str]:
     """Returns a list of all callables available in a module"""
     try:
-        source=dir(__import__(module))
+        source=__import__(module)
     except:
         try:
             current=os.getcwd()
             os.chdir(module)
             module=module.split(".")[0].split("\\")[-1]
-            source=dir(__import__(module))
+            source=__import__(module)
             os.chdir(current)
         except Exception as e:
             os.chdir(current)
             raise e
-    return [i for i in source if isinstance(i,callable)==True]
+    callables=[]
+    for i in dir(source):
+        exec("temp=source."+i)
+        if isinstance(locals()["temp"],Callable)==True:
+            callables+=[locals()["temp"]]
+    return callables
         
-def export_code(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w") -> str | None:
-    """Exports code with it's other depent code and modules to a .py string that can then be used to write to a file or for use elsewhere"""
+def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False) -> str | None:
+    """Exports code to a .py string that can then be used to write to a file or for use elsewhere"""
     # get source_code if Callable
     FUNC=None
     if isinstance(section,Callable)==True:
-        section=source_code(section)
-        FUNC=re.match("def *(",source_code(section)[1]) ## needs fixing ##
+        section,FUNC,source=source_code(section),section.__name__,section.__module__
     # prep section
     variables=get_variables(section)
     if len(variables) == 0:
         return section
     # gather all functions,classes available to the .py file
     callables=all_callables(source)
-    if FUNC==None:
-        callables=[i for i in source if i!=FUNC]
+    if FUNC!=None:
+        callables=[func for func in callables if func.__name__!=FUNC]
     # start exporting code
-    code_export=get_code_requirements(*(section,callables,variables,source)) ## needs implementation
+    
+    #return callables,variables
+    code_export=get_code_requirements(*(section,callables,variables,source,show)) ## needs implementation
+    
+    
+    ## this should be fine ##
     if to==None:
         return code_export
     with open(to,option+"b") as file:
