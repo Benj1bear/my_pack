@@ -36,6 +36,28 @@ from keyword import iskeyword
 ##################################################################
 ## seems to work but needs testing
 ##################################################################
+def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit=10) -> str | None:
+    """Exports code to a .py string that can then be used to write to a file or for use elsewhere"""
+    # get source_code if Callable
+    FUNC=None
+    if isinstance(section,Callable)==True:
+        section,FUNC,source=source_code(section),section.__name__,section.__module__
+    # prep section
+    variables=get_variables(section)
+    if len(variables) == 0:
+        return section
+    # gather all functions,classes available to the .py file
+    callables=all_callables(source)
+    if FUNC!=None:
+        callables=[func for func in callables if func.__name__!=FUNC]
+    # start exporting code
+    if show:print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
+    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit) ## needs implementation
+    if to==None:
+        return code_export
+    with open(to,option) as file:
+        file.write(code_export)
+
 def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False,recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # callables, section, and variables can change
@@ -48,11 +70,10 @@ def get_code_requirements(section: str,callables: list[str],variables: list[str]
         else:
             remaining_callables+=[func]
     if len(new_exports) > 0:
-        changes()
         for func in new_exports:# a list of functions from the module
             exec(f'temp=__import__("{source}").{func.__name__}')
             section+="\n"+source_code(locals()["temp"])
-        changes("after")
+        changes(f"Recursion: {recursions}")
         if recursions==limit:
             return section
         recursions+=1
@@ -79,27 +100,6 @@ def all_callables(module: str) -> list[str]:
         if isinstance(locals()["temp"],Callable)==True:
             callables+=[locals()["temp"]]
     return callables
-        
-def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit=10) -> str | None:
-    """Exports code to a .py string that can then be used to write to a file or for use elsewhere"""
-    # get source_code if Callable
-    FUNC=None
-    if isinstance(section,Callable)==True:
-        section,FUNC,source=source_code(section),section.__name__,section.__module__
-    # prep section
-    variables=get_variables(section)
-    if len(variables) == 0:
-        return section
-    # gather all functions,classes available to the .py file
-    callables=all_callables(source)
-    if FUNC!=None:
-        callables=[func for func in callables if func.__name__!=FUNC]
-    # start exporting code
-    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit) ## needs implementation
-    if to==None:
-        return code_export
-    with open(to,option) as file:
-        file.write(code_export)
 ##################################################################
 
 
