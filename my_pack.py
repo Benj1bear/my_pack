@@ -36,7 +36,7 @@ from keyword import iskeyword
 ##################################################################
 ## seems to work but needs testing
 ##################################################################
-def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit=10) -> str | None:
+def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
     """Exports code to a string that can then be used to write to a file or for use elsewhere"""
     # get source_code if Callable
     FUNC=None
@@ -74,7 +74,9 @@ def get_code_requirements(section: str,callables: list[str],variables: list[str]
             exec(f'temp=__import__("{source}").{func.__name__}')
             section+="\n"+source_code(locals()["temp"])
         changes(f"Recursion: {recursions}")
+        # make sure there's some safety in case errors occur
         if recursions==limit:
+            print(f"recursion limit '{limit}' reached\n\nNote: the function may not have completed, if true, adjust the recursion limit or enter in the current code section to continue")
             return section
         recursions+=1
         get_code_requirements(*(section,remaining_callables,get_variables(section),source,show,recursions))
