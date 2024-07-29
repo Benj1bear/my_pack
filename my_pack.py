@@ -34,9 +34,8 @@ from functools import partial,wraps
 from keyword import iskeyword
 
 ##################################################################
-## fixing at the moment (It may cause recursion errors - beware (you'll have to wait for jupyter notebook to reset itself))
+## seems to work but needs testing
 ##################################################################
-#1. get code section and its module location
 def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False,recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # callables, section, and variables can change
@@ -96,13 +95,10 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     if FUNC!=None:
         callables=[func for func in callables if func.__name__!=FUNC]
     # start exporting code
-    
-    #return callables,variables
-    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit)
-    ## this should be fine ##
+    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit) ## needs implementation
     if to==None:
         return code_export
-    with open(to,option+"b") as file:
+    with open(to,option) as file:
         file.write(code_export)
 ##################################################################
 
