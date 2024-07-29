@@ -89,7 +89,6 @@ def all_callables(module: str) -> list[str]:
             current=os.getcwd()
             module=slice_occ(module.split(".")[0][::-1],"\\")
             module=[i[::-1] for i in module]
-            print(module)
             os.chdir(module[1])
             source=__import__(module[0])
             os.chdir(current)
