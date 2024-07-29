@@ -66,7 +66,8 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     from test import hi
     from my_pack import export
     export(hi,show=True,to="new.py",option="a")
-    # should print
+    # It will write to a file called new.py
+    # and should print
     initial section:
     --------------------
     def hi(b=2):
