@@ -319,13 +319,11 @@ def get_variables(code: str) -> list[str]:
     # remove all comments
     code+="\n"
     sub(r"#(.+?)\n"," ")
-    # get letters and numbers only
-    sub(r"\W+"," ")
+    # get letters and numbers only (retaining '.' to extract the base dictionary)
+    sub(r"[^\w.]+"," ")
     # get unique names
-    variables=set(code.split(" "))
+    variables=(i.split(".")[0] for i in set(code.split(" ")))
     # filter to identifier and non keywords only with builtins removed 
-    # apparently __builtins__ and __builtin__ are the same
-    # i.e. [True for i,j in zip(dir(__builtins__),dir(__builtin__)) if i!=j] # should print # []
     builtins=get_builtins()
     return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in builtins]
 
