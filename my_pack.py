@@ -34,7 +34,7 @@ from functools import partial,wraps
 from keyword import iskeyword
 
 ##################################################################
-## fixing at the moment (It may cause recursion errors - beware)
+## fixing at the moment (It may cause recursion errors - beware (you'll have to wait for jupyter notebook to reset itself))
 ##################################################################
 #1. get code section and its module location
 def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False) -> str:
