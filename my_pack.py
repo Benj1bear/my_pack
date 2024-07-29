@@ -87,9 +87,11 @@ def all_callables(module: str) -> list[str]:
     except:
         try:
             current=os.getcwd()
-            module=module.split(".")[0].split("\\")
-            os.chdir(module[0])
-            source=__import__(module[-1])
+            module=slice_occ(module.split(".")[0][::-1],"\\")
+            module=[i[::-1] for i in module]
+            print(module)
+            os.chdir(module[1])
+            source=__import__(module[0])
             os.chdir(current)
         except Exception as e:
             os.chdir(current)
