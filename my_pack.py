@@ -37,14 +37,14 @@ from keyword import iskeyword
 ## fixing at the moment (It may cause recursion errors - beware (you'll have to wait for jupyter notebook to reset itself))
 ##################################################################
 #1. get code section and its module location
-def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False) -> str:
+def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False,recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # callables, section, and variables can change
-    changes=lambda string="before":print(string+":\n"+"-"*20+"\n"+section+"\n","-"*20) if show else None
+    changes=lambda string="before":print(string+":\n"+"-"*20+"\n"+section+"\n"+"-"*20) if show else None
     new_exports,remaining_callables=[],[]
     # get which functions 
     for func in callables:
-        if (func.__name__ in variables)==True:##############################################################################
+        if (func.__name__ in variables)==True:
             new_exports+=[func]
         else:
             remaining_callables+=[func]
@@ -54,8 +54,10 @@ def get_code_requirements(section: str,callables: list[str],variables: list[str]
             exec(f'temp=__import__("{source}").{func.__name__}')
             section+="\n"+source_code(locals()["temp"])
         changes("after")
-        return
-        get_code_requirements(*(section,remaining_callables,get_variables(section)))
+        if recursions==limit:
+            return section
+        recursions+=1
+        get_code_requirements(*(section,remaining_callables,get_variables(section),source,show,recursions))
     return section
 
 def all_callables(module: str) -> list[str]:
@@ -79,7 +81,7 @@ def all_callables(module: str) -> list[str]:
             callables+=[locals()["temp"]]
     return callables
         
-def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False) -> str | None:
+def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit=10) -> str | None:
     """Exports code to a .py string that can then be used to write to a file or for use elsewhere"""
     # get source_code if Callable
     FUNC=None
@@ -96,9 +98,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     # start exporting code
     
     #return callables,variables
-    code_export=get_code_requirements(*(section,callables,variables,source,show)) ## needs implementation
-    
-    
+    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit)
     ## this should be fine ##
     if to==None:
         return code_export
