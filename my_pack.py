@@ -148,7 +148,7 @@ def get_code_requirements(section: str,callables: list[str],variables: list[str]
     if len(new_exports) > 0:
         for func in new_exports:# a list of functions from the module
             exec(f'temp=__import__("{source}").{func.__name__}')
-            section+="\n"+source_code(locals()["temp"])
+            section+="\n"+source_code(locals()["temp"]) ########################## This needs to be replaced to deal with i.e. imports from modules
         changes(f"Recursion: {recursions}")
         # make sure there's some safety in case errors occur
         if recursions==limit:
