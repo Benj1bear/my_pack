@@ -33,6 +33,68 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+##################################################################
+## fixing at the moment
+##################################################################
+#1. get code section and its module location
+def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str) -> str:
+    """Gets the required code in order to export a section of code from a .py file maintainably"""
+    # callables, section, and variables can change
+    new_exports,remaining_callables=[],[]
+    # get which functions 
+    for func in callables:
+        if func.isin(variables)==True:
+            new_exports+=[func]
+        else:
+            remaining_callables+=[func]
+    if len(new_exports) > 0:
+        for func in new_exports:# a list of functions from the module
+            exec(f'temp=__import__("{source}").{func}')
+            section+="\n"+source_code(locals()["temp"])
+        get_code_requirements(*(section,remaining_callables,get_variables(section)))
+    return section
+
+def all_callables(module: str) -> list[str]:
+    """Returns a list of all callables available in a module"""
+    try:
+        source=dir(__import__(module))
+    except:
+        try:
+            current=os.getcwd()
+            os.chdir(module)
+            module=module.split(".")[0].split("\\")[-1]
+            source=dir(__import__(module))
+            os.chdir(current)
+        except Exception as e:
+            os.chdir(current)
+            raise e
+    return [i for i in source if isinstance(i,callable)==True]
+        
+def export_code(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w") -> str | None:
+    """Exports code with it's other depent code and modules to a .py string that can then be used to write to a file or for use elsewhere"""
+    # get source_code if Callable
+    FUNC=None
+    if isinstance(section,Callable)==True:
+        section=source_code(section)
+        FUNC=re.match("def *(",source_code(section)[1]) ## needs fixing ##
+    # prep section
+    variables=get_variables(section)
+    if len(variables) == 0:
+        return section
+    # gather all functions,classes available to the .py file
+    callables=all_callables(source)
+    if FUNC==None:
+        callables=[i for i in source if i!=FUNC]
+    # start exporting code
+    code_export=get_code_requirements(*(section,callables,variables,source)) ## needs implementation
+    if to==None:
+        return code_export
+    with open(to,option+"b") as file:
+        file.write(code_export)
+##################################################################
+
+
+
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
     """
     # code reference: Lysakowski, R., Aristide, (2021) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA,
