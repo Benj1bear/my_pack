@@ -33,6 +33,7 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+# needs more testing but works in simple cases
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
     """
     Exports code to a string that can then be used to write to a file or for use elsewhere
