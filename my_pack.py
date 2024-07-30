@@ -158,7 +158,7 @@ def get_code_requirements(section: str,callables: list[str],variables: list[str]
         get_code_requirements(*(section,remaining_callables,get_variables(section),source,show,recursions))
     return section
 
-def all_callables(module: str) -> list[str]:
+def all_callables(module: str,return_module: bool=False) -> list[str] | (list[str],str):
     """Returns a list of all callables available in a module"""
     try:
         source=__import__(module)
@@ -178,6 +178,8 @@ def all_callables(module: str) -> list[str]:
         exec("temp=source."+i)
         if isinstance(locals()["temp"],Callable)==True:
             callables+=[locals()["temp"]]
+    if return_module:
+        return callables,module
     return callables
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
