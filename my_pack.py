@@ -393,11 +393,13 @@ def get_variables(code: str) -> list[str]:
     sub(r"#(.+?)\n"," ")
     # get letters and numbers only (retaining '.' to extract the base dictionary)
     sub(r"[^\w.]+"," ")
+    # remove any spaces between attributes
+    sub(r"\s*\.",".")
     # get unique names
-    variables=(i.split(".")[0] for i in set(code.split(" ")))
+    variables=set(code.split(" "))
     # filter to identifier and non keywords only with builtins removed 
     builtins=get_builtins()
-    return [i for i in variables if i.isidentifier() == True and iskeyword(i) == False and i not in builtins]
+    return [i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i]
 
 def str_ascii(obj: str | list[int,...]) -> list[int,...] | str:
     """
