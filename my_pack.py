@@ -20,7 +20,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-#from types import ModuleType
+from types import ModuleType,BuiltinFunctionType
 from typing import Any,Callable
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
@@ -115,48 +115,154 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     --------------------
     """
     # get source_code if Callable
-    FUNC=None
     if isinstance(section,Callable)==True:
-        section,FUNC,source=source_code(section),section.__name__,section.__module__
+        section,FUNC,source=source_code(section),[section.__name__],section.__module__
+    else:
+        ## check for functions ## raw strings only
+        FUNC=re.sub(r"\\\"|\\\'","",section,flags=re.DOTALL)
+        FUNC=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",FUNC)]
     # prep section
-    variables=get_variables(section)
-    if len(variables) == 0:
-        return section
-    # gather all functions,classes available to the .py file
-    callables=all_callables(source)
-    if FUNC!=None:
-        callables=[func for func in callables if func.__name__!=FUNC]
-    # start exporting code
-    if show:print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
-    code_export=get_code_requirements(*(section,callables,variables,source,show),limit=recursion_limit) ## needs implementation
+    variables,code_export=get_variables(section),section
+    if len(variables)>0:
+        # gather all functions,classes available to the .py file
+        callables,source=all_callables(source,True)
+        if len(FUNC)>0:
+            callables=[func for func in callables if func.__name__ not in FUNC]
+        # start exporting code
+        if show:print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
+        ######################### add an option to keep the initial section separate from the rest of the code?? ##############################
+        code_export,modules=get_code_requirements(*(section,callables,variables,variables,source,show,{}),limit=recursion_limit)
+        ## add the modules ##
+        if len(modules)>0:
+            header=""
+            for key in list(modules.keys()):
+                module=modules[key]
+                if len(module)==0:
+                    header+=f"import {key}\n"
+                else:
+                    header+=f"from {key} import {str(module)[2:-2]}\n"
+            # append all modules to the top of the section
+            code_export=header+"\n"+code_export
     if to==None:
         return code_export
+    #####################################################################
+    print("----------final results---------- \n")
+    print(code_export)
+    #####################################################################
     with open(to,option) as file:
         file.write(code_export)
 
-def get_code_requirements(section: str,callables: list[str],variables: list[str],source: str,show: bool=False,recursions: int=0,limit: int=20) -> str:
+def get_code_requirements(section: str,callables: list[str],temp_variables: list[str],variables_present,source: str,show: bool=False,modules: dict={},recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # callables, section, and variables can change
-    changes=lambda string="before":print(string+":\n"+"-"*20+"\n"+section+"\n"+"-"*20) if show else None
-    new_exports,remaining_callables=[],[]
-    # get which functions 
+    variables,attrs=[],[]
+    # separate variables and attributes
+    for i in temp_variables:
+        if "." in i:
+            attrs+=[i]
+        else:
+            variables+=[i]
+    ## handles attributes
+    ################################################ point of failure ## ##############################################
+    new_exports,definitions,remaining_callables=search_attrs(*(attrs,source,callables))
+    ############################################################################################
+    #print(new_exports,definitions,remaining_callables)
+    #exit()
+    # get which functions
     for func in callables:
         if (func.__name__ in variables)==True:
-            new_exports+=[func]
+            new_exports+=[func]       
         else:
             remaining_callables+=[func]
+    ## to make sure the new_exports make it
     if len(new_exports) > 0:
+        ## add the new code ##
         for func in new_exports:# a list of functions from the module
             exec(f'temp=__import__("{source}").{func.__name__}')
-            section+="\n"+source_code(locals()["temp"]) ########################## This needs to be replaced to deal with i.e. imports from modules
-        changes(f"Recursion: {recursions}")
+            local_temp=locals()["temp"]
+            section,modules=add_code(*(section,modules,local_temp,source))
+        section+=definitions
+        if show:print(f"Recursion: {recursions}"+":\n"+"-"*20+"\n"+section+"\n"+"-"*20)
+        # limit the amount of variables needing to use
+        new_variables_present=get_variables(section)
+        temp_variables=[i for i in new_variables_present if i not in variables_present]
+        if len(temp_variables)==0:
+            return section,modules
         # make sure there's some safety in case errors occur
         if recursions==limit:
             print(f"recursion limit '{limit}' reached\n\nNote: the function may not have completed, if true, adjust the recursion limit or enter in the current code section to continue")
-            return section
+            return section,modules
         recursions+=1
-        get_code_requirements(*(section,remaining_callables,get_variables(section),source,show,recursions))
-    return section
+        ## you have to return the recursion else it won't work properly
+        return get_code_requirements(*(section,remaining_callables,temp_variables,new_variables_present,source,show,modules,recursions))
+    return section,modules
+
+def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (str,dict):
+    """For retrieving and appending necessary code the section depends on"""
+    try:
+        ## assume it's a function or class ##
+        if local_temp.__module__ == source:
+            section+="\n"+source_code(local_temp)
+        else:
+            if local_temp.__module__ not in modules:
+                modules[local_temp.__module__]=[local_temp.__name__]
+            else:
+                modules[local_temp.__module__]+=[local_temp.__name__]
+    except:
+        ## is it a module ##
+        if type(local_temp)==ModuleType:
+            if local_temp.__name__ not in modules:
+                modules[local_temp.__name__]=[]
+        else:
+            raise TypeError(f"Variable '{local_temp.__name__}' or '{local_temp}' from new_exports is not a Callable or module type")
+    return section,modules
+
+def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable]):
+    """Traverses an attribute to uncover where each of the individual attribute came from"""
+    new_exports,definitions=[],""
+    for attr in attrs: # go through all the attrs
+        ## make sure the attr itself is not a module ##
+        exec(f"temp=__import__('{source}').{attr}")
+        local_temp=locals()["temp"]
+        if isinstance(local_temp,type): ## new class
+            if source+"."+attr in str(local_temp):
+                new_exports+=[local_temp]
+        elif isinstance(local_temp,ModuleType): 
+            # then we need to import this module
+            new_exports+=[local_temp]
+            continue
+        attribute=""
+        for i in attr.split("."): # go up starting with the first one
+            attribute+=i
+            exec(f"temp=__import__('{source}').{attribute}")
+            local_temp=locals()["temp"]
+            if isinstance(local_temp,Callable): # it won't be a variable but might be a module
+                if "." not in attribute:
+                    # get it's source code or check it for module
+                    new_exports+=[local_temp]
+                else:
+                    # if the source code exists then it has been assigned
+                    # else it's already defined from the class definition
+                    ## the only flaw to this approach is type based methods and builtins
+                    if local_temp.__name__!=i:  ## this could be an easy point of failure ##
+                        new_exports+=[local_temp] #something
+                        definitions+=attribute+"="+local_temp.__name__+"\n"
+                    else:
+                        try:
+                            source_code(local_temp) # if we can't get it it's because it's a builtin or it's already defined
+                            new_exports+=[local_temp] #something
+                            definitions+=attribute+"="+local_temp.__name__+"\n"
+                        except:
+                            if isinstance(local_temp,BuiltinFunctionType):  ########## what about partial functions?
+                                definitions+=attribute+"="+local_temp.__name__+"\n"
+            elif isinstance(local_temp,ModuleType):
+                if "." not in attribute: # it's a module ##### needs testing
+                    new_exports+=[local_temp] # but what if it's chained? e.g. my_pack.my_pack.my_pack? It would get picked up?
+                new_exports+=[local_temp]
+            attribute+="."
+    if len(definitions)>0:
+        definitions="\n"+definitions
+    return new_exports,definitions,[i for i in callables if i not in new_exports]
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
