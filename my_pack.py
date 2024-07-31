@@ -152,49 +152,49 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     with open(to,option) as file:
         file.write(code_export)
 
+def split_list(reference: list[str],condition: Callable):
+    """For splitting one list into two based on a condition function"""
+    new,remaining=[],[]
+    for i in reference:
+        if condition(i):
+            new+=[i]
+        else:
+            remaining+=[i]
+    return new,remaining
+    
 def get_code_requirements(section: str,callables: list[str],temp_variables: list[str],variables_present,source: str,show: bool=False,modules: dict={},recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
-    # callables, section, and variables can change
-    variables,attrs=[],[]
     # separate variables and attributes
-    for i in temp_variables:
-        if "." in i:
-            attrs+=[i]
-        else:
-            variables+=[i]
-    ## handles attributes
+    attrs,variables=split_list(temp_variables,lambda var:True if "." in var else False)
+    ## get which functions for attrs ##
     ################################################ point of failure ## ##############################################
-    new_exports,definitions,remaining_callables=search_attrs(*(attrs,source,callables))
+    attr_exports,definitions=search_attrs(*(attrs,source))
     ############################################################################################
-    #print(new_exports,definitions,remaining_callables)
-    #exit()
-    # get which functions
-    for func in callables:
-        if (func.__name__ in variables)==True:
-            new_exports+=[func]       
-        else:
-            remaining_callables+=[func]
-    ## to make sure the new_exports make it
+    ## do the same but for the variables and then combine ##
+    new_exports,callables=split_list(callables,lambda func:True if (func.__name__ in variables)==True else False)
+    new_exports+=attr_exports
     if len(new_exports) > 0:
         ## add the new code ##
+        print(section,f"  length:  {len(new_exports)}")
         for func in new_exports:# a list of functions from the module
             exec(f'temp=__import__("{source}").{func.__name__}')
             local_temp=locals()["temp"]
-            section,modules=add_code(*(section,modules,local_temp,source))
+            section,modules=add_code(*(section,modules,local_temp,source)) ########### check here just in case but it shouldn't be here
         section+=definitions
+        ## print the current Recursion ##
         if show:print(f"Recursion: {recursions}"+":\n"+"-"*20+"\n"+section+"\n"+"-"*20)
-        # limit the amount of variables needing to use
+        ## limit the amount of variables needing to be used ##
         new_variables_present=get_variables(section)
         temp_variables=[i for i in new_variables_present if i not in variables_present]
         if len(temp_variables)==0:
             return section,modules
-        # make sure there's some safety in case errors occur
+        ## make sure there's some safety in case errors occur ##
         if recursions==limit:
             print(f"recursion limit '{limit}' reached\n\nNote: the function may not have completed, if true, adjust the recursion limit or enter in the current code section to continue")
             return section,modules
         recursions+=1
-        ## you have to return the recursion else it won't work properly
-        return get_code_requirements(*(section,remaining_callables,temp_variables,new_variables_present,source,show,modules,recursions))
+        ## you have to return the recursion else it won't work properly ##
+        return get_code_requirements(*(section,callables,temp_variables,new_variables_present,source,show,modules,recursions))
     return section,modules
 
 def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (str,dict):
