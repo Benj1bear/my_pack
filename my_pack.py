@@ -217,7 +217,7 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
             if local_temp.__name__ not in modules:
                 modules[local_temp.__name__]=[]
         else:
-            raise TypeError(f"Variable '{local_temp.__name__}' or '{local_temp}' from new_exports is not a Callable or module type")
+            raise TypeError(f"Variable '{local_temp}' from new_exports is not a Callable or module type")
     return section,modules
 
 def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable]):
