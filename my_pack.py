@@ -271,7 +271,7 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
         return [],"",callables
     if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
          definitions=""
-    elif len(definitions)>0:
+    else: # should just be able to use else here
         definitions="\n"+definitions
     return allowed_exports,definitions,callables
 
