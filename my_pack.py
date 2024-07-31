@@ -387,6 +387,23 @@ def get_variables(code: str) -> list[str]:
         code=re.sub(regex,repl,code,flags=re.DOTALL)
     # make sure we can distinguish strings
     sub(r"\\\"|\\\'")
+    ## in case methods are applied to string or int types
+    ## keep string types
+    sub(r"\'[^']*\'\.","str.")
+    sub(r"\(\'[^']*\'\)\.","str.")
+    sub(r'\"[^"]*\"\.',"str.")
+    sub(r'\(\"[^"]*\"\)\.',"str.")
+    ## keep float types
+    sub(r"[-+]?\d+\.\d+\.","float.")
+    sub(r"\([-+]?\d+\.\d+\)\.","float.")
+    ## keep int types (they cannot be i.e. 1.to_bytes() only (1).to_bytes() else it expects a float)
+    sub(r"\(\d+\)\.","int.")
+    ## check for errors
+    matches=re.findall(r"\d+\.",code)
+    if len(matches)>0:
+        raise SyntaxError(f"""The following syntaxes are not allowed as they will not execute: {matches}
+
+(Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types)""")
     # remove all strings
     sub(r"\'[^']*\'")
     sub(r'\"[^"]*\"')
@@ -399,7 +416,7 @@ def get_variables(code: str) -> list[str]:
     sub(r"\s*\.",".")
     # get unique names
     variables=set(code.split(" "))
-    # filter to identifier and non keywords only with builtins removed 
+    # filter to identifier and non keywords only with builtins removed
     builtins=get_builtins()
     return [i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i]
 
