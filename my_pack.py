@@ -180,7 +180,10 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
     if len(new_exports) > 0:
         ## add the new code ##
         for func in new_exports:# a list of functions from the module
-            exec(f'temp=__import__("{source}").{func.__name__}')
+            try:
+                exec(f'temp=__import__("{source}").{func.__name__}')
+            except: ## doesn't exist ##
+                continue
             local_temp=locals()["temp"]
             section,modules=add_code(*(section,modules,local_temp,source)) ########### check here just in case but it shouldn't be here
         section+=definitions
