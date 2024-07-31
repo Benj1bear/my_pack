@@ -176,7 +176,6 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
     new_exports+=attr_exports
     if len(new_exports) > 0:
         ## add the new code ##
-        print(section,f"  length:  {len(new_exports)}")
         for func in new_exports:# a list of functions from the module
             exec(f'temp=__import__("{source}").{func.__name__}')
             local_temp=locals()["temp"]
