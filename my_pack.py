@@ -226,7 +226,10 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
     # only add it in if there's a callable for it
     for attr in attrs: # go through all the attrs
         ## make sure the attr itself is not a module ##
-        exec(f"temp=__import__('{source}').{attr}")
+        try:
+            exec(f"temp=__import__('{source}').{attr}")
+        except: ## doesn't exist ##
+            continue
         local_temp=locals()["temp"]
         if isinstance(local_temp,type): ## new class
             if source+"."+attr in str(local_temp):
