@@ -515,6 +515,12 @@ def get_variables(code: str) -> list[str]:
     sub(r"\(\'[^']*\'\)\.","str.")
     sub(r'\"[^"]*\"\.',"str.")
     sub(r'\(\"[^"]*\"\)\.',"str.")
+    # remove all strings
+    sub(r"\'[^']*\'")
+    sub(r'\"[^"]*\"')
+    # remove all comments
+    code+="\n"
+    sub(r"#(.+?)\n"," ")
     ## keep float types
     sub(r"[-+]?\d+\.\d+\.","float.")
     sub(r"\([-+]?\d+\.\d+\)\.","float.")
@@ -526,12 +532,6 @@ def get_variables(code: str) -> list[str]:
         raise SyntaxError(f"""The following syntaxes are not allowed as they will not execute: {matches}
 
 (Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types)""")
-    # remove all strings
-    sub(r"\'[^']*\'")
-    sub(r'\"[^"]*\"')
-    # remove all comments
-    code+="\n"
-    sub(r"#(.+?)\n"," ")
     # get letters and numbers only (retaining '.' to extract the base dictionary)
     sub(r"[^\w.]+"," ")
     # remove any spaces between attributes
