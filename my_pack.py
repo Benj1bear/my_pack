@@ -119,7 +119,11 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
         section,FUNC,source=source_code(section),[section.__name__],section.__module__
     else:
         ## check for functions ## raw strings only
-        FUNC=re.sub(r"\\\"|\\\'","",section,flags=re.DOTALL)
+        FUNC=section.copy()
+        sub=lambda regex:re.sub(regex,"",FUNC,flags=re.DOTALL)
+        sub(r"\\\"|\\\'")
+        sub(r"\'[^']*\'")
+        sub(r'\"[^"]*\"')
         FUNC=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",FUNC)]
     # prep section
     variables,code_export=get_variables(section),section
