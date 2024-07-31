@@ -268,7 +268,7 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
         allowed_exports,callables=split_list(callables,lambda func:True if (func in list(new_exports[0]))==True else False)
         definitions=new_exports[new_exports[0].isin(allowed_exports)][1].dropna().sum()
     else:
-        allowed_exports,definitions=[],""
+        return [],"",callables
     if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
          definitions=""
     elif len(definitions)>0:
