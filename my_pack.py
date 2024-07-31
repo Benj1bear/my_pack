@@ -152,7 +152,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     with open(to,option) as file:
         file.write(code_export)
 
-def split_list(reference: list[str],condition: Callable):
+def split_list(reference: list[str],condition: Callable) -> (list,list):
     """For splitting one list into two based on a condition function"""
     new,remaining=[],[]
     for i in reference:
@@ -195,7 +195,7 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
         recursions+=1
         ## you have to return the recursion else it won't work properly ##
         return get_code_requirements(*(section,callables,temp_variables,new_variables_present,source,show,modules,recursions))
-    return section,modules
+    return section+definitions,modules
 
 def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (str,dict):
     """For retrieving and appending necessary code the section depends on"""
@@ -217,8 +217,8 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
             raise TypeError(f"Variable '{local_temp.__name__}' or '{local_temp}' from new_exports is not a Callable or module type")
     return section,modules
 
-def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable]):
-    """Traverses an attribute to uncover where each of the individual attribute came from"""
+def search_attrs(attrs: list[str],source: str) -> (list[str],str):
+    """Traverses an attribute to uncover where each of the individual attributes came from"""
     new_exports,definitions=[],""
     for attr in attrs: # go through all the attrs
         ## make sure the attr itself is not a module ##
@@ -262,7 +262,7 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
             attribute+="."
     if len(definitions)>0:
         definitions="\n"+definitions
-    return new_exports,definitions,[i for i in callables if i not in new_exports]
+    return new_exports,definitions
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
