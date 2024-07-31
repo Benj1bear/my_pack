@@ -169,6 +169,7 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
     ## get which functions for attrs ##
     ################################################ point of failure ## ##############################################
     attr_exports,definitions=search_attrs(*(attrs,source))
+    callables=[i for i in callables if i not in attr_exports]
     ############################################################################################
     ## do the same but for the variables and then combine ##
     new_exports,callables=split_list(callables,lambda func:True if (func.__name__ in variables)==True else False)
