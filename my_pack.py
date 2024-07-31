@@ -171,10 +171,9 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
     # separate variables and attributes
     attrs,variables=split_list(temp_variables,lambda var:True if "." in var else False)
     ## get which functions for attrs ##
-    ################################################ point of failure ## ##############################################
-    attr_exports,definitions=search_attrs(*(attrs,source))
-    callables=[i for i in callables if i not in attr_exports]
-    ############################################################################################
+    ###################################### need to test for submodules and maybe partial functions ##############################################
+    attr_exports,definitions,callables=search_attrs(*(attrs,source,callables))
+    #############################################################################################################################################
     ## do the same but for the variables and then combine ##
     new_exports,callables=split_list(callables,lambda func:True if (func.__name__ in variables)==True else False)
     new_exports+=attr_exports
@@ -221,9 +220,10 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
             raise TypeError(f"Variable '{local_temp.__name__}' or '{local_temp}' from new_exports is not a Callable or module type")
     return section,modules
 
-def search_attrs(attrs: list[str],source: str) -> (list[str],str):
-    """Traverses an attribute to uncover where each of the individual attributes came from"""
-    new_exports,definitions=[],""
+def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable]):
+    """Traverses an attribute to uncover where each of the individual attribute came from"""
+    new_exports=[]
+    # only add it in if there's a callable for it
     for attr in attrs: # go through all the attrs
         ## make sure the attr itself is not a module ##
         exec(f"temp=__import__('{source}').{attr}")
@@ -243,30 +243,37 @@ def search_attrs(attrs: list[str],source: str) -> (list[str],str):
             if isinstance(local_temp,Callable): # it won't be a variable but might be a module
                 if "." not in attribute:
                     # get it's source code or check it for module
-                    new_exports+=[local_temp]
+                    new_exports+=[[local_temp,None]]
                 else:
                     # if the source code exists then it has been assigned
                     # else it's already defined from the class definition
                     ## the only flaw to this approach is type based methods and builtins
                     if local_temp.__name__!=i:  ## this could be an easy point of failure ##
-                        new_exports+=[local_temp] #something
-                        definitions+=attribute+"="+local_temp.__name__+"\n"
+                        new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n"]]
                     else:
                         try:
                             source_code(local_temp) # if we can't get it it's because it's a builtin or it's already defined
-                            new_exports+=[local_temp] #something
-                            definitions+=attribute+"="+local_temp.__name__+"\n"
+                            new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n"]]
                         except:
                             if isinstance(local_temp,BuiltinFunctionType):  ########## what about partial functions?
-                                definitions+=attribute+"="+local_temp.__name__+"\n"
+                                new_exports+=[[None,attribute+"="+local_temp.__name__+"\n"]]
             elif isinstance(local_temp,ModuleType):
                 if "." not in attribute: # it's a module ##### needs testing
-                    new_exports+=[local_temp] # but what if it's chained? e.g. my_pack.my_pack.my_pack? It would get picked up?
-                new_exports+=[local_temp]
+                    new_exports+=[[local_temp,None]] # but what if it's chained? e.g. my_pack.my_pack.my_pack? It would get picked up?
+                else:
+                    new_exports+=[[local_temp,None]]
             attribute+="."
-    if len(definitions)>0:
+    new_exports=pd.DataFrame(new_exports).drop_duplicates()
+    if len(new_exports)>0: # if there are any
+        allowed_exports,callables=split_list(callables,lambda func:True if (func in list(new_exports[0]))==True else False)
+        definitions=new_exports[new_exports[0].isin(allowed_exports)][1].dropna().sum()
+    else:
+        allowed_exports,definitions=[],""
+    if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
+         definitions=""
+    elif len(definitions)>0:
         definitions="\n"+definitions
-    return new_exports,definitions
+    return allowed_exports,definitions,callables
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
