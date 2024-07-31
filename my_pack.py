@@ -134,15 +134,19 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
             callables=[func for func in callables if func.__name__ not in FUNC]
         # start exporting code
         if show:print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
-        ######################### add an option to keep the initial section separate from the rest of the code?? ##############################
-        code_export,modules=get_code_requirements(*(section,callables,variables,variables,source,show,{}),limit=recursion_limit)
+        ######################### add an option to keep the initial section separate from the rest of the code??
+        code_export,modules,module_names=get_code_requirements(*(section,callables,variables,variables,source,show,{},pd.DataFrame()),limit=recursion_limit)
         ## add the modules ##
         if len(modules)>0:
             header=""
             for key in list(modules.keys()):
                 module=modules[key]
                 if len(module)==0:
-                    header+=f"import {key}\n"
+                    header+="import "+key
+                    name=module_names[module_names[0]==key][2]
+                    if len(name)>0:
+                        header+=" as "+name[0]
+                    header+="\n"
                 else:
                     header+=f"from {key} import {str(module)[2:-2]}\n"
             # append all modules to the top of the section
@@ -166,26 +170,32 @@ def split_list(reference: list[str],condition: Callable) -> (list,list):
             remaining+=[i]
     return new,remaining
     
-def get_code_requirements(section: str,callables: list[str],temp_variables: list[str],variables_present,source: str,show: bool=False,modules: dict={},recursions: int=0,limit: int=20) -> str:
+def get_code_requirements(section: str,callables: list[str],temp_variables: list[str],variables_present,source: str,show: bool=False,modules: dict={},current_modules: pd.DataFrame=pd.DataFrame(),recursions: int=0,limit: int=20) -> str:
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # separate variables and attributes
     attrs,variables=split_list(temp_variables,lambda var:True if "." in var else False)
     ## get which functions for attrs ##
-    ###################################### need to test for submodules and maybe partial functions ##############################################
-    attr_exports,definitions,callables=search_attrs(*(attrs,source,callables))
-    #############################################################################################################################################
+    ################################################ point of failure ## ##############################################
+    attr_exports,definitions,callables,module_names=search_attrs(*(attrs,source,callables))
+    ############################################################################################
     ## do the same but for the variables and then combine ##
     new_exports,callables=split_list(callables,lambda func:True if (func.__name__ in variables)==True else False)
     new_exports+=attr_exports
     if len(new_exports) > 0:
         ## add the new code ##
-        for func in new_exports:# a list of functions from the module
+        for func in set(new_exports):# a list of functions from the module
             try:
                 exec(f'temp=__import__("{source}").{func.__name__}')
-            except: ## doesn't exist ##
-                continue
+            except Exception as e:
+                name=module_names[module_names[0]==func].dropna()
+                if len(name)>0:
+                    exec(f'temp=__import__("{source}").{list(name[2])[0]}')
+                    name[0]=name[0][0].__name__
+                    current_modules=pd.concat([current_modules,name])
+                else:
+                    raise e
             local_temp=locals()["temp"]
-            section,modules=add_code(*(section,modules,local_temp,source)) ########### check here just in case but it shouldn't be here
+            section,modules=add_code(*(section,modules,local_temp,source))
         section+=definitions
         ## print the current Recursion ##
         if show:print(f"Recursion: {recursions}"+":\n"+"-"*20+"\n"+section+"\n"+"-"*20)
@@ -193,15 +203,15 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
         new_variables_present=get_variables(section)
         temp_variables=[i for i in new_variables_present if i not in variables_present]
         if len(temp_variables)==0:
-            return section,modules
+            return section,modules,current_modules
         ## make sure there's some safety in case errors occur ##
         if recursions==limit:
             print(f"recursion limit '{limit}' reached\n\nNote: the function may not have completed, if true, adjust the recursion limit or enter in the current code section to continue")
             return section,modules
         recursions+=1
         ## you have to return the recursion else it won't work properly ##
-        return get_code_requirements(*(section,callables,temp_variables,new_variables_present,source,show,modules,recursions))
-    return section+definitions,modules
+        return get_code_requirements(*(section,callables,temp_variables,new_variables_present,source,show,modules,current_modules,recursions))
+    return section+definitions,modules,current_modules
 
 def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (str,dict):
     """For retrieving and appending necessary code the section depends on"""
@@ -223,7 +233,7 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
             raise TypeError(f"Variable '{local_temp}' from new_exports is not a Callable or module type")
     return section,modules
 
-def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable]):
+def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable],pd.DataFrame):
     """Traverses an attribute to uncover where each of the individual attribute came from"""
     new_exports=[]
     # only add it in if there's a callable for it
@@ -231,54 +241,64 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
         ## make sure the attr itself is not a module ##
         try:
             exec(f"temp=__import__('{source}').{attr}")
-        except: ## doesn't exist ##
-            continue
-        local_temp=locals()["temp"]
-        if isinstance(local_temp,type): ## new class
-            if source+"."+attr in str(local_temp):
+            local_temp=locals()["temp"]
+            if isinstance(local_temp,type): ## new class
+                if source+"."+attr in str(local_temp):
+                    new_exports+=[local_temp]
+            elif isinstance(local_temp,ModuleType): 
+                # then we need to import this module
                 new_exports+=[local_temp]
-        elif isinstance(local_temp,ModuleType): 
-            # then we need to import this module
-            new_exports+=[local_temp]
-            continue
-        attribute=""
+                continue
+        except: ## attribute doesn't exist
+            None
+        module_name,attribute,module="","",ModuleType("")
         for i in attr.split("."): # go up starting with the first one
             attribute+=i
-            exec(f"temp=__import__('{source}').{attribute}")
-            local_temp=locals()["temp"]
-            if isinstance(local_temp,Callable): # it won't be a variable but might be a module
-                if "." not in attribute:
-                    # get it's source code or check it for module
-                    new_exports+=[[local_temp,None]]
-                else:
-                    # if the source code exists then it has been assigned
-                    # else it's already defined from the class definition
-                    ## the only flaw to this approach is type based methods and builtins
-                    if local_temp.__name__!=i:  ## this could be an easy point of failure ##
-                        new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n"]]
+            try:
+                exec(f"temp=__import__('{source}').{attribute}")
+                local_temp=locals()["temp"]
+                if isinstance(local_temp,Callable): # it won't be a variable but might be a module
+                    if "." not in attribute:
+                        # get it's source code or check it for module
+                        new_exports+=[[local_temp,None,None]]
                     else:
-                        try:
-                            source_code(local_temp) # if we can't get it it's because it's a builtin or it's already defined
-                            new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n"]]
-                        except:
-                            if isinstance(local_temp,BuiltinFunctionType):  ########## what about partial functions?
-                                new_exports+=[[None,attribute+"="+local_temp.__name__+"\n"]]
-            elif isinstance(local_temp,ModuleType):
-                if "." not in attribute: # it's a module ##### needs testing
-                    new_exports+=[[local_temp,None]] # but what if it's chained? e.g. my_pack.my_pack.my_pack? It would get picked up?
-                else:
-                    new_exports+=[[local_temp,None]]
+                        if len(module.__name__)>0:
+                            if module.__name__==local_temp.__module__ or (module.__name__ in local_temp.__module__)==True:
+                                new_exports+=[[module,None,module_name]]
+                                module=ModuleType("")
+                        # if the source code exists then it has been assigned
+                        # else it's already defined from the class definition
+                        ## the only flaw to this approach is type based methods and builtins
+                        elif local_temp.__name__!=i:  ## this could be an easy point of failure ##
+                            new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n",None]]
+                            if module.__name__!="":
+                                new_exports+=[[module,None,module_name]]
+                                module=ModuleType("")
+                        else:
+                            try:
+                                source_code(local_temp) # if we can't get it it's because it's a builtin or it's already defined
+                                new_exports+=[[local_temp,attribute+"="+local_temp.__name__+"\n",None]]
+                            except:
+                                if isinstance(local_temp,BuiltinFunctionType):  ########## what about partial functions?
+                                    new_exports+=[[None,attribute+"="+local_temp.__name__+"\n",None]]
+                elif isinstance(local_temp,ModuleType):
+                    module,module_name=local_temp,attribute
+            except: ## attribute doesn't exist
+                None
             attribute+="."
-    new_exports=pd.DataFrame(new_exports).drop_duplicates()
+        if module.__name__!="":
+            new_exports+=[[module,None,module_name]]
+    new_exports=pd.DataFrame(new_exports).drop_duplicates() # columns are callable/module,definitions,module_name
     if len(new_exports)>0: # if there are any
         allowed_exports,callables=split_list(callables,lambda func:True if (func in list(new_exports[0]))==True else False)
         definitions=new_exports[new_exports[0].isin(allowed_exports)][1].dropna().sum()
         if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
              definitions=""
-        else: # should just be able to use else here
+        else:
             definitions="\n"+definitions
-        return allowed_exports,definitions,callables
-    return [],"",callables
+        new_exports=new_exports[[0,2]]
+        return allowed_exports,definitions,callables,new_exports[new_exports.isnull()==False]
+    return [],"",callables,[],[]
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
