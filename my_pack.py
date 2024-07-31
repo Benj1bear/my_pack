@@ -298,7 +298,7 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
             definitions="\n"+definitions
         new_exports=new_exports[[0,2]]
         return allowed_exports,definitions,callables,new_exports[new_exports.isnull()==False]
-    return [],"",callables,[],[]
+    return [],"",callables,[]
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
