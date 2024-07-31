@@ -267,13 +267,12 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
     if len(new_exports)>0: # if there are any
         allowed_exports,callables=split_list(callables,lambda func:True if (func in list(new_exports[0]))==True else False)
         definitions=new_exports[new_exports[0].isin(allowed_exports)][1].dropna().sum()
-    else:
-        return [],"",callables
-    if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
-         definitions=""
-    else: # should just be able to use else here
-        definitions="\n"+definitions
-    return allowed_exports,definitions,callables
+        if type(definitions)!=str: # in case pd.Series([]).sum() which returns 0
+             definitions=""
+        else: # should just be able to use else here
+            definitions="\n"+definitions
+        return allowed_exports,definitions,callables
+    return [],"",callables
 
 def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
     """Returns a list of all callables available in a module"""
