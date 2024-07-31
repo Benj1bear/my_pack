@@ -507,9 +507,9 @@ def get_variables(code: str) -> list[str]:
     sub(r"[-+]?\d+\.\d+\.","float.")
     sub(r"\([-+]?\d+\.\d+\)\.","float.")
     ## keep int types (they cannot be i.e. 1.to_bytes() only (1).to_bytes() else it expects a float)
-    sub(r"\(\d+\)\.","int.")
+    sub(r"\([-+]?\d+\)\.","int.")
     ## check for errors
-    matches=re.findall(r"\d+\.",code)
+    matches=re.findall(r"[-+]?\d+\.",code)
     if len(matches)>0:
         raise SyntaxError(f"""The following syntaxes are not allowed as they will not execute: {matches}
 
