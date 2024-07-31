@@ -320,6 +320,8 @@ def all_callables(module: str,return_module: bool=False) -> list[str] or (list[s
         exec("temp=source."+i)
         if isinstance(locals()["temp"],Callable)==True:
             callables+=[locals()["temp"]]
+        if return_module==True and isinstance(locals()["temp"],ModuleType)==True:
+            callables+=[locals()["temp"]]
     if return_module:
         return callables,module
     return callables
