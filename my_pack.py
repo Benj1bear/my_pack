@@ -145,7 +145,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
                     header+="import "+key
                     name=module_names[module_names[0]==key][2]
                     if len(name)>0:
-                        header+=" as "+name[0]
+                        header+=" as "+list(name)[0]
                     header+="\n"
                 else:
                     header+=f"from {key} import {str(module)[2:-2]}\n"
@@ -190,7 +190,7 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
                 name=module_names[module_names[0]==func].dropna()
                 if len(name)>0:
                     exec(f'temp=__import__("{source}").{list(name[2])[0]}')
-                    name[0]=name[0][0].__name__
+                    name[0]=list(name[0])[0].__name__
                     current_modules=pd.concat([current_modules,name])
                 else:
                     raise e
