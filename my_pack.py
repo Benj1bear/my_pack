@@ -147,7 +147,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
                         header+=" as "+list(name)[0]
                     header+="\n"
                 else:
-                    header+=f"from {key} import {str(module)[2:-2]}\n"
+                    header+=f"from {key} import "+", ".join(module)+"\n"
             # append all modules to the top of the section
             code_export=header+"\n"+code_export
     if to==None:
