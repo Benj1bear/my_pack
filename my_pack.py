@@ -536,7 +536,7 @@ def remove_docstrings(section: str,round_number: int=0) -> str:
             new_section+=char
         if prev[0]-count==0:
             count=0
-    new_section=new_section.replace(avoid*3,"str")# the start of the string will still be there
+    new_section=new_section.replace(avoid*3," str ")# the start of the string will still be there
     if round_number==1:
         return new_section
     return remove_docstrings(*(new_section,round_number+1))
@@ -557,7 +557,7 @@ def remove_strings(section: str) -> str:
         if in_string==False:
             new_section+=char
     ## remove the various types of string (since the starting piece is still there) ##
-    return re.sub(r"r\"|r'|b\"|b'|f\"|f'|\"|'","str",new_section)
+    return re.sub(r"r\"|r'|b\"|b'|f\"|f'|\"|'"," str ",new_section)
 
 def get_variables(code: str) -> list[str]:
     """
