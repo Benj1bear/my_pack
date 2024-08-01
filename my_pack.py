@@ -122,8 +122,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
         FUNC=section.copy()
         sub=lambda regex:re.sub(regex,"",FUNC,flags=re.DOTALL)
         sub(r"\\\"|\\\'")
-        sub(r"\'[^']*\'")
-        sub(r'\"[^"]*\"')
+        sub(r"\'[^']*\'|\"[^\"]*\"")
         FUNC=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",FUNC)]
     # prep section
     variables,code_export=get_variables(section),section
