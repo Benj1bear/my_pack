@@ -555,7 +555,7 @@ def get_variables(code: str) -> list[str]:
 
 (Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types)""")
     # get letters and numbers only (retaining '.' to extract the base dictionary)
-    sub(r"[^\w.]+"," ")
+    sub(r"[^\w.]+|\d+"," ")
     # remove any spaces between attributes
     sub(r"\s*\.",".")
     # get unique names
