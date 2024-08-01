@@ -533,10 +533,10 @@ def get_variables(code: str) -> list[str]:
     sub(r"\\\"|\\\'")
     ## in case methods are applied to string or int types
     ## keep string types
-    sub(r"\'[^']*\'\.","str.")
-    sub(r"\(\'[^']*\'\)\.","str.")
-    sub(r'\"[^"]*\"\.',"str.")
-    sub(r'\(\"[^"]*\"\)\.',"str.")
+    sub(r"\'[^']*\'\."," str.") ## we need to add a space at the beginning in case of func("".method()) (it gets corrected later for attributes)
+    sub(r"\(\'[^']*\'\)\."," str.")
+    sub(r'\"[^"]*\"\.'," str.")
+    sub(r'\(\"[^"]*\"\)\.'," str.")
     # remove all strings
     sub(r"\'[^']*\'")
     sub(r'\"[^"]*\"')
@@ -544,10 +544,10 @@ def get_variables(code: str) -> list[str]:
     code+="\n"
     sub(r"#(.+?)\n"," ")
     ## keep float types
-    sub(r"[-+]?\d+\.\d+\.","float.")
-    sub(r"\([-+]?\d+\.\d+\)\.","float.")
+    sub(r"[-+]?\d+\.\d+\."," float.")
+    sub(r"\([-+]?\d+\.\d+\)\."," float.")
     ## keep int types (they cannot be i.e. 1.to_bytes() only (1).to_bytes() else it expects a float)
-    sub(r"\([-+]?\d+\)\.","int.")
+    sub(r"\([-+]?\d+\)\."," int.")
     ## check for errors
     matches=re.findall(r"[-+]?\d+\.",code)
     if len(matches)>0:
