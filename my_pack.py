@@ -515,7 +515,50 @@ def get_builtins() -> list:
     if isinstance(__builtins__,dict) == False:
         return dir(__builtins__)
     return __builtins__
-## needs more testing ##
+
+def remove_docstrings(section: str,round_number: int=0) -> str:
+    """For removing multiline strings; sometimes used as docstrings (only raw strings)"""
+    avoid="'"
+    if round_number%2==1:
+        avoid='"'
+    new_section,in_string,in_comment,count="",False,False,0
+    for char in section:
+        prev=(count,)
+        if char==avoid and in_comment==False:
+            count+=1
+            if count==3:
+                in_string,count=(in_string+1)%2,0
+        elif char=="#" and in_string==False:
+            in_comment=True
+        elif char=="\n" and in_comment==True:
+            prev,count,in_comment=(0,),0,False # it should be 0
+        if in_string==False:
+            new_section+=char
+        if prev[0]-count==0:
+            count=0
+    new_section=new_section.replace(avoid*3,"str")# the start of the string will still be there
+    if round_number==1:
+        return new_section
+    return remove_docstrings(*(new_section,round_number+1))
+
+def remove_strings(section: str) -> str:
+    """For removing strings (only on raw strings)"""
+    new_section,in_string,in_comment,prev_char="",False,False,None
+    for char in section:
+        if (char=="'" or char=='"') and in_comment==False:
+            if prev_char==None:
+                in_string,prev_char=(in_string+1)%2,(char,)
+            elif char==prev_char[0]:
+                in_string,prev_char=(in_string+1)%2,None
+        elif char=="#" and in_string==False:
+            in_comment=True
+        elif char=="\n" and in_comment==True:
+            in_comment=False
+        if in_string==False:
+            new_section+=char
+    ## remove the various types of string (since the starting piece is still there) ##
+    return re.sub(r"r\"|r'|b\"|b'|f\"|f'|\"|'","str",new_section)
+
 def get_variables(code: str) -> list[str]:
     """
     Extract only variable names from strings
@@ -528,35 +571,32 @@ def get_variables(code: str) -> list[str]:
         """For reducing the amount of code written"""
         nonlocal code # makes it accessible to a scope one above
         code=re.sub(regex,repl,code,flags=re.DOTALL)
-    # make sure we can distinguish strings
+    ## remove all double backslashes (i.e. "\\" is possible for a string) and distinguish strings ##
+    sub(r"\\\\")
     sub(r"\\\"|\\\'")
-    ## in case methods are applied to string or int types
-    ## keep string types
-    sub(r"\'[^']*\'\."," str.") ## we need to add a space at the beginning in case of func("".method()) (it gets corrected later for attributes)
-    sub(r"\(\'[^']*\'\)\."," str.")
-    sub(r'\"[^"]*\"\.'," str.")
-    sub(r'\(\"[^"]*\"\)\.'," str.")
-    # remove all strings
-    sub(r"\'[^']*\'|\"[^\"]*\"") ## both have to be done together as a kind of intersection else you get an out of band encoding
+    ## remove all strings
+    code=remove_docstrings(code)
+    code=remove_strings(code)
     # remove all comments
     code+="\n"
-    sub(r"#(.+?)\n"," ")
+    sub(r"#(.+?)\n","\n")
     ## keep float types
     sub(r"[-+]?\d+\.\d+\."," float.")
     sub(r"\([-+]?\d+\.\d+\)\."," float.")
     ## keep int types (they cannot be i.e. 1.to_bytes() only (1).to_bytes() else it expects a float)
     sub(r"\([-+]?\d+\)\."," int.")
     ## check for errors
-    matches=re.findall(r"[-+]?\d+\.",code)
+    matches=re.findall(r"\W[-+]?\d+\.\D",code)
     if len(matches)>0:
         raise SyntaxError(f"""The following syntaxes are not allowed as they will not execute: {matches}
 
-(Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types)""")
+Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types""")
     # get letters and numbers only (retaining '.' to extract the base dictionary)
     sub(r"[^\w.]+|\d+"," ")
     # remove any spaces between attributes
+    #r"\s+\.|\.\s+"
     sub(r"\s+\.",".")
-    sub(r"\.\s+",".") ## do both directions
+    sub(r"\.\s+",".") # for some reason splitting them up rather than using | works
     # get unique names
     variables=set(code.split(" "))
     # filter to identifier and non keywords only with builtins removed
