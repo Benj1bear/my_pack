@@ -538,7 +538,7 @@ def get_variables(code: str) -> list[str]:
     sub(r'\"[^"]*\"\.'," str.")
     sub(r'\(\"[^"]*\"\)\.'," str.")
     # remove all strings
-    sub(r"\'[^\']*\'|\"[^\"]*\"") ## both have to be done together as a kind of intersection else you get an out of band encoding
+    sub(r"\'[^']*\'|\"[^\"]*\"") ## both have to be done together as a kind of intersection else you get an out of band encoding
     # remove all comments
     code+="\n"
     sub(r"#(.+?)\n"," ")
