@@ -557,7 +557,8 @@ def get_variables(code: str) -> list[str]:
     # get letters and numbers only (retaining '.' to extract the base dictionary)
     sub(r"[^\w.]+|\d+"," ")
     # remove any spaces between attributes
-    sub(r"\s*\.",".")
+    sub(r"\s+\.",".")
+    sub(r"\.\s+",".") ## do both directions
     # get unique names
     variables=set(code.split(" "))
     # filter to identifier and non keywords only with builtins removed
