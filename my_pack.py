@@ -187,10 +187,13 @@ def split_list(reference: list[str],condition: Callable) -> (list,list):
     """For splitting one list into two based on a condition function"""
     new,remaining=[],[]
     for i in reference:
-        if condition(i):
-            new+=[i]
-        else:
-            remaining+=[i]
+        try:
+            if condition(i):
+                new+=[i]
+            else:
+                remaining+=[i]
+        except:
+            None
     return new,remaining
     
 def get_code_requirements(section: str,callables: list[str],temp_variables: list[str],variables_present,source: str,show: bool=False,modules: dict={},current_modules: pd.DataFrame=pd.DataFrame(),recursions: int=0,limit: int=20) -> str:
