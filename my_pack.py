@@ -33,6 +33,19 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+class Sub:
+    """shorthand version of re.sub"""
+    def __init__(self,code,flags=re.DOTALL) -> None:
+        self.code=code
+    def __repr__(self) -> str:
+        return self.code
+    def __call__(self,regex: str,repl: str="") -> object:
+        self.code=re.sub(regex,repl,self.code,flags=re.DOTALL)
+        return self
+    @property
+    def get(self) -> str:
+        return self.code
+
 # needs more testing but works in simple cases
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
     """
@@ -119,10 +132,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
         section,FUNC,source=source_code(section),[section.__name__],section.__module__
     else:
         ## check for functions ## raw strings only
-        FUNC=section.copy()
-        sub=lambda regex:re.sub(regex,"",FUNC,flags=re.DOTALL)
-        sub(r"\\\"|\\\'")
-        sub(r"\'[^']*\'|\"[^\"]*\"")
+        FUNC=extract_code(FUNC).get
         FUNC=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",FUNC)]
     # prep section
     variables,code_export=get_variables(section),section
@@ -571,15 +581,7 @@ def get_variables(code: str) -> list[str]:
         """For reducing the amount of code written"""
         nonlocal code # makes it accessible to a scope one above
         code=re.sub(regex,repl,code,flags=re.DOTALL)
-    ## remove all double backslashes (i.e. "\\" is possible for a string) and distinguish strings ##
-    sub(r"\\\\")
-    sub(r"\\\"|\\\'")
-    ## remove all strings
-    code=remove_docstrings(code)
-    code=remove_strings(code)
-    # remove all comments
-    code+="\n"
-    sub(r"#(.+?)\n","\n")
+    sub=extract_code(code=code) # returns an object
     ## keep float types
     sub(r"[-+]?\d+\.\d+\."," float.")
     sub(r"\([-+]?\d+\.\d+\)\."," float.")
@@ -598,7 +600,7 @@ Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types""")
     sub(r"\s+\.",".")
     sub(r"\.\s+",".") # for some reason splitting them up rather than using | works
     # get unique names
-    variables=set(code.split(" "))
+    variables=set(sub.get.split(" "))
     # filter to identifier and non keywords only with builtins removed
     builtins=get_builtins()
     return [i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i]
