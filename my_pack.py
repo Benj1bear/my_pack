@@ -590,10 +590,6 @@ def get_variables(code: str) -> list[str]:
     the kind you may get from reading files
     else it won't remove strings correctly
     """
-    def sub(regex: str,repl: str="") -> None:
-        """For reducing the amount of code written"""
-        nonlocal code # makes it accessible to a scope one above
-        code=re.sub(regex,repl,code,flags=re.DOTALL)
     sub=extract_code(code=code) # returns an object
     ## keep float types
     sub(r"[-+]?\d+\.\d+\."," float.")
