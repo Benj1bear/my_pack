@@ -200,10 +200,10 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
     """Gets the required code in order to export a section of code from a .py file maintainably"""
     # separate variables and attributes
     attrs,variables=split_list(temp_variables,lambda var:True if "." in var else False)
-    ## get which functions for attrs ##
-    ################################################ point of failure ## ##############################################
+    ## search attrs for callables and modules ##
+    ################################################ needs testing ##############################################
     attr_exports,definitions,callables,module_names=search_attrs(*(attrs,source,callables))
-    ############################################################################################
+    #############################################################################################################
     ## do the same but for the variables and then combine ##
     new_exports,callables=split_list(callables,lambda func:True if (func.__name__ in variables)==True else False)
     new_exports+=attr_exports
@@ -218,8 +218,8 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
                     exec(f'temp=__import__("{source}").{list(name[2])[0]}')
                     name[0]=list(name[0])[0].__name__
                     current_modules=pd.concat([current_modules,name])
-                else:
-                    raise e
+                else: ## attribute doesn't exist
+                    continue
             local_temp=locals()["temp"]
             section,modules=add_code(*(section,modules,local_temp,source))
         section+=definitions
