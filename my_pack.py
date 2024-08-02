@@ -54,10 +54,10 @@ def extract_code(code: str,repl: str=" str ") -> str:
     sub(r"\\\\")
     sub(r"\\\"|\\\'")
     ## remove all strings
-    code=remove_docstrings(code)
-    code=remove_strings(code)
+    sub.code=remove_docstrings(sub.code)
+    sub.code=remove_strings(sub.code)
     # remove all comments
-    code+="\n"
+    sub.code+="\n"
     return sub(r"#(.+?)\n","\n")
 
 # needs more testing but works in simple cases
