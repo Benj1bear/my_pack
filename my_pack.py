@@ -46,6 +46,19 @@ class Sub:
     def get(self) -> str:
         return self.code
 
+def extract_code(code: str,repl: str=" str ") -> str:
+    """Removes all strings and comments from code"""
+    sub=Sub(code)
+    ## remove all double backslashes (i.e. "\\" is possible for a string) and distinguish strings ##
+    sub(r"\\\\")
+    sub(r"\\\"|\\\'")
+    ## remove all strings
+    code=remove_docstrings(code)
+    code=remove_strings(code)
+    # remove all comments
+    code+="\n"
+    return sub(r"#(.+?)\n","\n")
+
 # needs more testing but works in simple cases
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
     """
