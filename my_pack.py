@@ -597,7 +597,7 @@ def get_variables(code: str) -> list[str]:
     ## keep int types (they cannot be i.e. 1.to_bytes() only (1).to_bytes() else it expects a float)
     sub(r"\([-+]?\d+\)\."," int.")
     ## check for errors
-    matches=re.findall(r"\W[-+]?\d+\.\D",code)
+    matches=re.findall(r"\W[-+]?\d+\.\D",sub.get)
     if len(matches)>0:
         raise SyntaxError(f"""The following syntaxes are not allowed as they will not execute: {matches}
 
