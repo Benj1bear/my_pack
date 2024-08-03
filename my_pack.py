@@ -52,9 +52,7 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
         else:
             temp(annotation)
 
-    args=kwargs["args"]
-    kwargs=kwargs["kwargs"]
-    annotations=FUNC.__annotations__
+    args,kwargs,annotations=kwargs["args"],kwargs["kwargs"],FUNC.__annotations__
     if inputs:
         ## do all the kwargs first
         for key,value in kwargs.items():
