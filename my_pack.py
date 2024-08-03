@@ -46,11 +46,11 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
             nonlocal message
             if isinstance(arg,annotation)==False:
                 raise TypeError(message)
-            if len(arg)!=len(annotation):
-                raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
         if type(annotation) in (tuple,list,set):
             if type(arg) not in (tuple,list,set):
                 raise TypeError(f"arguement '{key}' must be of type {annotation}. Instead recieved: {arg}")
+            if len(arg)!=len(annotation):
+                raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
             for type_annotation,arguement in annotation,arg:
                 temp(type_annotation,arguement)
         else:
