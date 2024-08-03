@@ -76,6 +76,12 @@ class sanitize:
     def do(x: int|float) -> None:
         print("hi")
     do("hello") # should raise a TypeError
+
+    ## you can also add your own checks that the functions 
+    ## arguements must pass by adding them i.e.:
+    @sanitize.add(*desired function*)
+    def do(x: int|float) -> None:
+        print("hi")
     """
     def __init__(self,FUNC: Callable) -> None:
         """retains the function and common metadata or attributes"""
