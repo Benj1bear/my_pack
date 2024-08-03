@@ -69,6 +69,13 @@ class sanitize:
     """
     My class for sanitizing functions inputs 
     and/or outputs and other attributes
+    i.e. can be used as decorator to always first 
+    validate the input types (needs testing at the moment)
+    
+    @sanitize
+    def do(x: int|float) -> None:
+        print("hi")
+    do("hello") # should raise a TypeError
     """
     def __init__(self,FUNC: Callable) -> None:
         """retains the function and common metadata or attributes"""
