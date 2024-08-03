@@ -33,6 +33,66 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+## needs testing (probably can't handle additional *args and **kwargs annotations and needs some exception handling for length mismatches)
+def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
+    """For validating types against their type annotations"""
+    annotations=FUNC.__annotations__
+    def try_check(arg,annotation,message) -> None:
+        """For handling the checking of each arguements type"""
+        def temp(annotation) -> None:
+            nonlocal arg,message
+            if isinstance(arg,annotation)==False:
+                raise TypeError(message)
+        if type(annotation) in (tuple,list,set):
+            for i in annotation:
+                temp(i)
+        else:
+            temp(*(annotation))
+    if inputs:
+        ## do all the kwargs first
+        for key,value in kwargs.items():
+            try:
+                try_check(*(value,annotations[key],f"arguement '{key}' must be of type {annotations[key]}"))
+                del annotations[key]
+            except:
+                None
+        ## then the args
+        for key,annotation,arg in zip(*annotations.items(),args):
+            if key=="return":
+                continue
+            try_check(*(arg,annotation,f"arguement '{key}' must be of type {annotation}"))
+        ## check for kwargs, args specific types
+    else:
+        try_check(*(arg,annotations["return"],f"return arguement must be of type {annotations['return']}"))
+
+class sanitize:
+    """
+    My class for sanitizing functions inputs 
+    and/or outputs and other attributes
+    """
+    def __init__(self,FUNC: Callable) -> None:
+        """retains the function and common metadata or attributes"""
+        self.FUNC,self.__doc__,self.__annotations__=FUNC,FUNC.__doc__,FUNC.__annotations__
+        if hasattr(self,"checks"):
+            self.checks=(type_check,*self.checks)
+        else:
+            self.checks=(type_check,)
+
+    def __repr__(self) -> str:
+        return str(self.FUNC)
+
+    def __call__(self,*args,**kwargs) -> Callable:
+        """Runs through all the checks before calling using the functions arguements"""
+        for __check in self.checks:
+            __check(self.FUNC,*args,**kwargs)
+        return self.FUNC(*args,**kwargs)
+
+    @classmethod
+    def add(self,*args: Callable) -> object:
+        """adds additional custom checks to inputs"""
+        self.checks=args
+        return self
+
 class Sub:
     """shorthand version of re.sub"""
     def __init__(self,code: str,flags=re.DOTALL) -> None:
