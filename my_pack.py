@@ -33,6 +33,10 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 
+def cwd() -> None:
+    """convenience function for openning file explorer at the cwd"""
+    os.startfile(os.getcwd())
+
 ## needs testing (probably can't handle additional *args and **kwargs annotations and needs some exception handling for length mismatches)
 def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
     """For validating types against their type annotations"""
