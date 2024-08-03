@@ -40,24 +40,28 @@ def cwd() -> None:
 ## needs testing (probably can't handle additional *args and **kwargs annotations and needs some exception handling for length mismatches)
 def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
     """For validating types against their type annotations"""
-    def try_check(arg,annotation,message) -> None:
+    def try_check(arg,annotation,key,message) -> None:
         """For handling the checking of each arguements type"""
-        def temp(annotation) -> None:
-            nonlocal arg,message
+        def temp(annotation,arg) -> None:
+            nonlocal message
             if isinstance(arg,annotation)==False:
                 raise TypeError(message)
+            if len(arg)!=len(annotation):
+                raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
         if type(annotation) in (tuple,list,set):
-            for i in annotation:
-                temp(i)
+            if type(arg) not in (tuple,list,set):
+                raise TypeError(f"arguement '{key}' must be of type {annotation}. Instead recieved: {arg}")
+            for type_annotation,arguement in annotation,arg:
+                temp(type_annotation,arguement)
         else:
-            temp(annotation)
+            temp(annotation,arg)
 
     args,kwargs,annotations=kwargs["args"],kwargs["kwargs"],FUNC.__annotations__
     if inputs:
         ## do all the kwargs first
         for key,value in kwargs.items():
             try:
-                try_check(*(value,annotations[key],f"arguement '{key}' must be of type {annotations[key]}"))
+                try_check(*(value,annotations[key],key,f"arguement '{key}' must be of type {annotations[key]}"))
                 del annotations[key]
             except:
                 None
@@ -70,10 +74,10 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
                 break
             if key=="return":
                 continue
-            try_check(*(arg,annotation,f"arguement '{key}' must be of type {annotation}"))
+            try_check(*(arg,annotation,key,f"arguement '{key}' must be of type {annotation}"))
         ## check for kwargs, args specific types
     else:
-        try_check(*(arg,annotations["return"],f"return arguement must be of type {annotations['return']}"))
+        try_check(*(arg,annotations["return"],"return",f"return arguement must be of type {annotations['return']}"))
 
 class sanitize:
     """
