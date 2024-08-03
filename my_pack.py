@@ -38,9 +38,8 @@ def cwd() -> None:
     os.startfile(os.getcwd())
 
 ## needs testing (probably can't handle additional *args and **kwargs annotations and needs some exception handling for length mismatches)
-def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
+def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
     """For validating types against their type annotations"""
-    annotations=FUNC.__annotations__
     def try_check(arg,annotation,message) -> None:
         """For handling the checking of each arguements type"""
         def temp(annotation) -> None:
@@ -52,6 +51,10 @@ def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
                 temp(i)
         else:
             temp(annotation)
+
+    args=kwargs["args"]
+    kwargs=kwargs["kwargs"]
+    annotations=FUNC.__annotations__
     if inputs:
         ## do all the kwargs first
         for key,value in kwargs.items():
@@ -106,7 +109,7 @@ class sanitize:
     def __call__(self,*args,**kwargs) -> Callable:
         """Runs through all the checks before calling using the functions arguements"""
         for __check in self.checks:
-            __check(self.FUNC,*args,**kwargs)
+            __check(self.FUNC,args=args,kwargs=kwargs)
         return self.FUNC(*args,**kwargs)
 
     @classmethod
