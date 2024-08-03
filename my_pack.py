@@ -51,7 +51,7 @@ def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
             for i in annotation:
                 temp(i)
         else:
-            temp(*(annotation))
+            temp(annotation)
     if inputs:
         ## do all the kwargs first
         for key,value in kwargs.items():
@@ -61,7 +61,12 @@ def type_check(FUNC: Callable,inputs: bool=True,*args,**kwargs) -> None:
             except:
                 None
         ## then the args
-        for key,annotation,arg in zip(*annotations.items(),args):
+        args=iter(args)
+        for key,annotation in annotations.items():
+            try:
+                arg=next(args)
+            except StopIteration:
+                break
             if key=="return":
                 continue
             try_check(*(arg,annotation,f"arguement '{key}' must be of type {annotation}"))
