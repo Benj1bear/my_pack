@@ -51,7 +51,7 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
                 raise TypeError(f"arguement '{key}' must be of type {annotation}. Instead recieved: {arg}")
             if len(arg)!=len(annotation):
                 raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
-            for type_annotation,arguement in annotation,arg:
+            for type_annotation,arguement in zip(annotation,arg):
                 temp(type_annotation,arguement)
         else:
             temp(annotation,arg)
