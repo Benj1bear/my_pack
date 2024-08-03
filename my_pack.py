@@ -110,12 +110,15 @@ class Sub:
     """shorthand version of re.sub"""
     def __init__(self,code: str,flags=re.DOTALL) -> None:
         self.code=code
+
     def __repr__(self) -> str:
         return self.code
+
     def __call__(self,regex: str,repl: str="") -> object:
         """For string substitution with regex"""
         self.code=re.sub(regex,repl,self.code,flags=re.DOTALL)
         return self
+
     @property
     def get(self) -> str:
         return self.code
