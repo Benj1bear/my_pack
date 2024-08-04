@@ -32,6 +32,17 @@ from inspect import getfile,getsource
 import sys
 from functools import partial,wraps
 from keyword import iskeyword
+import pickle
+
+def to_pickle(obj: object,filename: str) -> None:
+    """Convenience function for pickling objects in python with context management"""
+    with open(filename+'.pkl','wb') as file:
+        pickle.dump(obj, file)
+
+def read_pickle(filename: "str") -> object:
+    """Convenience function for reading pickled objects in python with context management"""
+    with open('my_array.pkl', 'rb') as file:
+        return pickle.load(file)
 
 def cwd() -> None:
     """convenience function for openning file explorer at the cwd"""
