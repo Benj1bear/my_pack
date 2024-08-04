@@ -41,7 +41,7 @@ def to_pickle(obj: object,filename: str) -> None:
 
 def read_pickle(filename: "str") -> object:
     """Convenience function for reading pickled objects in python with context management"""
-    with open('my_array.pkl', 'rb') as file:
+    with open(filename+'.pkl', 'rb') as file:
         return pickle.load(file)
 
 def cwd() -> None:
