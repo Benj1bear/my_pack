@@ -104,17 +104,26 @@ class sanitize:
 
     ## you can also add your own checks that the functions 
     ## arguements must pass by adding them i.e.:
-    @sanitize.add(*desired function*)
+    sanitize.add(*desired function*)
+    ## Note: this will make all sanitize class instances
+    ## make use of the functions added
+    
+    ## if you only want particular checks applied
+    ## to the instances specified and not to all instnaces
+    ## you can use:
+    @sanitize.use(*desired function*,defaults=False) ## defaults=False won't use the default type checker
     def do(x: int|float) -> None:
         print("hi")
     """
-    def __init__(self,FUNC: Callable) -> None:
+    checks=(type_check,) ## default check used ##
+    
+    def __init__(self,FUNC: Callable,args: Callable,defaults: bool=True) -> None:
         """retains the function and common metadata or attributes"""
         self.FUNC,self.__doc__,self.__annotations__=FUNC,FUNC.__doc__,FUNC.__annotations__
-        if hasattr(self,"checks"):
-            self.checks=(type_check,*self.checks)
+        if defaults:
+            self.checks=(*self.checks,*args)
         else:
-            self.checks=(type_check,)
+            self.checks=args
 
     def __repr__(self) -> str:
         return str(self.FUNC)
@@ -124,12 +133,20 @@ class sanitize:
         for __check in self.checks:
             __check(self.FUNC,args=args,kwargs=kwargs)
         return self.FUNC(*args,**kwargs)
-
+    @classmethod  ## if we want global class manipulation before instantiation we have to use @classmethod ##
+    def add(cls,*args: Callable) -> object:
+        """adds additional custom checks to inputs (globally e.g. for all instances)"""
+        cls.checks=(*cls.checks,*args)
+        return cls
     @classmethod
-    def add(self,*args: Callable) -> object:
-        """adds additional custom checks to inputs"""
-        self.checks=args
-        return self
+    def remove(cls,*args: Callable) -> object:
+        """removes checks from all instances of the class"""
+        cls.checks=tuple(__check for __check in self.checks if __check not in args)
+        return cls
+    @classmethod
+    def use(cls,*args: Callable,defaults: bool=True) -> None:
+        """adds additional custom checks to inputs (locally e.g. only on the instance used)"""
+        return partial(cls,args=args,defaults=defaults) ## make an instance of the class with the new args ##
 
 class Sub:
     """shorthand version of re.sub"""
