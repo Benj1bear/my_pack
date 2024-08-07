@@ -73,7 +73,7 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
     except:
         raise KeyError("Key 'return' does not exist in .__annotations__. You must annotate a return type")
     ## assuming it has a return type
-    params=signature(FUNC).parameters
+    params=signature(FUNC).parameters ## will use this later to fix the *args **kwargs problem ##
     if len(params)!=len(annotations)-1:
         ## which are missing ##
         missed=[key for key in params.keys() if params[key].annotation==_empty]
