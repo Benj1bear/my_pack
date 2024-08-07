@@ -76,7 +76,7 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
     params=signature(FUNC).parameters
     if len(params)!=len(annotations)-1:
         ## which are missing ##
-        missed=[key for key in params.keys() if params["x"].annotation==_empty]
+        missed=[key for key in params.keys() if params[key].annotation==_empty]
         raise Exception(f"The following parameters have no type annotations: {missed}")
     if inputs:
         ## do all the kwargs first
