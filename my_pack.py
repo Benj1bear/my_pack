@@ -51,9 +51,9 @@ def cwd() -> None:
 ## needs testing (probably can't handle additional *args and **kwargs annotations and needs some exception handling for length mismatches)
 def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
     """For validating types against their type annotations"""
-    def try_check(arg,annotation,key,message) -> None:
+    def try_check(arg: Any,annotation: type,key: Any,message: str) -> None:
         """For handling the checking of each arguements type"""
-        def temp(annotation,arg) -> None:
+        def checker(annotation: type,arg: Any) -> None:
             nonlocal message
             if isinstance(arg,annotation)==False:
                 raise TypeError(message)
@@ -63,9 +63,9 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
             if len(arg)!=len(annotation):
                 raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
             for type_annotation,arguement in zip(annotation,arg):
-                temp(type_annotation,arguement)
+                checker(type_annotation,arguement)
         else:
-            temp(annotation,arg)
+            checker(annotation,arg)
 
     args,kwargs,annotations=kwargs["args"],kwargs["kwargs"],FUNC.__annotations__
     if inputs:
@@ -79,12 +79,12 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
         ## then the args
         args=iter(args)
         for key,annotation in annotations.items():
+            if key=="return":
+                continue
             try:
                 arg=next(args)
             except StopIteration:
                 break
-            if key=="return":
-                continue
             try_check(*(arg,annotation,key,f"arguement '{key}' must be of type {annotation}"))
         ## check for kwargs, args specific types
     else:
