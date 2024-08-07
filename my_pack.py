@@ -117,7 +117,7 @@ class sanitize:
     """
     checks=(type_check,) ## default check used ##
     
-    def __init__(self,FUNC: Callable,args: Callable,defaults: bool=True) -> None:
+    def __init__(self,FUNC: Callable,*args: Callable,defaults: bool=True) -> None:
         """retains the function and common metadata or attributes"""
         self.FUNC,self.__doc__,self.__annotations__=FUNC,FUNC.__doc__,FUNC.__annotations__
         if defaults:
