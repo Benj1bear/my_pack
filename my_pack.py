@@ -28,7 +28,7 @@ from importlib.util import module_from_spec,spec_from_loader
 import re
 import glob
 import shutil
-from inspect import getfile,getsource
+from inspect import getfile,getsource,signature,_empty
 import sys
 from functools import partial,wraps
 from keyword import iskeyword
@@ -68,6 +68,16 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
             checker(annotation,arg)
 
     args,kwargs,annotations=kwargs["args"],kwargs["kwargs"],FUNC.__annotations__
+    try:
+        annotations["return"]
+    except:
+        raise KeyError("Key 'return' does not exist in .__annotations__. You must annotate a return type")
+    ## assuming it has a return type
+    params=signature(FUNC).parameters
+    if len(params)!=len(annotations)-1:
+        ## which are missing ##
+        missed=[key for key in params.keys() if params["x"].annotation==_empty]
+        raise Exception(f"The following parameters have no type annotations: {missed}")
     if inputs:
         ## do all the kwargs first
         for key,value in kwargs.items():
