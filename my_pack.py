@@ -144,7 +144,7 @@ class sanitize:
         cls.checks=tuple(__check for __check in self.checks if __check not in args)
         return cls
     @classmethod
-    def use(cls,*args: Callable,defaults: bool=True) -> None:
+    def use(cls,*args: Callable,defaults: bool=True) -> object:
         """adds additional custom checks to inputs (locally e.g. only on the instance used)"""
         return partial(cls,args=args,defaults=defaults) ## make an instance of the class with the new args ##
 
