@@ -7,3 +7,4 @@ setuptools
 matplotlib
 IPython
 pandas
+pyautogui
