@@ -61,7 +61,7 @@ def get_url() -> str:
     pyautogui.hotkey('ctrl', 'c')
     return Tk().clipboard_get()
 
-def get_tabs(delay: int|float=1.5,close_init: bool=False):
+def get_tabs(delay: int|float=1.5,close_init: bool=False) -> list[str]:
     """
     Gets all links from currently open tabs in google chrome
     (stops when there's a repeat e.g. only accepts a unique set of tabs)
