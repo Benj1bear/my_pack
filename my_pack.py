@@ -37,10 +37,10 @@ import webbrowser
 import pyautogui
 from tkinter import Tk
 
-def save_tabs(filename: str) -> None:
+def save_tabs(filename: str,*args,**kwargs) -> None:
     """save urls to .txt file"""
     with open(filename,"w") as file:
-        file.write("\n".join(get_tabs()))
+        file.write("\n".join(get_tabs(*args,**kwargs)))
 
 def browse_from_file(filename: str) -> None:
     """Browses urls from .txt file"""
