@@ -33,6 +33,52 @@ import sys
 from functools import partial,wraps
 from keyword import iskeyword
 import pickle
+import webbrowser
+import pyautogui
+from tkinter import Tk
+
+def save_tabs(filename: str) -> None:
+    """save urls to .txt file"""
+    with open(filename,"w") as file:
+        file.write("\n".join(get_tabs()))
+
+def browse_from_file(filename: str) -> None:
+    """Browses urls from .txt file"""
+    urls=read_urls(filename)
+    browse(urls) if urls else print("No links found in the file.")
+
+def read_urls(filename: str) -> list[str]:
+    """Reads urls from a text file"""
+    with open(filename, 'r') as file: return [url for line in file if (url:=line.strip())]
+
+def browse(urls: list[str]) -> None:
+    """Uses Google Chrome to browse a selection of links"""
+    return [webbrowser.open(url, new=2, autoraise=True) for url in urls]
+
+def get_url() -> str:
+    """get url from google chrome tab"""
+    pyautogui.hotkey('ctrl', 'l')
+    pyautogui.hotkey('ctrl', 'c')
+    return Tk().clipboard_get()
+
+def get_tabs(delay: int|float=1.5,close_init: bool=False):
+    """
+    Gets all links from currently open tabs in google chrome
+    (stops when there's a repeat e.g. only accepts a unique set of tabs)
+    """
+    webbrowser.open("https://www.google.com", new=2, autoraise=True)
+    sleep(delay)
+    pyautogui.hotkey('ctrl', 'tab')
+    links,temp=[],get_url()
+    while temp not in links:
+        pyautogui.hotkey('ctrl', 'tab')
+        links+=[temp]
+        temp=get_url()
+    ## in case for whatever reason something should happen it's possible that
+    ##  you might interfere with it and it may close some other application
+    if close_init:
+        pyautogui.hotkey('ctrl', 'w')
+    return links
 
 def to_pickle(obj: object,filename: str) -> None:
     """Convenience function for pickling objects in python with context management"""
