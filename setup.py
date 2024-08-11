@@ -8,5 +8,5 @@ setup(
     author='author',
     author_email='email',
     packages=find_packages(),
-    install_requires=['numpy','bs4','seaborn','scikit-learn','requests','setuptools','matplotlib','IPython','pandas']
+    install_requires=['numpy','bs4','seaborn','scikit-learn','requests','setuptools','matplotlib','IPython','pandas','pyautogui']
 )
