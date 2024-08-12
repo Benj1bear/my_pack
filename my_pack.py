@@ -59,7 +59,10 @@ def get_url() -> str:
     """get url from google chrome tab"""
     pyautogui.hotkey('ctrl', 'l')
     pyautogui.hotkey('ctrl', 'c')
-    return Tk().clipboard_get()
+    tk_obj=Tk()
+    result=tk_obj.clipboard_get()
+    tk_obj.destroy() ## pops up when using a CLI ## there's no option to turn off the popup on __init__ so it has to be saved then removed ##
+    return result
 
 def get_tabs(delay: int|float=1.5,close_init: bool=False) -> list[str]:
     """
