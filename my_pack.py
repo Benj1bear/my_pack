@@ -37,15 +37,46 @@ import webbrowser
 import pyautogui
 from tkinter import Tk
 import secrets
+import string
 
-def create_password(length: int=12,char_range: int=127) -> str:
+def create_password(length: int=12,selection: None|str=None,char_range: int=range(127)) -> str:
     """
     creates a password using cryptographic pseudo-random numbers
     ## code reference: https://stackoverflow.com/questions/3854692/generate-password-in-python
     # changes made: allowed for a wider range of characters
     """
-    selection="".join(char for i in range(char_range) if "\\" not in repr((char:=chr(i))))
+    if selection==None:
+        if type(char_range)==int:
+            char_range=range(char_range)
+        selection="".join(char for i in char_range if "\\" not in repr((char:=chr(i))))
     return "".join(secrets.choice(selection) for _ in range(length))
+
+def random_shuffle(arr: list|str) -> list:
+    flag,index=0,[]
+    if type(arr)==str:
+        flag,arr=1,list(arr)
+    for i in range(len(arr)):
+        temp=secrets.choice(range(len(arr)))
+        index+=[arr[temp]]
+        del arr[temp]
+    if flag:
+        return "".join(index)
+    return index
+
+def format_password(upper: int=0,lower: int=0,punc: int=0,num: int=0,other: int=0,char_range: int=range(127)) -> str:
+    """Creates a new password formatted to password rules"""
+    selection=""
+    if upper:
+        selection+=create_password(upper,string.ascii_uppercase)
+    if lower:
+        selection+=create_password(lower,string.ascii_lowercase)
+    if punc:
+        selection+=create_password(punc,string.punctuation)
+    if num:
+        selection+=create_password(num,string.digits)
+    if other:
+        selection+=create_password(other,char_range=char_range)
+    return random_shuffle(selection)
 
 def save_tabs(filename: str,*args,**kwargs) -> None:
     """save urls to .txt file"""
