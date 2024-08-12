@@ -44,12 +44,9 @@ def save_tabs(filename: str,*args,**kwargs) -> None:
 
 def browse_from_file(filename: str) -> None:
     """Browses urls from .txt file"""
-    urls=read_urls(filename)
+    with open(filename, 'r') as file:
+        urls=[url for line in file if (url:=line.strip())]
     browse(urls) if urls else print("No links found in the file.")
-
-def read_urls(filename: str) -> list[str]:
-    """Reads urls from a text file"""
-    with open(filename, 'r') as file: return [url for line in file if (url:=line.strip())]
 
 def browse(urls: list[str]) -> None:
     """Uses Google Chrome to browse a selection of links"""
