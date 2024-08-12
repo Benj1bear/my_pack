@@ -36,6 +36,16 @@ import pickle
 import webbrowser
 import pyautogui
 from tkinter import Tk
+import secrets
+
+def create_password(length: int=12,char_range: int=127) -> str:
+    """
+    creates a password using cryptographic pseudo-random numbers
+    ## code reference: https://stackoverflow.com/questions/3854692/generate-password-in-python
+    # changes made: allowed for a wider range of characters
+    """
+    selection="".join(char for i in range(char_range) if "\\" not in repr((char:=chr(i))))
+    return "".join(secrets.choice(selection) for _ in range(length))
 
 def save_tabs(filename: str,*args,**kwargs) -> None:
     """save urls to .txt file"""
