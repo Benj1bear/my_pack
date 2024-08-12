@@ -51,7 +51,7 @@ def create_password(length: int=12,selection: None|str=None,char_range: int=rang
         selection="".join(char for i in char_range if "\\" not in repr((char:=chr(i))))
     return "".join(secrets.choice(selection) for _ in range(length))
 
-def random_shuffle(arr: list|str) -> list:
+def random_shuffle(arr: list|str) -> list|str:
     """Pseudo-randomly shuffles a list or string"""
     flag,index=0,[]
     if type(arr)==str:
