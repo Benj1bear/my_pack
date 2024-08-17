@@ -239,7 +239,7 @@ class sanitize:
     @classmethod
     def remove(cls,*args: Callable) -> object:
         """removes checks from all instances of the class"""
-        cls.checks=tuple(__check for __check in self.checks if __check not in args)
+        cls.checks=tuple(__check for __check in cls.checks if __check not in args)
         return cls
     @classmethod
     def use(cls,*args: Callable,defaults: bool=True) -> object:
@@ -248,15 +248,15 @@ class sanitize:
 
 class Sub:
     """shorthand version of re.sub"""
-    def __init__(self,code: str,flags=re.DOTALL) -> None:
+    def __init__(self,code: str) -> None:
         self.code=code
 
     def __repr__(self) -> str:
         return self.code
 
-    def __call__(self,regex: str,repl: str="") -> object:
+    def __call__(self,regex: str,repl: str="",flags=re.DOTALL) -> object:
         """For string substitution with regex"""
-        self.code=re.sub(regex,repl,self.code,flags=re.DOTALL)
+        self.code=re.sub(regex,repl,self.code,flags=flags)
         return self
 
     @property
