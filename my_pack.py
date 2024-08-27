@@ -667,10 +667,17 @@ class dct_ext:
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
         if type(index) != tuple:
-            index=(index,)
+            try:
+                if type(index)==list and type(index[0])==list:
+                    index=tuple(index[0])
+                else:
+                    index=tuple(index)
+            except:
+                raise TypeError(f"index {index} is an invalid index type")
         keys=list(self.dct.keys())
         condition=lambda i:i if type(i)==str else keys[i]
-        return {condition(i): self.dct[condition(i)] for i in [*index]} # decided not to use set([*index]) to retain ordering
+        ## np.unique retains ordering
+        return {condition(i): self.dct[condition(i)] for i in np.unique([*index]).tolist()}
 
     def __setitem__(self,index,args) -> None:
         if type(args) != list and type(args) != tuple:
@@ -683,6 +690,12 @@ class dct_ext:
             raise Exception(f"in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned\nkeys: {keys}\nargs: {args}")
         for key,arg in zip(keys,args):
             self.dct[key]=arg
+    @property
+    def keys(self) -> list:
+        return list(self.dct.keys())
+    @property
+    def values(self) -> list:
+        return list(self.dct.keys())
 
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
