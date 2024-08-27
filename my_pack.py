@@ -658,6 +658,8 @@ class dct_ext:
         return str(self.dct)
     
     def __getitem__(self,index: slice) -> dict:
+        if type(index)==list:
+            index=slice(*tuple(index))
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
