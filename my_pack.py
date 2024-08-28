@@ -657,28 +657,29 @@ class dct_ext:
         """Makes sure to display a dict and not a memory location"""
         return str(self.dct)
     
-    def __getitem__(self,index: slice) -> dict:
-        if type(index)==list:
-            index=slice(*tuple(index))
+    def __getitem__(self,index: int|list|tuple|slice) -> dict:
+        if type(index) == int:
+            temp_dct=list(self.dct.items())[index]
+            return dict.fromkeys([temp_dct[0]],temp_dct[1])
+        
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
                 index=key_slice(self.dct,index)
+            elif type(index.start) == float or type(index.stop) == float or type(index.step) == float:
+                raise TypeError("slices must be of the the type slice[int|None,int|None,int|None]")
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
-        if type(index) != tuple:
-            try:
-                if type(index)==list and type(index[0])==list:
-                    index=tuple(index[0])
-                else:
-                    index=tuple(index)
-            except:
-                raise TypeError(f"index {index} is an invalid index type")
-        keys=list(self.dct.keys())
-        condition=lambda i:i if type(i)==str else keys[i]
-        ## np.unique retains ordering
-        return {condition(i): self.dct[condition(i)] for i in np.unique([*index]).tolist()}
-
+        if type(index)==float:
+            raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
+        if isinstance(index,list|tuple):
+            index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
+            keys=list(self.dct.keys())
+            condition=lambda i:i if type(i)==str else keys[i]
+            ## np.unique retains ordering
+            return {condition(i): self.dct[condition(i)] for i in np.unique([*index]).tolist()}
+        raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
+    
     def __setitem__(self,index,args) -> None:
         if type(args) != list and type(args) != tuple:
             args=[args]
@@ -690,12 +691,16 @@ class dct_ext:
             raise Exception(f"in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned\nkeys: {keys}\nargs: {args}")
         for key,arg in zip(keys,args):
             self.dct[key]=arg
+
     @property
     def keys(self) -> list:
         return list(self.dct.keys())
     @property
     def values(self) -> list:
-        return list(self.dct.keys())
+        return list(self.dct.values())
+    @property
+    def items(self) -> list:
+        return list(self.dct.items())
 
 def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
