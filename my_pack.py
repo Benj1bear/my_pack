@@ -40,6 +40,18 @@ import secrets
 import string
 from operator import itemgetter
 
+def unique(ls: list,order: bool|str="retain") -> list:
+    """Returns the unique values of a list with specified ordering"""
+    if order:
+        if order=="retain":
+            temp=[]
+            for i in ls:
+                if temp.count(i)==0:
+                    temp+=[i]
+            return temp
+        return np.unique(ls).tolist()
+    return list(set(ls))
+
 def create_password(length: int=12,selection: None|str=None,char_range: int=range(127)) -> str:
     """
     creates a password using cryptographic pseudo-random numbers
@@ -671,11 +683,11 @@ class dct_ext:
             elif type(index.start) == float or type(index.stop) == float or type(index.step) == float:
                 raise TypeError("slices must be of the the type slice[int|None,int|None,int|None]")
             return dict(itemgetter(index)(self.items))
-        if isinstance(index,list|tuple|str):
+        if isinstance(index,list|tuple):
             index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
             keys=self.keys
             condition=lambda i:i if type(i)==str else keys[i]
-            return {condition(i): self.dct[condition(i)] for i in np.unique([index]).tolist()}
+            return {condition(i): self.dct[condition(i)] for i in unique(index)}
         raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
     
     def __setitem__(self,index,args) -> None:
