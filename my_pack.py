@@ -668,8 +668,7 @@ class dct_ext:
                 index=key_slice(self.dct,index)
             elif type(index.start) == float or type(index.stop) == float or type(index.step) == float:
                 raise TypeError("slices must be of the the type slice[int|None,int|None,int|None]")
-            # numeric # convert to list
-            return {i: self.dct[i] for i in list(self.dct)[index]}
+            return dict(itemgetter(index)(self.items))
         if isinstance(index,list|tuple):
             index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
             return dict(itemgetter(*index)(self.items))
@@ -686,7 +685,6 @@ class dct_ext:
             raise Exception(f"in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned\nkeys: {keys}\nargs: {args}")
         for key,arg in zip(keys,args):
             self.dct[key]=arg
-
     @property
     def keys(self) -> list:
         return list(self.dct.keys())
