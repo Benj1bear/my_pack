@@ -659,9 +659,11 @@ class dct_ext:
         return str(self.dct)
     
     def __getitem__(self,index: int|list|tuple|slice) -> dict:
-        if type(index) == int:
+        if isinstance(index,int):
             temp_dct=list(self.dct.items())[index]
             return dict.fromkeys([temp_dct[0]],temp_dct[1])
+        if isinstance(index,str):
+            return {index:self.dct[index]}
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
