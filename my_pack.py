@@ -38,6 +38,7 @@ import pyautogui
 from tkinter import Tk
 import secrets
 import string
+from operator import itemgetter
 
 def create_password(length: int=12,selection: None|str=None,char_range: int=range(127)) -> str:
     """
@@ -671,10 +672,7 @@ class dct_ext:
             return {i: self.dct[i] for i in list(self.dct)[index]}
         if isinstance(index,list|tuple):
             index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
-            keys=list(self.dct.keys())
-            condition=lambda i:i if type(i)==str else keys[i]
-            ## np.unique retains ordering
-            return {condition(i): self.dct[condition(i)] for i in np.unique([*index]).tolist()}
+            return dict(itemgetter(*index)(self.items))
         raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
     
     def __setitem__(self,index,args) -> None:
