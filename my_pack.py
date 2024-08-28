@@ -661,7 +661,6 @@ class dct_ext:
         if type(index) == int:
             temp_dct=list(self.dct.items())[index]
             return dict.fromkeys([temp_dct[0]],temp_dct[1])
-        
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
@@ -670,8 +669,6 @@ class dct_ext:
                 raise TypeError("slices must be of the the type slice[int|None,int|None,int|None]")
             # numeric # convert to list
             return {i: self.dct[i] for i in list(self.dct)[index]}
-        if type(index)==float:
-            raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
         if isinstance(index,list|tuple):
             index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
             keys=list(self.dct.keys())
