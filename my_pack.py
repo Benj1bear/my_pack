@@ -669,9 +669,11 @@ class dct_ext:
             elif type(index.start) == float or type(index.stop) == float or type(index.step) == float:
                 raise TypeError("slices must be of the the type slice[int|None,int|None,int|None]")
             return dict(itemgetter(index)(self.items))
-        if isinstance(index,list|tuple):
+        if isinstance(index,list|tuple|str):
             index=tuple(index[0]) if isinstance(index[0],list|tuple) else tuple(index)
-            return dict(itemgetter(*index)(self.items))
+            keys=self.keys
+            condition=lambda i:i if type(i)==str else keys[i]
+            return {condition(i): self.dct[condition(i)] for i in np.unique([index]).tolist()}
         raise TypeError("indexes or slices can only be of type int,list,tuple,or slice[int|None,int|None,int|None]")
     
     def __setitem__(self,index,args) -> None:
