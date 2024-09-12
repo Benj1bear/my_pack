@@ -59,10 +59,10 @@ class chain:
         if len(signature(FUNC).parameters) > 0:
             return partial(FUNC,self.obj)
         try:
-            ## assume it's already a staticmethod and that it's a functions that has no params
+            ## assume it's already a staticmethod and that it's a function that has no params
             return FUNC
         except:
-            ## reset as a staticmethod
+            ## reset as a staticmethod.
             setattr(cls,attr,staticmethod(self.attr))
             return getattr(self,attr)
 
