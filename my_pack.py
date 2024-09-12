@@ -128,7 +128,7 @@ def dct_join(*dcts) -> dict:
 def biop(data: Any,op: str) -> Any:
     """applies a reduce using a binary operator"""
     def bi_op(x: Any,y: Any) -> Any:
-        """asfd"""
+        """dynamic binary operation"""
         exec("temp=x"+op+"y")
         return locals()["temp"]
     return reduce(bi_op,data)
