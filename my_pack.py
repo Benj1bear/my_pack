@@ -48,6 +48,7 @@ class ext:
     i.e. you can now do:
     def method(self):
         print("hi")
+        return self
     @staticmethod
     def testing(self):
         print("hello")
