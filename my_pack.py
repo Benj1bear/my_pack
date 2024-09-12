@@ -58,13 +58,11 @@ class chain:
         FUNC=getattr(self,attr)
         if len(signature(FUNC).parameters) > 0:
             return partial(FUNC,self.obj)
-        try:
-            ## assume it's already a staticmethod
+        if isinstance(FUNC,staticmethod):
             return FUNC
-        except:
-            ## reset as a staticmethod
-            setattr(cls,attr,staticmethod(self.attr))
-            return getattr(self,attr)
+        ## else reset as a staticmethod
+        setattr(cls,attr,staticmethod(self.attr))
+        return getattr(self,attr)
 
 class ext:
     """
