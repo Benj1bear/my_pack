@@ -61,11 +61,10 @@ class tup_ext:
         self.tup=tuple(temp)
 
     def __delitem__(self,index) -> None:
-        indexes=list(interval:=range(len(self.tup)))
-        remove=indexes[index]
+        remove=list(range(len(self.tup)))[index]
         if type(remove)!=list:
             remove=[remove]
-        self.tup=tuple(self.tup[i] for i in interval if i not in remove)
+        self.tup=tuple(value for index,value in enumerate(self.tup) if index not in remove)
 
 class Print:
     """In-time display"""
