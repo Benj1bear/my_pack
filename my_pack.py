@@ -42,7 +42,23 @@ from operator import itemgetter
 from itertools import combinations
 
 class ext:
-    """Extensions for python data types whereby you can now dynamically create/use methods"""
+    """
+    Extensions for python data types whereby you can now dynamically create/use methods
+
+    i.e. you can now do:
+    def method(self):
+        print("hi")
+    
+    def testing(self):
+        print("hello")
+
+    ext().method().testing()
+    # should print:
+    # hi
+    # hello
+    Note: these instance based methods are dynamically added e.g. they were not
+    part of the original class definition but were already defined elsewhere
+    """
     def __init__(self,obj: Any=[]) -> None:
         self.obj=obj
         
