@@ -41,6 +41,32 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+class tup_ext:
+    """Extensions for tuples"""
+    def __init__(self,tup: tuple) -> None:
+        self.tup=tup
+
+    def __repr__(self) -> str:
+        return str(self.tup)
+    
+    def __len__(self) -> int:
+        return len(self.tup)
+    
+    def __getitem__(self,index) -> tuple:
+        return itemgetter(index)(self.tup)
+    
+    def __setitem__(self,index,value) -> None:
+        temp=list(self.tup)
+        temp[index]=value
+        self.tup=tuple(temp)
+
+    def __delitem__(self,index) -> None:
+        indexes=list(interval:=range(len(self.tup)))
+        remove=indexes[index]
+        if type(remove)!=list:
+            remove=[remove]
+        self.tup=tuple(self.tup[i] for i in interval if i not in remove)
+
 class Print:
     """In-time display"""
     def __init__(self,initial: int=0) -> None:
