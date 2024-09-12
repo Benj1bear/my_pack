@@ -41,6 +41,31 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+class chain:
+    """if wanting to apply to the object and keep a chain going"""
+    def __init__(self,obj: Any=[]) -> None:
+        self.obj=obj
+
+    def __repr__(self) -> str:
+        return str(self.obj)
+    @classmethod
+    def __add_method(cls,attr: str) -> None:
+        """Dynamically adds new methods to a class"""
+        if hasattr(cls,attr)==False:
+            setattr(cls,attr,globals()[attr])
+    def __getattr__(self,attr: str) -> Any:
+        self.__add_method(attr)
+        FUNC=getattr(self,attr)
+        if len(signature(FUNC).parameters) > 0:
+            return partial(FUNC,self.obj)
+        try:
+            ## assume it's already a staticmethod
+            return FUNC
+        except:
+            ## reset as a staticmethod
+            setattr(cls,attr,staticmethod(self.attr))
+            return getattr(self,attr)
+
 class ext:
     """
     Extensions for python data types whereby you can now dynamically create/use methods
