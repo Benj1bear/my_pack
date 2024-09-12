@@ -2805,7 +2805,7 @@ def digit_slice(num: float,places: int) -> float:
     scalar=10**places
     return np.floor(num*scalar)/scalar
 
-def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame:
+def preprocess(data: pd.DataFrame,file: str="",variable: str="",limit: int=10*6) -> pd.DataFrame:
     """ 
     Function for cleaning / preprocessing data 
         
@@ -2830,13 +2830,14 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
     # show the info #
     display(Markdown("**Type consistency:**"))
     display(my_info(data))
-    try:
-        # is there enough data for analysis
-        sns.heatmap(data.isnull())
-        plt.title("Heatmap of missing values")
-        plt.show()
-    except Exception as e:
-        print(e)
+    if len(data) < limit:
+        try:
+            # is there enough data for analysis
+            sns.heatmap(data.isnull())
+            plt.title("Heatmap of missing values")
+            plt.show()
+        except Exception as e:
+            print(e)
     # show description # check continuity # check uniqueness
     display(Markdown("**Numeric data:**"))
     def try_mod(df: pd.DataFrame) -> pd.Series:
@@ -2864,6 +2865,7 @@ def preprocess(data: pd.DataFrame,file: str="",variable: str="") -> pd.DataFrame
         display(objs.describe())
         data = data_sets(objs)
         display(data.head(15))
+        display(objs.apply(indicator_encode).describe().T)
     except Exception as e:
         print(e)
     return data
