@@ -89,7 +89,9 @@ def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tu
     if show:
         print("Available models: tree, knn, forest, nb, dummy, nnet, svm, gb, log")
         return
-    if SKLEARN_IMPORTED==False: import_sklearn_models()
+    if SKLEARN_IMPORTED==False: 
+        import_sklearn_models()
+        SKLEARN_IMPORTED=True
     get=lambda _mod: _mod if len(kwargs)==0 else _mod(**kwargs)
     match mod:
         case "tree":
