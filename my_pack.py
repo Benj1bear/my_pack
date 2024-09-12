@@ -52,15 +52,19 @@ class ext:
     def testing(self):
         print("hello")
     @classmethod
-    def testing(cls):
+    def testing2(cls):
         print(cls)
-    
+    @property
+    def testing3(self):
+        print("is a property")
     ext().method().testing()
     ext().testing2()
+    ext().testing3()
     # should print:
     # hi
     # hello
     # <class '__main__.ext'>
+    # is a property
     Note: these instance based methods are dynamically added e.g. they were not
     part of the original class definition but were already defined elsewhere
     """
