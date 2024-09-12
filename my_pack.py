@@ -122,11 +122,16 @@ class Print:
     def clear(self) -> None:
         print(" "*self.prev,end="\r")
 
-def import_sklearn_models() -> None:
+def import_sklearn_models(kind) -> None:
     """Convenience function for importing lots of sklearn models"""
-    models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
-            ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
-                "LogisticRegression","GaussianNB","DummyClassifier","MLPClassifier","SVC"])
+    if kind!="classifiers" and kind!="regressors":
+        raise ValueError("'kind' must be in ["classifiers","regressors"]")
+    if kind=="classifiers":
+        models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
+                ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
+                    "LogisticRegression","GaussianNB","DummyClassifier","MLPClassifier","SVC"])
+    if kind=="regressors":
+        pass ### to add
 
     for directory,model in models:
         exec("from sklearn."+directory+" import "+model,globals())
