@@ -891,6 +891,10 @@ class dct_ext:
     def __setitem__(self,index,args) -> None:
         if type(args) != list and type(args) != tuple:
             args=[args]
+        # make sure keys exist
+        for key in index:
+            if key not in self.dct:
+                self.dct[key]=None
         # get keys and set them
         dct=self.__getitem__(index)
         keys=list(dct.keys())
