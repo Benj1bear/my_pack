@@ -30,7 +30,7 @@ import glob
 import shutil
 from inspect import getfile,getsource,signature,_empty
 import sys
-from functools import partial,wraps
+from functools import partial,wraps,reduce
 from keyword import iskeyword
 import pickle
 import webbrowser
@@ -39,6 +39,112 @@ from tkinter import Tk
 import secrets
 import string
 from operator import itemgetter
+from itertools import combinations
+
+def import_sklearn_models() -> None:
+    """Convienence function for importing lots of sklearn models"""
+    models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
+            ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
+                "LogisticRegression","GaussianNB","DummyClassifier","MLPClassifier","SVC"])
+
+    for directory,model in models:
+        exec("from sklearn."+directory+" import "+model,globals())
+
+def all_multi_combos_dict(arr: dict) -> list:
+    """Same as all_multi_combos but for retaining key/column placing"""
+    def all_multi_combos(current_combo: list=[]) -> list:
+        nonlocal arr
+        """Returns a list of all combinations of multiple lists"""
+        all_combos,index=tuple(),len(current_combo)
+        if index==len(arr):
+            return [current_combo]
+        for i in list(dct_ext(arr)[index].values())[0]:
+            all_combos=(*all_combos,*all_multi_combos(current_combo+[i]))
+        return all_combos
+    return all_multi_combos()
+
+def all_multi_combos(arr: list[list],current_combo: list=[]) -> list:
+    """Returns a list of all combinations of multiple lists"""
+    all_combos,index=tuple(),len(current_combo)
+    if index==len(arr):
+        return [current_combo]
+    for i in arr[index]:
+        all_combos=(*all_combos,*all_multi_combos(arr,current_combo+[i]))
+    return all_combos
+@property
+def reset_cols(df: pd.DataFrame) -> pd.DataFrame:
+    df.columns=range(len(df.columns))
+    return df
+
+pd.DataFrame.reset_cols=reset_cols
+
+def all_combinations(ls: list,start: int=1,stop: int=0) -> iter:
+    """Returns all the unique combinations"""
+    stop=len(ls)+1-stop
+    return (combo for i in range(start,stop) for combo in combinations(ls,i))
+
+SKLEARN_IMPORTED=False
+def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tuple[Callable,str]:
+    """Convenience function for obtaining common sklearn and other classifier models"""
+    if show:
+        print("Available models: tree, knn, forest, nb, dummy, nnet, svm, gb, log")
+        return
+    if SKLEARN_IMPORTED==False: import_sklearn_models()
+    get=lambda _mod: _mod if len(kwargs)==0 else _mod(**kwargs)
+    match mod:
+        case "tree":
+            FUNC,depth = get(DecisionTreeClassifier),"Depth"
+        case "knn":
+            FUNC,depth = get(KNeighborsClassifier),"neighbors"
+        case "forest":
+            FUNC,depth = get(RandomForestClassifier),"estimators"
+        case "nb":
+            FUNC,depth = get(GaussianNB),"iteration"
+        case "dummy":
+            FUNC,depth = get(DummyClassifier),"iteration"
+        case "nnet":
+            FUNC,depth = get(MLPClassifier),"iteration"
+        case "svm":
+            FUNC,depth = get(SVC),"iteration"
+        case "gb":
+            FUNC,depth = get(GradientBoostingClassifier),"iteration"
+        case "log":
+            FUNC,depth = get(LogisticRegression),"iteration"
+        case _:
+            return print(f"model '{mod}' doesn't exist")
+
+    if plot:
+        FUNC,depth
+    return FUNC
+
+def dct_join(*dcts) -> dict:
+    """For concatenating multiple dicts together where all have the same keys"""
+    keys=biop(map(lambda x:x.keys(),dcts),"|")
+    return {key: [dct[key] if key in dct else None for dct in dcts] for key in keys}
+
+def biop(data: Any,op: str) -> Any:
+    """applies a reduce using a binary operator"""
+    def bi_op(x: Any,y: Any) -> Any:
+        """asfd"""
+        exec("temp=x"+op+"y")
+        return locals()["temp"]
+    return reduce(bi_op,data)
+
+FILE_SAVE_INDEX={}
+def unidir(path_name: str="",ext: str="") -> None:
+    """Finds a unique file name in the specified directory"""
+    global FILE_SAVE_INDEX
+    file_name=path_name+"."+ext
+    if file_name in FILE_SAVE_INDEX: index=FILE_SAVE_INDEX[file_name]
+    else: index=FILE_SAVE_INDEX[file_name]=0
+    while True:
+        file_name=f"{path_name}_{index}.{ext}"
+        if os.path.isfile(file_name)==False: return file_name
+        index+=1
+
+def pd_read(*args,method: Callable=pd.read_csv,**kwargs) -> tuple[pd.DataFrame,...]:
+    """Convenience function For reading multiple csvs into pandas DataFrames"""
+    return (method(filename,engine="pyarrow",**kwargs) for filename in args)
 
 def unique(ls: list,order: bool|str="retain") -> list:
     """Returns the unique values of a list with specified ordering"""
