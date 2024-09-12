@@ -41,6 +41,24 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+class ext:
+    """Extensions for python data types whereby you can now dynamically create/use methods"""
+    def __init__(self,obj: Any=[]) -> None:
+        self.obj=obj
+        
+    def __repr__(self) -> str:
+        return str(self.obj)
+    
+    @classmethod
+    def __add_method(cls,attr) -> bool:
+        """Dynamically adds new methods to a class"""
+        if hasattr(cls,attr)==False:
+            setattr(cls,attr,globals()[attr])
+
+    def __getattr__(self,attr):
+        self.__add_method(attr)
+        return getattr(self,attr)
+
 class tup_ext:
     """Extensions for tuples"""
     def __init__(self,tup: tuple) -> None:
