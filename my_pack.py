@@ -122,7 +122,7 @@ class Print:
         print(" "*self.prev,end="\r")
 
 def import_sklearn_models() -> None:
-    """Convienence function for importing lots of sklearn models"""
+    """Convenience function for importing lots of sklearn models"""
     models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
             ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
                 "LogisticRegression","GaussianNB","DummyClassifier","MLPClassifier","SVC"])
