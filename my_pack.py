@@ -122,7 +122,7 @@ class Print:
     def clear(self) -> None:
         print(" "*self.prev,end="\r")
 
-def import_sklearn_models(kind) -> None:
+def import_sklearn_models(kind: str) -> None:
     """Convenience function for importing lots of sklearn models"""
     if kind!="classifiers" and kind!="regressors":
         raise ValueError("'kind' must be in ["classifiers","regressors"]")
