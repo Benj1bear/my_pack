@@ -791,7 +791,10 @@ class dct_ext:
     def __repr__(self) -> str:
         """Makes sure to display a dict and not a memory location"""
         return str(self.dct)
-    
+
+    def __len__(self) -> int:
+        return len(self.dct)
+
     def __getitem__(self,index: int|list|tuple|slice) -> dict:
         if isinstance(index,int):
             temp_dct=list(self.dct.items())[index]
