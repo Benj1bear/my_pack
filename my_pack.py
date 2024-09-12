@@ -86,6 +86,7 @@ def all_combinations(ls: list,start: int=1,stop: int=0) -> iter:
 SKLEARN_IMPORTED=False
 def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tuple[Callable,str]:
     """Convenience function for obtaining common sklearn and other classifier models"""
+    global SKLEARN_IMPORTED
     if show:
         print("Available models: tree, knn, forest, nb, dummy, nnet, svm, gb, log")
         return
