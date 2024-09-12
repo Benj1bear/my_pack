@@ -41,6 +41,19 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+class Print:
+    """In-time display"""
+    def __init__(self,initial: int=0) -> None:
+        self.prev=initial
+    
+    def __call__(self,message: Any) -> None:
+        self.clear
+        print(message,end="\r")
+        self.prev=len(message)
+    @property
+    def clear(self) -> None:
+        print(" "*self.prev,end="\r")
+
 def import_sklearn_models() -> None:
     """Convienence function for importing lots of sklearn models"""
     models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
