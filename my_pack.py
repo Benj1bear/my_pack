@@ -48,14 +48,19 @@ class ext:
     i.e. you can now do:
     def method(self):
         print("hi")
-    
+    @staticmethod
     def testing(self):
         print("hello")
-
+    @classmethod
+    def testing(cls):
+        print(cls)
+    
     ext().method().testing()
+    ext().testing2()
     # should print:
     # hi
     # hello
+    # <class '__main__.ext'>
     Note: these instance based methods are dynamically added e.g. they were not
     part of the original class definition but were already defined elsewhere
     """
