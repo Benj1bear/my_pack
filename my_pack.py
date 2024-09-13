@@ -1798,7 +1798,7 @@ def req_search(directory: str="",allowed_extensions: list[str]=["py","ipynb"]) -
     # return only the unique requirements
     return list(set(requirements))
         
-def install(library_name: str,directory: str="",setup: bool=True,get_requirements: bool=True,defaults: bool=True,default_config: str="PYTHON_SETUP_DEFAULTS.pkl") -> None:
+def install(library_name: str,directory: str="",setup: bool=True,get_requirements: bool=True,defaults: bool=True,build: bool=False,default_config: str="PYTHON_SETUP_DEFAULTS.pkl") -> None:
     """
     Creates necessary files for a library that can be accessed globally 
     on your local machine created in the same directory as the script 
@@ -1813,6 +1813,9 @@ def install(library_name: str,directory: str="",setup: bool=True,get_requirement
     directory: directory where your python script is
     default_config: a .pkl file that's a pd.Series with your default information i.e.:
     pd.Series({"version":"'0.1.0'","description":"'contains useful function'","author":"'author'","email":"'email'"}).to_pickle("PYTHON_SETUP_DEFAULTS.pkl")
+    build: 
+      -  if False will install an editable library - pro: can be edited and reloaded quickly. - con: can be slower to load if contains lots of code
+      -  if True will build a .whl file            - pro: can load the file quickly.          - con: requires reinstallation to rebuild it
     """
     try:
         current_dir=os.getcwd()
@@ -1852,7 +1855,15 @@ setup(
         # go to the directory then run the command
         if directory != "":
             os.chdir(directory)
-        process=subprocess.run("pip install -e .",capture_output=True)    
+        if build:
+            ## needs testing ##
+            process=subprocess.run("python setup.py sdist bdist_wheel",capture_output=True)
+            if process.returncode == 0:
+                os.chdir("dist")
+                build_name=glob.glob('*.whl')[0]
+                process=subprocess.run("pip install "+build_name,capture_output=True)
+        else:
+            process=subprocess.run("pip install -e .",capture_output=True)
         if process.returncode != 0:
             print("---installation failed---")
             print("note: some imported packages may use dummy names")            
