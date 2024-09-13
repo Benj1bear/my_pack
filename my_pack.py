@@ -53,6 +53,11 @@ class chain:
         """Dynamically adds new methods to a class"""
         if hasattr(cls,attr)==False:
             setattr(cls,attr,globals()[attr])
+    @classmethod
+    def __static_setter(cls,attr: str) -> None:
+        """Sets an attribute as a staticmethod"""
+        setattr(cls,attr,staticmethod(self.attr))
+    
     def __getattr__(self,attr: str) -> Any:
         self.__add_method(attr)
         FUNC=getattr(self,attr)
@@ -63,7 +68,7 @@ class chain:
             return FUNC
         except:
             ## reset as a staticmethod.
-            setattr(cls,attr,staticmethod(self.attr))
+            self.__static_setter(attr)
             return getattr(self,attr)
 
 class ext:
@@ -150,7 +155,7 @@ class Print:
 def import_sklearn_models(kind: str) -> None:
     """Convenience function for importing lots of sklearn models"""
     if kind!="classifiers" and kind!="regressors":
-        raise ValueError("'kind' must be in ["classifiers","regressors"]")
+        raise ValueError("'kind' must be in [\"classifiers\",\"regressors\"]")
     if kind=="classifiers":
         models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
                 ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
@@ -228,7 +233,7 @@ def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tu
             return print(f"model '{mod}' doesn't exist")
 
     if plot:
-        FUNC,depth
+        return FUNC,depth
     return FUNC
 
 def dct_join(*dcts) -> dict:
