@@ -47,7 +47,7 @@ class chain:
         self.obj=obj
 
     def __repr__(self) -> str:
-        return str(self.obj)
+        return self.obj.__repr__()
     @classmethod
     def __add_method(cls,attr: str) -> None:
         """Dynamically adds new methods to a class"""
@@ -62,14 +62,14 @@ class chain:
         self.__add_method(attr)
         FUNC=getattr(self,attr)
         if len(signature(FUNC).parameters) > 0:
-            return partial(FUNC,self.obj)
+            return chain(partial(FUNC,self.obj))
         try:
             ## assume it's already a staticmethod and that it's a function that has no params
-            return FUNC
+            return chain(FUNC)
         except:
             ## reset as a staticmethod.
             self.__static_setter(attr)
-            return getattr(self,attr)
+            return chain(getattr(self,attr))
 
 class ext:
     """
