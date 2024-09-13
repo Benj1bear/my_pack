@@ -49,8 +49,8 @@ class chain:
     def __repr__(self) -> str:
         return self.obj.__repr__()
     @classmethod
-    def __add_method(cls,attr: str) -> None:
-        """Dynamically adds new methods to a class"""
+    def __add_attr(cls,attr: str) -> None:
+        """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
             setattr(cls,attr,globals()[attr])
     @classmethod
@@ -59,7 +59,10 @@ class chain:
         setattr(cls,attr,staticmethod(cls.attr))
     
     def __getattr__(self,attr: str) -> Any:
-        self.__add_method(attr)
+        """Modified to instantiate return values as chain objects"""
+        if hasattr(self.obj,attr):
+            return getattr(self.obj,attr)
+        self.__add_attr(attr)
         FUNC=getattr(self,attr)
         if len(signature(FUNC).parameters) > 0:
             return chain(partial(FUNC,self.obj))
