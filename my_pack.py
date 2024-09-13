@@ -1861,10 +1861,9 @@ setup(
             if setup:
                 ## put all files into a directory named after the modules name ##
                 source=os.getcwd()
-                os.mkdir(library_name)
                 files=os.listdir(source)
-                files.remove(library_name)
                 files.remove("setup.py")
+                os.mkdir(library_name)
                 for file in files:
                     shutil.move(os.path.join(source,file), library_name)
             process=subprocess.run("python setup.py sdist bdist_wheel",capture_output=True)
