@@ -56,7 +56,7 @@ class chain:
     @classmethod
     def __static_setter(cls,attr: str) -> None:
         """Sets an attribute as a staticmethod"""
-        setattr(cls,attr,staticmethod(self.attr))
+        setattr(cls,attr,staticmethod(cls.attr))
     
     def __getattr__(self,attr: str) -> Any:
         self.__add_method(attr)
