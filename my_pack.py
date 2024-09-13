@@ -1819,7 +1819,7 @@ def install(library_name: str,directory: str="",setup: bool=True,get_requirement
     """
     try:
         current_dir=os.getcwd()
-        if setup == True:
+        if setup:
             print("---setup configs---")
             if defaults == True:
                 # get the default setup directory correct
@@ -1847,7 +1847,8 @@ setup(
 )
 """
             # create __init__.py and setup.py
-            with open(directory+"__init__.py","w"):None
+            if build==False: # might consider an alternative for builds for subdirectories as well
+                with open(directory+"__init__.py","w"):None
             with open(directory+"setup.py","w") as file:
                 file.write(setup_content)
             print("Successfully created setup files __init__.py and setup.py.")
@@ -1857,6 +1858,15 @@ setup(
             os.chdir(directory)
         if build:
             ## needs testing ##
+            if setup:
+                ## put all files into a directory named after the modules name ##
+                source=os.getcwd()
+                os.mkdir(library_name)
+                files=os.listdir(source)
+                files.remove(library_name)
+                files.remove("setup.py")
+                for file in files:
+                    shutil.move(os.path.join(source,file), library_name)
             process=subprocess.run("python setup.py sdist bdist_wheel",capture_output=True)
             if process.returncode == 0:
                 os.chdir("dist")
