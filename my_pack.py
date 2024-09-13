@@ -61,7 +61,7 @@ class chain:
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
         if hasattr(self.obj,attr):
-            return getattr(self.obj,attr)
+            return chain(getattr(self.obj,attr))
         self.__add_attr(attr)
         FUNC=getattr(self,attr)
         if len(signature(FUNC).parameters) > 0:
