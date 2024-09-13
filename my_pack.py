@@ -1798,7 +1798,7 @@ def req_search(directory: str="",allowed_extensions: list[str]=["py","ipynb"]) -
     # return only the unique requirements
     return list(set(requirements))
         
-def install(library_name: str,directory: str="",setup: bool=True,get_requirements: bool=True,defaults: bool=True,build: bool=False,default_config: str="PYTHON_SETUP_DEFAULTS.pkl") -> None:
+def install(library_name: str,directory: str="",setup: bool=True,get_requirements: bool=True,defaults: bool=True,build: bool=False,build_type: str="wheel",default_config: str="PYTHON_SETUP_DEFAULTS.pkl") -> None:
     """
     Creates necessary files for a library that can be accessed globally 
     on your local machine created in the same directory as the script 
@@ -1816,6 +1816,7 @@ def install(library_name: str,directory: str="",setup: bool=True,get_requirement
     build: 
       -  if False will install an editable library - pro: can be edited and reloaded quickly. - con: can be slower to load if contains lots of code
       -  if True will build a .whl file            - pro: can load the file quickly.          - con: requires reinstallation to rebuild it
+    build_type: "wheel" or "sdist"
     """
     try:
         current_dir=os.getcwd()
@@ -1866,10 +1867,13 @@ setup(
                 os.mkdir(library_name)
                 for file in files:
                     shutil.move(os.path.join(source,file), library_name)
-            process=subprocess.run("python setup.py sdist bdist_wheel",capture_output=True)
+            while build_type!="wheel" and build_type!="sdist":
+                build_type=input("build_type must be either 'wheel' or 'sdist'")
+            build_type=["bdist_wheel","whl"] if build_type=="wheel" else ["sdist","tar.gz"]
+            process=subprocess.run("python setup.py "+build_type[0],capture_output=True)
             if process.returncode == 0:
                 os.chdir("dist")
-                build_name=glob.glob('*.whl')[0]
+                build_name=glob.glob('*.'+build_type[1])[0]
                 process=subprocess.run("pip install "+build_name,capture_output=True)
         else:
             process=subprocess.run("pip install -e .",capture_output=True)
