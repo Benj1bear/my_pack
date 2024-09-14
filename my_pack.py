@@ -72,7 +72,7 @@ class chain:
         self._clear
         if kwargs:
             self.override=kwargs["override"]
-        self.share_attrs(obj) ## needs testing
+        self.share_attrs(obj)
     
     __not_allowed=["__class__","__dir__","__dict__","__init__","__call__","__repr__","__getattr__","_"]
     @classmethod
