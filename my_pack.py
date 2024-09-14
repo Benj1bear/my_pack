@@ -49,14 +49,7 @@ class chain:
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        try:
-            ## assume it's a function
-            return chain(self.obj.__call__(*args,**kwargs))
-        except AttributeError:
-            ## does it have an __init__ method
-            if hasattr(self.obj,"__init__"):
-                return chain(self.obj.__init__(*args,**kwargs))
-            raise AttributeError(f"type object '{type(self.obj)}' has no '__init__' or '__call__' method")
+        self.obj(*args,**kwargs)
         
     def __repr__(self) -> str:
         return self.obj.__repr__()
