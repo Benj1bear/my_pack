@@ -49,10 +49,10 @@ class chain:
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        return self.obj(*args,**kwargs)
+        return chain(self.obj(*args,**kwargs))
         
     def __repr__(self) -> str:
-        return self.obj.__repr__()
+        return "chain."+repr(self.obj)
     @classmethod
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
