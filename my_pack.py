@@ -72,6 +72,22 @@ class chain:
         self._clear
         if kwargs:
             self.override=kwargs["override"]
+        #self.share_attrs(obj) ## needs testing
+    
+    __not_allowed=["__class__","__dir__","__dict__","__init__","__call__","__repr__","__getattr__","_"]
+    @classmethod
+    def share_attrs(cls,obj: Any) -> None:
+        """Shares the dunder methods of an object with the class"""
+        not_allowed=cls.__not_allowed
+        for key,value in class_dict(obj).items():
+            ## decide which functions to use e.g. only dunder methods (since we can already access non-dunder methods)
+            if re.match("__.*__",key)!=None:
+                ## make sure to not allow any of the following methods to be overrided
+                if [key] not in not_allowed:
+                    setattr(cls,key,value)
+                else:
+                    # reduce computation time
+                    not_allowed.remove(key)
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
