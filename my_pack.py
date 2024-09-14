@@ -96,7 +96,7 @@ class chain:
     @property
     def _scope(self) -> None:
         """Changes scope from global to local or local to global"""
-        self.override=True
+        self.override=False if self.override else True
     @property
     def _clear(self) -> object:
         """Clears the cache"""
