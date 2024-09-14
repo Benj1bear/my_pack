@@ -49,7 +49,7 @@ class chain:
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        self.obj(*args,**kwargs)
+        return self.obj(*args,**kwargs)
         
     def __repr__(self) -> str:
         return self.obj.__repr__()
