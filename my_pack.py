@@ -47,6 +47,17 @@ class chain:
     def __init__(self,obj: Any=[]) -> None:
         self.obj=obj
 
+    def __call__(self,*args,**kwargs) -> Any:
+        """For calling or instantiating the object"""
+        try:
+            ## assume it's a function
+            return chain(self.obj.__call__(*args,**kwargs))
+        except AttributeError:
+            ## does it have an __init__ method
+            if hasattr(self.obj,"__init__"):
+                return chain(self.obj.__init__(*args,**kwargs))
+            raise AttributeError(f"type object '{type(self.obj)}' has no '__init__' or '__call__' method")
+        
     def __repr__(self) -> str:
         return self.obj.__repr__()
     @classmethod
@@ -57,23 +68,26 @@ class chain:
     @classmethod
     def __static_setter(cls,attr: str) -> None:
         """Sets an attribute as a staticmethod"""
-        setattr(cls,attr,staticmethod(cls.attr))
+        setattr(cls,attr,staticmethod(getattr(cls,attr)))
     
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
         if hasattr(self.obj,attr):
             return chain(getattr(self.obj,attr))
         self.__add_attr(attr)
-        FUNC=getattr(self,attr)
-        if len(signature(FUNC).parameters) > 0:
-            return chain(partial(FUNC,self.obj))
-        try:
-            ## assume it's already a staticmethod and that it's a function that has no params
-            return chain(FUNC)
-        except:
-            ## reset as a staticmethod.
+        attribute=getattr(self,attr)
+        if isinstance(attribute,Callable):
+            try:
+                if len(signature(attribute).parameters) > 0:
+                    return chain(partial(attribute,self.obj))
+            except ValueError:
+                pass
+            ## has to be a staticmethod
+            if isinstance(attribute,staticmethod):
+                return chain(attribute)
             self.__static_setter(attr)
             return chain(getattr(self,attr))
+        return chain(attribute)
 
 class ext:
     """
