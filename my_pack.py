@@ -51,7 +51,7 @@ def classproperty(obj: Any) -> classmethod:
 ## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
     """if wanting to apply to the object and keep a chain going"""
-    __cache=["df"]
+    __cache=[]
     def __init__(self,obj: Any=[]) -> None:
         self.obj=obj
         self._clear
