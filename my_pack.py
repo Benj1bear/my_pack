@@ -41,6 +41,12 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+def class_dict(cls):
+    """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
+    keys=dir(cls)
+    attrs=(attr for attr in map(partial(getattr,cls),keys))
+    return dict(zip(keys,attrs))
+
 def classproperty(obj: Any) -> classmethod:
     """Short hand for:
     @classmethod
