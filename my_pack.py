@@ -97,6 +97,8 @@ class chain:
         return new_cls_dct
     @staticmethod
     def __wrap(method: Callable) -> Callable:
+        """wrapper function to ensure the dunder methods return values are wrapped in a chain object"""
+        @wraps(method) ## retains the docstring
         def wrapper(self,*args) -> object:
             return self.__chain(method(*args))
         return wrapper
