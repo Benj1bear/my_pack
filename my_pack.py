@@ -162,13 +162,8 @@ class chain:
         """Changes scope from global to local or local to global"""
         self.override=False if self.override else True
         return self
-    @property
-    def __clear(self) -> object:
-        """Clears the cache"""
-        self.__clear_
-        return self
     @classproperty
-    def __clear_(cls) -> None:
+    def __clear(cls) -> None:
         """Clears the cache"""
         for attr in cls.__cache:
             if hasattr(cls,attr):
