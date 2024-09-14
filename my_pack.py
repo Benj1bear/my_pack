@@ -94,7 +94,7 @@ class chain:
         return chain(attribute)
     override=False
     @property
-    def _scope(self) -> None:
+    def _scope(self) -> object:
         """Changes scope from global to local or local to global"""
         self.override=False if self.override else True
         return self
