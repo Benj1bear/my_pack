@@ -48,7 +48,6 @@ def classproperty(obj: Any) -> classmethod:
     """
     return classmethod(property(obj))
 
-## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
     """
     if wanting to apply to the object and keep a chain going
