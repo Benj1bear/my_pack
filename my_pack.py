@@ -54,6 +54,7 @@ def classproperty(obj: Any) -> classmethod:
     """
     return classmethod(property(obj))
 
+#### needs testing ####
 class chain:
     """
     if wanting to apply to the object and keep a chain going
@@ -79,11 +80,11 @@ class chain:
         if kwargs:
             if "override" in kwargs:
                 self.override=kwargs["override"]
-        #self.__share_attrs(self.__get_attrs(obj))
+        self.__share_attrs(self.__get_attrs(obj))
 
     __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__","_",
                   "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
-                  "__qualname__"]
+                  "__qualname__","__module__"]
     def __get_attrs(self,obj: Any) -> tuple[dict,list]:
         """Finds the new dunder methods to be added to the class"""
         new_cls_dct,not_allowed={},self.__not_allowed.copy()
@@ -94,13 +95,10 @@ class chain:
                 else:
                     new_cls_dct[key]=self.__wrap(value)
         return new_cls_dct
-
-    def __wrap(self,method: Callable) -> Callable:
-        def wrapper(*args,**kwargs) -> object:
-            #print(method)
-            #print(args)
-            #args=(*args,kwargs.values())
-            return self.__chain(method)
+    @staticmethod
+    def __wrap(method: Callable) -> Callable:
+        def wrapper(self,*args) -> object:
+            return self.__chain(method(*args))
         return wrapper
     __show_errors=False
     @classmethod
@@ -113,7 +111,6 @@ class chain:
             except Exception as e:
                 if cls.__show_errors:
                     print(cls,key,value)
-            
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
