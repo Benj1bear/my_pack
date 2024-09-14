@@ -52,7 +52,7 @@ def classproperty(obj: Any) -> classmethod:
 class chain:
     """if wanting to apply to the object and keep a chain going"""
     __cache=[]
-    def __init__(self,obj: Any,**kwargs) -> None:
+    def __init__(self,obj: Any=[],**kwargs) -> None:
         self.obj=obj
         self._clear
         if kwargs:
