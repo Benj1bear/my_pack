@@ -44,6 +44,7 @@ from itertools import combinations
 ## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
     """if wanting to apply to the object and keep a chain going"""
+    __cache=[]
     def __init__(self,obj: Any=[]) -> None:
         self.obj=obj
 
@@ -58,6 +59,7 @@ class chain:
         """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
             setattr(cls,attr,globals()[attr])
+            cls.__cache+=[attr]
     @classmethod
     def __static_setter(cls,attr: str) -> None:
         """Sets an attribute as a staticmethod"""
@@ -65,7 +67,8 @@ class chain:
     
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
-        if hasattr(self.obj,attr):
+        ## consider global vs local overrides
+        if hasattr(self.obj,attr) and self.override:
             return chain(getattr(self.obj,attr))
         self.__add_attr(attr)
         attribute=getattr(self,attr)
@@ -81,6 +84,18 @@ class chain:
             self.__static_setter(attr)
             return chain(getattr(self,attr))
         return chain(attribute)
+    override=False
+    @property
+    def _scope(self) -> None:
+        """Changes scope from global to local or local to global"""
+        self.override=True
+    @classmethod
+    @property # for some reason class properties are deprecated?
+    def _clear(cls) -> None:
+        """Clears the cache"""
+        for attr in cls.__cache:
+            delattr(cls,attr)
+        cls.__cache=[]
 
 class ext:
     """
