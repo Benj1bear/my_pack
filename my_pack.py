@@ -51,9 +51,10 @@ def classproperty(obj: Any) -> classmethod:
 ## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
     """if wanting to apply to the object and keep a chain going"""
-    __cache=[]
+    __cache=["df"]
     def __init__(self,obj: Any=[]) -> None:
         self.obj=obj
+        self._clear
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
@@ -96,11 +97,17 @@ class chain:
     def _scope(self) -> None:
         """Changes scope from global to local or local to global"""
         self.override=True
+    @property
+    def _clear(self) -> object:
+        """Clears the cache"""
+        self.__clear
+        return self
     @classproperty
-    def _clear(cls) -> None:
+    def __clear(cls) -> None:
         """Clears the cache"""
         for attr in cls.__cache:
-            delattr(cls,attr)
+            if hasattr(cls,attr):
+                delattr(cls,attr)
         cls.__cache=[]
 
 class ext:
