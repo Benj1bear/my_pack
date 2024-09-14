@@ -65,6 +65,12 @@ class chain:
     chain([1,2,3]).sum() # builtin method added
     chain(pd.Series([1,2,3]))._.explode() # objects methods
     chain(pd.Series([1,2,3]))._.explode()._.testing() # switching between local and global scope
+
+    It should also be able to inherit methods i.e.
+    j=1
+    chain(j)**3 # should return 1
+    chain(j)+j  # should return 2
+    chain(j)*3  # should return 3
     """
     __cache=[]
     def __init__(self,obj: Any=[],**kwargs) -> None:
@@ -72,7 +78,7 @@ class chain:
         self._clear
         if kwargs:
             self.override=kwargs["override"]
-        self.share_attrs(obj)
+        #self.share_attrs(obj)
     
     __not_allowed=["__class__","__dir__","__dict__","__init__","__call__","__repr__","__getattr__","_"]
     @classmethod
@@ -84,7 +90,7 @@ class chain:
             if re.match("__.*__",key)!=None:
                 ## make sure not to allow any of the methods required for chain to work to be overrided
                 if key not in not_allowed:
-                    setattr(cls,key,value)
+                    setattr(cls,key,value) ############### needs a wrapper function
                 else:
                     # reduce computation time
                     not_allowed.remove(key)
