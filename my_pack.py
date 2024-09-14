@@ -80,7 +80,7 @@ class chain:
             try:
                 if len(signature(attribute).parameters) > 0:
                     return chain(partial(attribute,self.obj))
-            except ValueError:
+            except ValueError: ## has no params and is a staticmethod
                 pass
             ## has to be a staticmethod
             if isinstance(attribute,staticmethod):
@@ -123,13 +123,13 @@ class ext:
     def __repr__(self) -> str:
         return str(self.obj)
     @classmethod
-    def __add_method(cls,attr: str) -> None:
-        """Dynamically adds new methods to a class"""
+    def __add_attr(cls,attr: str) -> None:
+        """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
             setattr(cls,attr,globals()[attr])
 
     def __getattr__(self,attr: str) -> Any:
-        self.__add_method(attr)
+        self.__add_attr(attr)
         return getattr(self,attr)
 
 class tup_ext:
