@@ -52,13 +52,15 @@ def classproperty(obj: Any) -> classmethod:
 class chain:
     """if wanting to apply to the object and keep a chain going"""
     __cache=[]
-    def __init__(self,obj: Any=[]) -> None:
+    def __init__(self,obj: Any,**kwargs) -> None:
         self.obj=obj
         self._clear
+        if kwargs:
+            self.override=kwargs["override"]
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        return chain(self.obj(*args,**kwargs))
+        return self.__chain(self.obj(*args,**kwargs))
         
     def __repr__(self) -> str:
         return "chain:\n"+repr(self.obj)
@@ -83,15 +85,20 @@ class chain:
         if isinstance(attribute,Callable):
             try:
                 if len(signature(attribute).parameters) > 0:
-                    return chain(partial(attribute,self.obj))
+                    return self.__chain(partial(attribute,self.obj))
             except ValueError: ## has no params and is a staticmethod
                 pass
             ## has to be a staticmethod
             if isinstance(attribute,staticmethod):
-                return chain(attribute)
+                return self.__chain(attribute)
             self.__static_setter(attr)
-            return chain(getattr(self,attr))
-        return chain(attribute)
+            return self.__chain(getattr(self,attr))
+        return self.__chain(attribute)
+
+    def __chain(self,attr: Any) -> object:
+        """For creating new chain objects"""
+        return chain(attr,override=self.override)
+    
     override=False
     @property
     def _(self) -> object:
