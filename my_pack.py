@@ -136,7 +136,7 @@ class chain:
         """Modified to instantiate return values as chain objects"""
         ## consider global vs local overrides
         if hasattr(self.obj,attr) and self.override:
-            return chain(getattr(self.obj,attr))
+            return self.__chain(getattr(self.obj,attr))
         self.__add_attr(attr)
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
