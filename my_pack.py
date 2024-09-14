@@ -50,7 +50,17 @@ def classproperty(obj: Any) -> classmethod:
 
 ## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
-    """if wanting to apply to the object and keep a chain going"""
+    """
+    if wanting to apply to the object and keep a chain going
+
+    Examples of how to use:
+    def testing():
+        print("hello")
+    chain().test() # global method added
+    chain([1,2,3]).sum() # builtin method added
+    chain(pd.Series([1,2,3]))._.explode() # objects methods
+    chain(pd.Series([1,2,3]))._.explode()._.test() # switching between local and global scope
+    """
     __cache=[]
     def __init__(self,obj: Any=[],**kwargs) -> None:
         self.obj=obj
@@ -68,7 +78,10 @@ class chain:
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
-            setattr(cls,attr,globals()[attr])
+            if hasattr(__builtins__,attr):
+                setattr(cls,attr,getattr(__builtins__,attr))
+            else:
+                setattr(cls,attr,globals()[attr])
             cls.__cache+=[attr]
     @classmethod
     def __static_setter(cls,attr: str) -> None:
