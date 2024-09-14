@@ -78,22 +78,31 @@ class chain:
         self._clear
         if kwargs:
             self.override=kwargs["override"]
-        #self.share_attrs(obj)
-    
-    __not_allowed=["__class__","__dir__","__dict__","__init__","__call__","__repr__","__getattr__","_"]
-    @classmethod
-    def share_attrs(cls,obj: Any) -> None:
-        """Shares the dunder methods of an object with the class"""
-        not_allowed=cls.__not_allowed
-        for key,value in class_dict(obj).items():
-            ## decide which functions to use e.g. only dunder methods (since we can already access non-dunder methods)
+        #self.__share_attrs(self.__get_attrs(obj)) ## 
+
+    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__","_"]
+    def __get_attrs(self,obj: Any) -> tuple[dict,list]:
+        """Finds the new dunder methods to be added to the class"""
+        new_cls_dct,not_allowed,cls_dct={},self.__not_allowed,class_dict(obj)
+        for key,value in cls_dct.items():
             if re.match("__.*__",key)!=None:
-                ## make sure not to allow any of the methods required for chain to work to be overrided
-                if key not in not_allowed:
-                    setattr(cls,key,value) ############### needs a wrapper function
-                else:
-                    # reduce computation time
+                if key in not_allowed:
                     not_allowed.remove(key)
+                else:
+                    new_cls_dct[key]=self.__wrap(value)
+        return new_cls_dct
+
+    def __wrap(self,method):
+        def wrapper(*args,**kwargs) -> object:
+            return self.__chain(value(*args,**kwargs))
+        return wrapper
+    
+    @classmethod
+    def __share_attrs(cls,cls_dct: dict) -> None:
+        """Shares the dunder methods of an object with the class"""
+        for key,value in cls_dct.items():
+            print(key,value)
+            #setattr(cls,key,value) #### class is not constructing properly
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
