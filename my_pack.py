@@ -117,7 +117,7 @@ class chain:
         return self.__chain(self.obj(*args,**kwargs))
 
     def __repr__(self) -> str:
-        return "chain:\n"+repr(self.obj)
+        return repr(self.obj)
     @classmethod
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
