@@ -56,10 +56,10 @@ class chain:
     Examples of how to use:
     def testing():
         print("hello")
-    chain().test() # global method added
+    chain().testing() # global method added
     chain([1,2,3]).sum() # builtin method added
     chain(pd.Series([1,2,3]))._.explode() # objects methods
-    chain(pd.Series([1,2,3]))._.explode()._.test() # switching between local and global scope
+    chain(pd.Series([1,2,3]))._.explode()._.testing() # switching between local and global scope
     """
     __cache=[]
     def __init__(self,obj: Any=[],**kwargs) -> None:
