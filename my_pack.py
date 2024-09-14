@@ -41,6 +41,13 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
+def classproperty(obj: Any) -> classmethod:
+    """Short hand for:
+    @classmethod
+    @property
+    """
+    return classmethod(property(obj))
+
 ## needs modifying e.g. shouldn't overide the object but should always be a chain object that allows new attribute creation dynamically
 class chain:
     """if wanting to apply to the object and keep a chain going"""
@@ -89,8 +96,7 @@ class chain:
     def _scope(self) -> None:
         """Changes scope from global to local or local to global"""
         self.override=True
-    @classmethod
-    @property # for some reason class properties are deprecated?
+    @classproperty
     def _clear(cls) -> None:
         """Clears the cache"""
         for attr in cls.__cache:
