@@ -49,6 +49,8 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
     if isinstance(attr,Callable)==False:
         raise TypeError("attr must be Callable")
     length=len(value)
+    if attr==print or attr==display:
+        return length
     try:
         attr(*value)
         return length
@@ -208,13 +210,14 @@ class chain:
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
             try: ## pass in the object stored to the Callable
-                if len(signature(attribute).parameters) > 0:
+                if hasattr(__builtins__,attr):
+                    for arg_num in get_arg_count(attribute):
+                        if arg_num > 0:
+                            return self.__chain(partial(attribute,self.__obj))  ### needs testing
+                if len(signature(attribute).parameters) > 0: ## needed in case of instances
                     return self.__chain(partial(attribute,self.__obj))
-            except ValueError: 
-                try:
-                    return self.__chain(partial(attribute,self.__obj)) # if can't use signature since not all (particularly builtins) don't have them
-                except:
-                    pass
+            except ValueError:
+                pass
             ## if the Callable has no params then it has to be a staticmethod
             ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
