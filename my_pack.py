@@ -41,6 +41,7 @@ import string
 from operator import itemgetter
 from itertools import combinations
 import IPython
+from warnings import simplefilter
 
 def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     """returns the number of accepted args. Note: doesn't do the kwargs"""
