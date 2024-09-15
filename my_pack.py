@@ -66,6 +66,8 @@ class chain:
         print("hello")
     chain().testing() # global method added
     chain([1,2,3]).sum() # builtin method added
+    a=[1,2,3]
+    chain().a # attribute added
     chain(pd.Series([1,2,3]))._.explode() # objects methods
     chain(pd.Series([1,2,3]))._.explode()._.testing() # switching between local and global scope
 
