@@ -43,7 +43,7 @@ from itertools import combinations
 import IPython
 
 def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
-    """returns the number of accepted args"""
+    """returns the number of accepted args. Note: doesn't do the kwargs"""
     ## either it's an invalid type
     ## or any of the numbers less than or equal to the length
     if isinstance(attr,Callable)==False:
@@ -51,8 +51,7 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
     length=len(value)
     try:
         attr(*value)
-        print("\n","-"*20,"passed","-"*20)
-        return 1
+        return length
     except TypeError as e:
         message=" ".join(str(e).split(" ")[1:])
         if " takes no arguements" in message: return 0
@@ -82,7 +81,6 @@ def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) 
             pass
     return messages
 
-@property
 def toggle_print() -> None:
     """Toggles between enabling and disabling printing to display"""
     global print,display
