@@ -147,7 +147,7 @@ class chain:
         self.__clear
         if hasattr(kwargs,"override"):
             self.__override=kwargs["override"]
-        #self.__get_attrs(obj)
+        self.__get_attrs(obj) ## should be all that needs testing
 
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
