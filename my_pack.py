@@ -73,7 +73,7 @@ class chain:
     chain(j)+j  # should return 2
     chain(j)*3  # should return 3
 
-    Note: all data and methods (except speacial methods) have been made private in this class
+    Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
 
     In python private data and methods strictly don't exist (in what I know currently) i.e.
