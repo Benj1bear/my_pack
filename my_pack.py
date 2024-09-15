@@ -42,6 +42,26 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 
+def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
+    """returns the number of accepted args"""
+    ## either it's an invalid type
+    ## or any of the numbers less than the length
+    if isinstance(attr,Callable)==False:
+        raise TypeError("attr must be Callable")
+    length=len(value)
+    try:
+        attr(*value)
+        print("\n","-"*20,"passed","-"*20)
+        return 1
+    except TypeError as e:
+        message=" ".join(str(e).split(" ")[1:])
+        if " takes no arguements" in message: return 0
+        if " exactly one " in message: return 1
+        arg_numbers=re.findall(r"\d+",message)
+        if len(arg_numbers):
+            return [num for i in arg_numbers if (num:=int(i)) < length]
+        raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+message)
+
 def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
     messages=[]
