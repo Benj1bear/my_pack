@@ -41,10 +41,10 @@ import string
 from operator import itemgetter
 from itertools import combinations
 
-def class_dict(cls):
+def class_dict(obj: Any) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
-    keys=dir(cls)
-    attrs=(attr for attr in map(partial(getattr,cls),keys))
+    keys=dir(obj)
+    attrs=(attr for attr in map(partial(getattr,obj),keys))
     return dict(zip(keys,attrs))
 
 def classproperty(obj: Any) -> classmethod:
@@ -72,17 +72,25 @@ class chain:
     chain(j)**3 # should return 1
     chain(j)+j  # should return 2
     chain(j)*3  # should return 3
+
+    Note: all data and methods have been made private in this class
+    to allow for more commonly named attributes to be added.
+
+    In python private data and methods strictly don't exist (in what I know currently) i.e.
+    in the chain class we have __cache as a private variable but this is accessible via:
+    
+    chain._chain__cache
+    and can be assigned new values or overwritten
     """
     __cache=[]
     def __init__(self,obj: Any=[],**kwargs) -> None:
-        self.obj=obj
+        self.__obj=obj
         self.__clear
-        if kwargs:
-            if "override" in kwargs:
-                self.override=kwargs["override"]
+        if hasattr(kwargs,"override"):
+            self.override=kwargs["override"]
         self.__get_attrs(obj)
-
-    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__","_",
+    # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
+    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__",
                   "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
                   "__qualname__","__module__"]
     def __get_attrs(self,obj: Any) -> None:
@@ -92,13 +100,16 @@ class chain:
             if re.match("__.*__",key)!=None:
                 if key in not_allowed:
                     not_allowed.remove(key)
-                else:
+                elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
                     self.__share_attrs(key,self.__wrap(value))
     @staticmethod
     def __wrap(method: Callable) -> Callable:
-        """wrapper function to ensure the dunder methods return values are wrapped in a chain object"""
+        """
+        wrapper function to ensure methods assigned are instance based 
+        and that the dunder methods return values are wrapped in a chain object
+        """
         @wraps(method) ## retains the docstring
-        def wrapper(self,*args) -> object:
+        def wrapper(self,*args) -> object: ## will return an instance based method since those are the methods we're after
             return self.__chain(method(*args))
         return wrapper
     __show_errors=False
@@ -108,21 +119,21 @@ class chain:
         try:
             setattr(cls,key,value)
             cls.__cache+=[key]
-        except Exception as e:
+        except:
             if cls.__show_errors:
                 print(cls,key,value)
 
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        return self.__chain(self.obj(*args,**kwargs))
+        return self.__chain(self.__obj(*args,**kwargs))
 
     def __repr__(self) -> str:
-        return repr(self.obj)
+        return repr(self.__obj)
     @classmethod
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
-            if hasattr(__builtins__,attr):
+            if hasattr(__builtins__,attr): # might add an override here; though you shouldn't really be monkey patching builtins with global functions
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
                 setattr(cls,attr,globals()[attr])
@@ -135,17 +146,16 @@ class chain:
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
         ## consider global vs local overrides
-        if hasattr(self.obj,attr) and self.override:
-            return self.__chain(getattr(self.obj,attr))
+        if hasattr(self.__obj,attr) and self.__override:
+            return self.__chain(getattr(self.__obj,attr))
         self.__add_attr(attr)
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
-            try:
+            try: ## pass in the object stored to the Callable
                 if len(signature(attribute).parameters) > 0:
-                    return self.__chain(partial(attribute,self.obj))
-            except ValueError: ## has no params and is a staticmethod
-                pass
-            ## has to be a staticmethod
+                    return self.__chain(partial(attribute,self.__obj))
+            except ValueError: ## if the Callable has no params then it has to be a staticmethod
+                pass           ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
                 return self.__chain(attribute)
             self.__static_setter(attr)
@@ -154,13 +164,13 @@ class chain:
 
     def __chain(self,attr: Any) -> object:
         """For creating new chain objects"""
-        return chain(attr,override=self.override)
+        return chain(attr,override=self.__override)
     
-    override=False
+    __override=False
     @property
     def _(self) -> object:
         """Changes scope from global to local or local to global"""
-        self.override=False if self.override else True
+        self.__override=False if self.__override else True
         return self
     @classproperty
     def __clear(cls) -> None:
