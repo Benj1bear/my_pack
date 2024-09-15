@@ -42,10 +42,10 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 
-def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
+def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
     """returns the number of accepted args"""
     ## either it's an invalid type
-    ## or any of the numbers less than the length
+    ## or any of the numbers less than or equal to the length
     if isinstance(attr,Callable)==False:
         raise TypeError("attr must be Callable")
     length=len(value)
