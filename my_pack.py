@@ -156,9 +156,15 @@ class chain:
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
             try: ## pass in the object stored to the Callable
-                return self.__chain(partial(attribute,self.__obj)) # can't use signature since not all (particularly builtins) don't have them
-            except ValueError: ## if the Callable has no params then it has to be a staticmethod
-                pass           ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
+                if len(signature(attribute).parameters) > 0:
+                    return self.__chain(partial(attribute,self.__obj))
+            except ValueError: 
+                try:
+                    return self.__chain(partial(attribute,self.__obj)) # if can't use signature since not all (particularly builtins) don't have them
+                except:
+                    pass
+            ## if the Callable has no params then it has to be a staticmethod
+            ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
                 return self.__chain(attribute)
             self.__static_setter(attr)
