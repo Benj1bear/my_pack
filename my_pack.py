@@ -42,7 +42,7 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 
-def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
+def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     """returns the number of accepted args. Note: doesn't do the kwargs"""
     ## either it's an invalid type
     ## or any of the numbers less than or equal to the length
@@ -50,14 +50,14 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
         raise TypeError("attr must be Callable")
     length=len(value)
     if attr==print or attr==display:
-        return length
+        return [length]
     try:
         attr(*value)
-        return length
+        return [length]
     except TypeError as e:
         message=" ".join(str(e).split(" ")[1:])
-        if " takes no arguements" in message: return 0
-        if " exactly one " in message: return 1
+        if " takes no arguements" in message: return [0]
+        if " exactly one " in message: return [1]
         arg_numbers=re.findall(r"\d+",message)
         if len(arg_numbers):
             return [num for i in arg_numbers if (num:=int(i)) < length]
