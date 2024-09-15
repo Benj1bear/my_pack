@@ -144,9 +144,10 @@ class chain:
             self.__override=kwargs["override"]
         self.__get_attrs(obj)
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
-    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__getattr__",
-                  "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
-                  "__qualname__","__module__","__abstractmethods__"]
+    __not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
+                   "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
+                   "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
+                   "__name__","__qualname__","__module__","__abstractmethods__"]
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
         not_allowed=self.__not_allowed.copy()
@@ -162,7 +163,9 @@ class chain:
         wrapper function to ensure methods assigned are instance based 
         and that the dunder methods return values are wrapped in a chain object
         """
-        if key in ["__str__","__int__","__float__","__repr__"]: ## need to add more
+        if key in ["__del__","__hash__","__repr__","__str__","__bool__","__int__","__float__","__bytes__","__complex__","__format__","__enter__","__exit__","__len__",
+                   "__iter__","__setitem__","__delitem__","__contains__","__reversed__","__next__","__missing__","ength_hint__","__post_init__","__getnewargs__",
+                   "__getnewargs_ex__","__getstate__","__reduce__","__reduce_ex__","__setstate__","__await__","__aenter__","__aexit__","__aiter__","__anext__","__release_buffer__"]:
             @wraps(method) ## retains the docstring
             def wrapper(self) -> object: ## will return an instance based method since those are the methods we're after
                 return getattr(self.__obj,key)()
