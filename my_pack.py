@@ -138,9 +138,8 @@ class chain:
     c=pd.DataFrame
     chain().a.sorted(reverse=True).b().c().tuple()[0].BREAK
     # or
-    chain().a.sorted(reverse=True).chain(pd.Series).chain(pd.DataFrame).tuple()[0].BREAK
-    # or 
-    chain()([1,2,3]).sorted(reverse=False)(pd.DataFrame).BREAK
+    chain()([1,2,3]).sorted(reverse=True)(pd.Series)(pd.DataFrame).tuple()[0].BREAK
+
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
     
