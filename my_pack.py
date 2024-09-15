@@ -40,6 +40,38 @@ import secrets
 import string
 from operator import itemgetter
 from itertools import combinations
+import IPython
+
+def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> set:
+    """For figuring out how many args functions use"""
+    messages=[]
+    for attr in dir(obj):
+        try:
+            attribute=getattr(obj,attr)
+            if isinstance(attribute,Callable):
+                if use_attr==False:
+                    attr=""
+                try:
+                    attribute(*value)
+                except TypeError as e:
+
+                    messages+=[attr+" "+" ".join(str(e).split(" ")[1:])]
+                else:
+                    messages+=[attr+" "+"any"]
+        except:
+            pass
+    return messages
+
+@property
+def toggle_print() -> None:
+    """Toggles between enabling and disabling printing to display"""
+    global print,display
+    if print("",end="")!=None and display()!=None:
+        print=__builtins__.print
+        display=IPython.core.display_functions.display
+    else:
+        print=lambda *args,**kwargs: ""
+        display=lambda *args,**kwargs: ""
 
 def class_dict(obj: Any) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
