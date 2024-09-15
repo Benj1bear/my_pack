@@ -114,7 +114,6 @@ def classproperty(obj: Any) -> classmethod:
 class chain:
     """
     if wanting to apply to the object and keep a chain going
-
     Examples of how to use:
     def testing():
         print("hello")
@@ -124,16 +123,13 @@ class chain:
     chain().a # attribute added
     chain(pd.Series([1,2,3]))._.explode() # objects methods
     chain(pd.Series([1,2,3]))._.explode()._.testing() # switching between local and global scope
-
     It should also be able to inherit methods i.e.
     j=1
     chain(j)**3 # should return 1
     chain(j)+j  # should return 2
     chain(j)*3  # should return 3
-
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
-
     In python private data and methods strictly don't exist (in what I know currently) i.e.
     in the chain class we have __cache as a private variable but this is accessible via:
     
@@ -148,9 +144,9 @@ class chain:
             self.__override=kwargs["override"]
         self.__get_attrs(obj)
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
-    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__getattr__","__name__","__module__"
-                  "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__qualname__",
-                   "__abstractmethods__"]
+    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__getattr__",
+                  "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
+                  "__qualname__","__module__","__abstractmethods__"]
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
         not_allowed=self.__not_allowed.copy()
@@ -169,7 +165,7 @@ class chain:
         if key in ["__str__","__int__","__float__","__repr__"]: ## need to add more
             @wraps(method) ## retains the docstring
             def wrapper(self) -> object: ## will return an instance based method since those are the methods we're after
-                return method()
+                return getattr(self.__obj,key)()
         else:
             @wraps(method) ## retains the docstring
             def wrapper(self,*args) -> object:
@@ -185,14 +181,9 @@ class chain:
         except:
             if cls.__show_errors:
                 print(cls,key,value)
-
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
         return self.__chain(self.__obj(*args,**kwargs))
-
-    def __str__(self) -> str:
-        return str(self.__obj)
-    
     def __repr__(self) -> str:
         return repr(self.__obj)
     @classmethod
@@ -233,7 +224,6 @@ class chain:
             self.__static_setter(attr)
             return self.__chain(getattr(self,attr))
         return self.__chain(attribute)
-
     def __chain(self,attr: Any) -> object:
         """For creating new chain objects"""
         return chain(attr,override=self.__override)
