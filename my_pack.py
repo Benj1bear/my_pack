@@ -48,6 +48,11 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     ## or any of the numbers less than or equal to the length
     if isinstance(attr,Callable)==False:
         raise TypeError("attr must be Callable")
+    if attr.__name__ not in dir(__builtins__):
+        try: ## see if it has a signature
+            return len(signature(attr).parameters)
+        except:
+            pass
     length=len(value)
     if attr==print or attr==display:
         return [length]
@@ -95,8 +100,10 @@ def toggle_print() -> None:
     else:
         print,display=(lambda *args,**kwargs: "",)*2
 
-def class_dict(obj: Any) -> dict:
+def class_dict(obj: Any,warn=False) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
+    if warn==False:
+        simplefilter("ignore") ## some attributes are deprecated and they may throw warnings
     keys,attrs=dir(obj),[]
     for key in keys:
         try: attrs+=[getattr(obj,key)]  ## some attrs cannot be retrieved i.e. ,"__abstractmethods__" when passing in the 'type' builtin method
