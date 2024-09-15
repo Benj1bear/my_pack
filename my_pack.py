@@ -148,9 +148,9 @@ class chain:
             self.__override=kwargs["override"]
         self.__get_attrs(obj)
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
-    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__",
-                  "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
-                  "__qualname__","__module__","__abstractmethods__","__str__"]  ## typing needs to removed and added to the class
+    __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__getattr__","__name__","__module__"
+                  "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__qualname__",
+                   "__abstractmethods__"]
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
         not_allowed=self.__not_allowed.copy()
@@ -159,16 +159,21 @@ class chain:
                 if key in not_allowed:
                     not_allowed.remove(key)
                 elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
-                    self.__share_attrs(key,self.__wrap(value))
+                    self.__share_attrs(key,self.__wrap(key,value))
     @staticmethod
-    def __wrap(method: Callable) -> Callable:
+    def __wrap(key: str,method: Callable) -> Callable:
         """
         wrapper function to ensure methods assigned are instance based 
         and that the dunder methods return values are wrapped in a chain object
         """
-        @wraps(method) ## retains the docstring
-        def wrapper(self,*args) -> object: ## will return an instance based method since those are the methods we're after
-            return self.__chain(method(*args))
+        if key in ["__str__","__int__","__float__","__repr__"]: ## need to add more
+            @wraps(method) ## retains the docstring
+            def wrapper(self) -> object: ## will return an instance based method since those are the methods we're after
+                return method()
+        else:
+            @wraps(method) ## retains the docstring
+            def wrapper(self,*args) -> object:
+                return self.__chain(method(*args))
         return wrapper
     __show_errors=False
     @classmethod
