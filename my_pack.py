@@ -85,11 +85,9 @@ def toggle_print() -> None:
     """Toggles between enabling and disabling printing to display"""
     global print,display
     if print("",end="")!=None and display()!=None:
-        print=__builtins__.print
-        display=IPython.core.display_functions.display
+        print,display=__builtins__.print,IPython.core.display_functions.display
     else:
-        print=lambda *args,**kwargs: ""
-        display=lambda *args,**kwargs: ""
+        print,display=(lambda *args,**kwargs: "",)*2
 
 def class_dict(obj: Any) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
