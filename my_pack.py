@@ -160,21 +160,21 @@ class chain:
                     not_allowed.remove(key)
                 elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
                     self.__share_attrs(key,self.__wrap(key,value))
-    @staticmethod
-    def __wrap(key: str,method: Callable) -> Callable:
+    
+    def __wrap(self,key: str,method: Callable) -> Callable:
         """
         wrapper function to ensure methods assigned are instance based 
         and that the dunder methods return values are wrapped in a chain object
         """
         if key in self.__selection:
             @wraps(method) ## retains the docstring
-            def wrapper(self) -> object: ## will return an instance based method since those are the methods we're after
+            def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
                 return getattr(self.__obj,key)()
-            self.__selection.remove(key)
+            _self.__selection.remove(key)
         else:
             @wraps(method) ## retains the docstring
-            def wrapper(self,*args) -> object:
-                return self.__chain(method(*args))
+            def wrapper(_self,*args) -> object:
+                return _self.__chain(method(*args))
         return wrapper
 
     __show_errors=False
