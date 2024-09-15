@@ -115,7 +115,7 @@ class chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
-    import pandas as pd
+    
     def testing():
         print("hello")
     chain().testing() # global method added
@@ -137,7 +137,10 @@ class chain:
     b=pd.Series
     c=pd.DataFrame
     chain().a.sorted(reverse=True).b().c().tuple()[0].BREAK
-    
+    # or
+    chain().a.sorted(reverse=True).chain(pd.Series).chain(pd.DataFrame).tuple()[0].BREAK
+    # or 
+    chain()([1,2,3]).sorted(reverse=False)(pd.DataFrame).BREAK
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
     
@@ -204,7 +207,12 @@ class chain:
     
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
-        return self.__chain(self.__obj(*args,**kwargs))
+        try:
+            return self.__chain(self.__obj(*args,**kwargs))
+        except:
+            if isinstance(args[0],Callable):
+                return self.__chain(args[0](self.__obj,*args[1:],**kwargs))
+            return self.__chain(args[0])
     
     def __repr__(self) -> str:
         return repr(self.__obj)
@@ -224,20 +232,20 @@ class chain:
     
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
+        if attr=="chain" and self.__override==False:
+            return partial(chain,self.__obj,override=self.__override)
         ## consider global vs local overrides
         if hasattr(self.__obj,attr) and self.__override:
             return self.__chain(getattr(self.__obj,attr))
         self.__add_attr(attr)
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
-            try: ## pass in the object stored to the Callable
-                for arg_num in get_arg_count(attribute):
-                    if arg_num > 0:
-                        if type(attribute).__name__=="method":
-                            return attribute ## seems only the attribute needs to be passed since setting it to an instance already passes the self.__obj through
-                        return self.__chain(partial(attribute,self.__obj))
-            except ValueError:
-                pass
+            ## pass in the object stored to the Callable
+            for arg_num in get_arg_count(attribute):  ## need to add more functionality
+                if arg_num > 0:
+                    if type(attribute).__name__=="method":
+                        return attribute ## seems only the attribute needs to be passed since setting it to an instance already passes the self.__obj through
+                    return self.__chain(partial(attribute,self.__obj))
             ## if the Callable has no params then it has to be a staticmethod
             ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
@@ -265,7 +273,7 @@ class chain:
         cls.__cache=[]
     @property
     def BREAK(self) -> Any:
-        """Breaks the chain e.g. returns the object"""
+        """Breaks the chain e.g. returns the final object"""
         return self.__obj
 
 class ext:
