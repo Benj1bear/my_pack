@@ -169,8 +169,8 @@ class chain:
         if key in self.__selection:
             @wraps(method) ## retains the docstring
             def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
-                return getattr(self.__obj,key)()
-            _self.__selection.remove(key)
+                return getattr(_self.__obj,key)()
+            self.__selection.remove(key)
         else:
             @wraps(method) ## retains the docstring
             def wrapper(_self,*args) -> object:
