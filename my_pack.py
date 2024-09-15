@@ -150,7 +150,7 @@ class chain:
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
     __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__",
                   "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
-                  "__qualname__","__module__","__abstractmethods__"]
+                  "__qualname__","__module__","__abstractmethods__","__str__"]  ## typing needs to removed and added to the class
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
         not_allowed=self.__not_allowed.copy()
@@ -185,6 +185,9 @@ class chain:
         """For calling or instantiating the object"""
         return self.__chain(self.__obj(*args,**kwargs))
 
+    def __str__(self) -> str:
+        return str(self.__obj)
+    
     def __repr__(self) -> str:
         return repr(self.__obj)
     @classmethod
