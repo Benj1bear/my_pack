@@ -115,6 +115,7 @@ class chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
+    
     def testing():
         print("hello")
     chain().testing() # global method added
@@ -123,13 +124,17 @@ class chain:
     chain().a # attribute added
     chain(pd.Series([1,2,3]))._.explode() # objects methods
     chain(pd.Series([1,2,3]))._.explode()._.testing() # switching between local and global scope
+    
     It should also be able to inherit methods i.e.
+    
     j=1
     chain(j)**3 # should return 1
     chain(j)+j  # should return 2
     chain(j)*3  # should return 3
+    
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
+    
     In python private data and methods strictly don't exist (in what I know currently) i.e.
     in the chain class we have __cache as a private variable but this is accessible via:
     
@@ -142,7 +147,7 @@ class chain:
         self.__clear
         if hasattr(kwargs,"override"):
             self.__override=kwargs["override"]
-        self.__get_attrs(obj)
+        #self.__get_attrs(obj)
 
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
@@ -150,8 +155,8 @@ class chain:
         not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
                    "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
                    "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
-                   "__name__","__qualname__","__module__","__abstractmethods__"]
-        self.__selection=["__del__","__hash__","__repr__","__str__","__bool__","__int__","__float__","__bytes__","__complex__","__format__","__enter__","__exit__","__len__",
+                   "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
+        self.__selection=["__del__","__hash__","__str__","__bool__","__int__","__float__","__bytes__","__complex__","__format__","__enter__","__exit__","__len__",
                    "__iter__","__setitem__","__delitem__","__contains__","__reversed__","__next__","__missing__","__length_hint__","__post_init__","__getnewargs__",
                    "__getnewargs_ex__","__getstate__","__reduce__","__reduce_ex__","__setstate__","__await__","__aenter__","__aexit__","__aiter__","__anext__","__release_buffer__"]
         for key,value in class_dict(obj).items():
@@ -169,7 +174,10 @@ class chain:
         if key in self.__selection:
             @wraps(method) ## retains the docstring
             def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
-                return getattr(_self.__obj,key)()
+                try:
+                    return getattr(_self.__obj,key)()
+                except:
+                    return getattr(_self.__obj,key)(_self.__obj)
             self.__selection.remove(key)
         else:
             @wraps(method) ## retains the docstring
@@ -187,9 +195,11 @@ class chain:
         except:
             if cls.__show_errors:
                 print(cls,key,value)
+    
     def __call__(self,*args,**kwargs) -> Any:
         """For calling or instantiating the object"""
         return self.__chain(self.__obj(*args,**kwargs))
+    
     def __repr__(self) -> str:
         return repr(self.__obj)
     @classmethod
@@ -215,12 +225,9 @@ class chain:
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
             try: ## pass in the object stored to the Callable
-                if hasattr(__builtins__,attr):
-                    for arg_num in get_arg_count(attribute):
-                        if arg_num > 0:
-                            return self.__chain(partial(attribute,self.__obj))  ### needs testing
-                if len(signature(attribute).parameters) > 0: ## needed in case of instances
-                    return self.__chain(partial(attribute,self.__obj))
+                for arg_num in get_arg_count(attribute):
+                    if arg_num > 0:
+                        return self.__chain(partial(attribute,self.__obj))  ### needs testing ## the problem is here and at self.__wrap
             except ValueError:
                 pass
             ## if the Callable has no params then it has to be a staticmethod
@@ -230,6 +237,7 @@ class chain:
             self.__static_setter(attr)
             return self.__chain(getattr(self,attr))
         return self.__chain(attribute)
+
     def __chain(self,attr: Any) -> object:
         """For creating new chain objects"""
         return chain(attr,override=self.__override)
