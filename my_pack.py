@@ -164,7 +164,7 @@ class chain:
         and that the dunder methods return values are wrapped in a chain object
         """
         if key in ["__del__","__hash__","__repr__","__str__","__bool__","__int__","__float__","__bytes__","__complex__","__format__","__enter__","__exit__","__len__",
-                   "__iter__","__setitem__","__delitem__","__contains__","__reversed__","__next__","__missing__","ength_hint__","__post_init__","__getnewargs__",
+                   "__iter__","__setitem__","__delitem__","__contains__","__reversed__","__next__","__missing__","__length_hint__","__post_init__","__getnewargs__",
                    "__getnewargs_ex__","__getstate__","__reduce__","__reduce_ex__","__setstate__","__await__","__aenter__","__aexit__","__aiter__","__anext__","__release_buffer__"]:
             @wraps(method) ## retains the docstring
             def wrapper(self) -> object: ## will return an instance based method since those are the methods we're after
