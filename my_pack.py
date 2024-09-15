@@ -227,7 +227,7 @@ class chain:
             try: ## pass in the object stored to the Callable
                 for arg_num in get_arg_count(attribute):
                     if arg_num > 0:
-                        return self.__chain(partial(attribute,self.__obj))  ### needs testing ## the problem is here and at self.__wrap
+                        return attribute ## seems only the attribute needs to be passed since setting it to an instance already passes the self.__obj through
             except ValueError:
                 pass
             ## if the Callable has no params then it has to be a staticmethod
