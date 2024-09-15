@@ -115,7 +115,7 @@ class chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
-    
+    import pandas as pd
     def testing():
         print("hello")
     chain().testing() # global method added
@@ -131,6 +131,12 @@ class chain:
     chain(j)**3 # should return 1
     chain(j)+j  # should return 2
     chain(j)*3  # should return 3
+    ## full chain example:
+    
+    a=[1,2,3]
+    b=pd.Series
+    c=pd.DataFrame
+    chain().a.sorted(reverse=True).b().c().tuple()[0].BREAK
     
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
@@ -257,6 +263,10 @@ class chain:
             if hasattr(cls,attr):
                 delattr(cls,attr)
         cls.__cache=[]
+    @property
+    def BREAK(self) -> Any:
+        """Breaks the chain e.g. returns the object"""
+        return self.__obj
 
 class ext:
     """
