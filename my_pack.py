@@ -87,7 +87,7 @@ class chain:
         self.__obj=obj
         self.__clear
         if hasattr(kwargs,"override"):
-            self.override=kwargs["override"]
+            self.__override=kwargs["override"]
         self.__get_attrs(obj)
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
     __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__",
