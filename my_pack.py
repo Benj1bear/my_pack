@@ -42,7 +42,7 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 
-def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> set:
+def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
     messages=[]
     for attr in dir(obj):
