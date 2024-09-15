@@ -231,8 +231,8 @@ class chain:
     
     def __getattr__(self,attr: str) -> Any:
         """Modified to instantiate return values as chain objects"""
-        if attr=="chain" and self.__override==False:
-            return partial(chain,self.__obj,override=self.__override)
+        # if attr=="chain" and self.__override==False: # probably not needed
+        #     return partial(chain,self.__obj,override=self.__override)
         ## consider global vs local overrides
         if hasattr(self.__obj,attr) and self.__override:
             return self.__chain(getattr(self.__obj,attr))
