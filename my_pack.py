@@ -64,7 +64,10 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list|int:
 def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
     messages=[]
+    toggle_print()
     for attr in dir(obj):
+        if attr=="print" or attr=="display": ## these can be done individually
+            continue
         try:
             attribute=getattr(obj,attr)
             if isinstance(attribute,Callable):
@@ -79,6 +82,7 @@ def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) 
                     messages+=[attr+" "+"any"]
         except:
             pass
+    toggle_print()
     return messages
 
 def toggle_print() -> None:
