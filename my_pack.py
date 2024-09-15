@@ -50,7 +50,7 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
         raise TypeError("attr must be Callable")
     if attr.__name__ not in dir(__builtins__):
         try: ## see if it has a signature
-            return len(signature(attr).parameters)
+            return [len(signature(attr).parameters)]
         except:
             pass
     length=len(value)
