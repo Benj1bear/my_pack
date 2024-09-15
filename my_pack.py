@@ -43,8 +43,10 @@ from itertools import combinations
 
 def class_dict(obj: Any) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
-    keys=dir(obj)
-    attrs=(attr for attr in map(partial(getattr,obj),keys))
+    keys,attrs=dir(obj),[]
+    for key in keys:
+        try: attrs+=[getattr(obj,key)]  ## some attrs cannot be retrieved i.e. ,"__abstractmethods__" when passing in the 'type' builtin method
+        except: pass
     return dict(zip(keys,attrs))
 
 def classproperty(obj: Any) -> classmethod:
@@ -92,7 +94,7 @@ class chain:
     # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
     __not_allowed=["__class__","__dir__","__dict__","__doc__","__init__","__call__","__repr__","__getattr__",
                   "__getattribute__","__new__","__setattr__","__init_subclass__","__subclasshook__","__name__",
-                  "__qualname__","__module__"]
+                  "__qualname__","__module__","__abstractmethods__"]
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
         not_allowed=self.__not_allowed.copy()
@@ -152,8 +154,7 @@ class chain:
         attribute=getattr(self,attr)
         if isinstance(attribute,Callable):
             try: ## pass in the object stored to the Callable
-                if len(signature(attribute).parameters) > 0:
-                    return self.__chain(partial(attribute,self.__obj))
+                return self.__chain(partial(attribute,self.__obj)) # can't use signature since not all (particularly builtins) don't have them
             except ValueError: ## if the Callable has no params then it has to be a staticmethod
                 pass           ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
