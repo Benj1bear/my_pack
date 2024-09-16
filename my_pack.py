@@ -213,7 +213,7 @@ class chain:
                 print(cls,key,value)
     
     def __call__(self,*args,**kwargs) -> Any:
-        """For calling or instantiating the object"""
+        """For calling or instantiating the object. If wanting to pass in methods as an object then use .__(method)"""
         try:
             return self.__chain(self.__obj(*args,**kwargs))
         except:
@@ -227,7 +227,7 @@ class chain:
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
-            if hasattr(__builtins__,attr): # might add an override here; though you shouldn't really be monkey patching builtins with global functions
+            if hasattr(__builtins__,attr) and self.__use_builtin:
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
                 setattr(cls,attr,globals()[attr])
@@ -265,11 +265,24 @@ class chain:
         """For creating new chain objects"""
         return chain(attr,override=self.__override)
     
-    __override=False
+    __override,__use_builtin=False,True
     @property
     def _(self) -> object:
         """Changes scope from global to local or local to global"""
-        self.__override=False if self.__override else True
+        self.__override=not self.__override ## since it's a bool
+        return self
+    @property
+    def __(self,obj: Any) -> object:
+        """Allows methods to be passed in to be set as an attribute e.g. not to be called"""
+        return self.__chain(obj)
+    @property
+    def _g(self) -> object:
+        """
+        Allows overriding of builtins. Shouldn't be needed but 
+        if for whatever reason monkey patching builtins seems 
+        appropriate then this allows use of them in the chain
+        """
+        self.__use_builtin=not self.__use_builtin
         return self
     @classproperty
     def __clear(cls) -> None:
