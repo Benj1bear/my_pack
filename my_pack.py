@@ -57,17 +57,26 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     length=len(value)
     if attr==print or attr==display:
         return [length]
-    try:
-        attr(*value)
-        return [length]
-    except TypeError as e:
-        message=" ".join(str(e).split(" ")[1:])
-        if " takes no arguements" in message: return [0]
-        if " exactly one " in message: return [1]
-        arg_numbers=re.findall(r"\d+",message)
-        if len(arg_numbers):
-            return [num for i in arg_numbers if (num:=int(i)) < length]
-        raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+message)
+    def get_args(value,length,breaking: bool=False):
+        """tests"""
+        try:
+            attr(*value)
+            return [length]
+        except TypeError as e:
+            message=" ".join(str(e).split(" ")[1:])
+            if " takes no arguements " in message: return [0]
+            if " exactly one  " in message: return [1] ## may re-write
+            if "at least two arguments" in message: return [2]  ## may re-write    
+            arg_numbers=re.findall(r"\d+",message)
+            if len(arg_numbers):
+                return [num for i in arg_numbers if (num:=int(i)) < length]
+            if breaking==False:
+                return get_args((iter(value),),length,False)
+            if breaking==False:
+                return get_args(([0]*999,),length,True)
+            raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+message)
+
+    return get_args(value,length)
 
 def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
