@@ -148,6 +148,13 @@ class chain:
     # or
     chain()([1,2,3]).sorted(reverse=True)(pd.Series)(pd.DataFrame).tuple()[0].BREAK
 
+    ## overriding builtins (not recommended; but is possible):
+    def sum():
+        print("hi")
+    chain([1,2,3])._g.sum() # should print 'hi'
+    # using a Callable as data rather than a method:
+    chain()([1,2,3]).__(pd.Series)
+    
     Note: all data and methods (except special methods) have been made private in this class
     to allow for more commonly named attributes to be added.
     
@@ -186,6 +193,10 @@ class chain:
         """
         wrapper function to ensure methods assigned are instance based 
         and that the dunder methods return values are wrapped in a chain object
+        if i.e. used in a binary operation or that these are left as is if 
+        type casting a chain object e.g. float(chain(1)) should return 1.0
+        and its type should be float and not my_pack.chain or __main__.chain if 
+        defined in program
         """
         if key in self.__selection:
             @wraps(method) ## retains the docstring
