@@ -57,8 +57,8 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     length=len(value)
     if attr==print or attr==display:
         return [length]
-    def get_args(value,length,breaking: bool=False):
-        """tests"""
+    def get_args(value: Any,length: int,breaking: bool=False) -> list:
+        """Intentionally runs tests for errors to infer the number of args allowed"""
         try:
             attr(*value)
             return [length]
@@ -110,7 +110,7 @@ def toggle_print() -> None:
     else:
         print,display=(lambda *args,**kwargs: "",)*2
 
-def class_dict(obj: Any,warn=False) -> dict:
+def class_dict(obj: Any,warn: bool=False) -> dict:
     """For obtaining a class dictionary (not all objects have a '__dict__' attribute)"""
     if warn==False:
         simplefilter("ignore") ## some attributes are deprecated and they may throw warnings
