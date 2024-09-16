@@ -43,7 +43,7 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
-def get_arg_count(attr: Any,values: tuple[tuple]=(
+def get_arg_count(attr: Any,values: tuple[Any]=(
     [None]*999,iter([None]*999),[0]*999
                  )) -> list:
     """returns the number of accepted args. Note: doesn't do the kwargs"""
