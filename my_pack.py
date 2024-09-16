@@ -58,12 +58,12 @@ def use_numbers(string: str,chain: bool=False) -> str:
     numbers=dict(
         base={0:("zero","one","two","three","four","five","six","seven","eight","nine"),1:tuple(range(10))},
         synonym={0:("no","none","single","couple","pair","few","dozen","bakersdozen"),1:(0,0,1,2,2,3,12,13)},
-        special={0:("ten","eleven","twelve","thirteen","fifteen","twenty","thirty","forty","fifty"),1:(10,11,12,13,15,*range(20,60,10))},
-        scale={0:("ty","hundred","thousand","million","billion","trillion","quadrillion",
+        special={0:("ten","eleven","twelve","thirteen","fifteen","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"),1:(10,11,12,13,15,*range(20,100,10))},
+        scale={0:("hundred","thousand","million","billion","trillion","quadrillion",
                   "quintillion","sextillion","septillion","octillion","nonillion",
                   "decillion","undecillion","duodecillion","tredecillion","quattuordecillion",
                   "quindecillion","sexdecillion","septendecillion","octodecillion","novemdecillion",
-                  " vigintillion "),1:tuple(10**i for i in (1,2)+tuple(range(3,64,3)))}
+                  " vigintillion "),1:tuple(10**i for i in (2,)+tuple(range(3,64,3)))}
     )
     numbers=dct_join(*numbers.values())
     numbers=tuple(biop(numbers[i],"+") for i in range(2))
