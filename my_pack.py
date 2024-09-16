@@ -57,7 +57,7 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
     length=len(value)
     if attr==print or attr==display:
         return [length]
-    def get_args(value: Any,length: int,breaking: bool=False) -> list:
+    def get_args(value: Any,length: int,breaking: int=0) -> list:
         """Intentionally runs tests for errors to infer the number of args allowed"""
         try:
             attr(*value)
@@ -70,10 +70,11 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
             arg_numbers=re.findall(r"\d+",message)
             if len(arg_numbers):
                 return [num for i in arg_numbers if (num:=int(i)) < length]
-            if breaking==False:
-                return get_args((iter(value),),length,False)
-            if breaking==False:
-                return get_args(([0]*999,),length,True)
+            match breaking:
+                case 0:
+                    return get_args((iter(value),),length,1)
+                case 1:
+                    return get_args(([0]*999,),length,2)
             raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+message)
 
     return get_args(value,length)
