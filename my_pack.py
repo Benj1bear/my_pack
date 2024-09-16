@@ -43,7 +43,9 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
-def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
+def get_arg_count(attr: Any,values: tuple[tuple]=(
+    [None]*999,iter([None]*999),[0]*999
+                 )) -> list:
     """returns the number of accepted args. Note: doesn't do the kwargs"""
     ## either it's an invalid type
     ## or any of the numbers less than or equal to the length
@@ -54,30 +56,31 @@ def get_arg_count(attr: Any,value: Any=[None]*999) -> list:
             return [len(signature(attr).parameters)]
         except:
             pass
-    length=len(value)
+    
+    length=len(values[0])
     if attr==print or attr==display:
         return [length]
-    def get_args(value: Any,length: int,breaking: int=0) -> list:
+    values,original_message=iter(values),""
+    def get_args() -> list:
         """Intentionally runs tests for errors to infer the number of args allowed"""
+        nonlocal values,length,original_message
         try:
-            attr(*value)
+            attr(*next(values))
             return [length]
+        except StopIteration:
+            raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+original_message)
         except TypeError as e:
-            message=" ".join(str(e).split(" ")[1:])
+            original_message=str(e)
+            message=" ".join(original_message.split(" ")[1:])
             if " takes no arguements " in message: return [0]
             if " exactly one  " in message: return [1] ## may re-write
-            if "at least two arguments" in message: return [2]  ## may re-write    
+            if "at least two arguments" in message: return [2]  ## may re-write
             arg_numbers=re.findall(r"\d+",message)
             if len(arg_numbers):
                 return [num for i in arg_numbers if (num:=int(i)) < length]
-            match breaking:
-                case 0:
-                    return get_args((iter(value),),length,1)
-                case 1:
-                    return get_args(([0]*999,),length,2)
-            raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+message)
+            return get_args()
 
-    return get_args(value,length)
+    return get_args()
 
 def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
