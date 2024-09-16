@@ -56,19 +56,15 @@ def get_arg_count(attr: Any,values: tuple[Any]=(
             return [len(signature(attr).parameters)]
         except:
             pass
-    
     length=len(values[0])
     if attr==print or attr==display:
         return [length]
-    values,original_message=iter(values),""
-    def get_args() -> list:
-        """Intentionally runs tests for errors to infer the number of args allowed"""
-        nonlocal values,length,original_message
+    original_message=""
+    ## Intentionally runs tests for errors to infer the number of args allowed
+    for value in values:
         try:
-            attr(*next(values))
-            return [length]
-        except StopIteration:
-            raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+original_message)
+            attr(*value)
+            return [length]    
         except TypeError as e:
             original_message=str(e)
             message=" ".join(original_message.split(" ")[1:])
@@ -78,9 +74,7 @@ def get_arg_count(attr: Any,values: tuple[Any]=(
             arg_numbers=re.findall(r"\d+",message)
             if len(arg_numbers):
                 return [num for i in arg_numbers if (num:=int(i)) < length]
-            return get_args()
-
-    return get_args()
+    raise ValueError(f"the value of 'value' should be reconsidered for the attribute '{attr}'.\n\n Original message: "+original_message)
 
 def find_args(obj: ModuleType|object,use_attr: bool=True,value: Any=[None]*999) -> list:
     """For figuring out how many args functions use"""
