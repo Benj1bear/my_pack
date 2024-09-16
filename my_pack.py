@@ -227,7 +227,7 @@ class chain:
     def __add_attr(cls,attr: str) -> None:
         """Dynamically adds new attributes to a class"""
         if hasattr(cls,attr)==False:
-            if hasattr(__builtins__,attr) and self.__use_builtin:
+            if hasattr(__builtins__,attr) and cls.__use_builtin:
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
                 setattr(cls,attr,globals()[attr])
