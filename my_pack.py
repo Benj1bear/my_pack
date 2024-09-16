@@ -286,7 +286,7 @@ class chain:
         if for whatever reason monkey patching builtins seems 
         appropriate then this allows use of them in the chain
         """
-        self.__change_builtin_status
+        self.__change_use_builtin_status
         return self
     @classproperty
     def __change_use_builtin_status(cls) -> None:
