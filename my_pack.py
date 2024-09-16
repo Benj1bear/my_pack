@@ -273,7 +273,11 @@ class chain:
         return self
 
     def __(self,obj: Any) -> object:
-        """Allows methods to be passed in to be set as an attribute e.g. not to be called"""
+        """
+        Allows methods to be passed in to be set as an attribute e.g. not to be called.
+        Note: this method is basically just self.__chain but for short hand global use which 
+        assumes it's more likely to get overriden even though it shouldn't.
+        """
         return self.__chain(obj)
     @property
     def _g(self) -> object:
