@@ -43,6 +43,84 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
+def list_join(ls1: list[str],ls2: list[str]) -> str:
+    """
+    joins a list by another list to produce a joined string (usually)
+    Inspiration for this function was from "".join(some_string)
+    but for custom joining at each point that can be made to join up
+    """
+    return biop(tuple(ls1_item+ls2_item for ls1_item,ls2_item in zip(ls1[:-1],ls2)),"+")+ls1[-1]
+
+## needs testing ##
+def use_numbers(string: str,chain: bool=False) -> str:
+    """Replaces all numbers in a string expressed as words to numbers. Optionally allows reading numbers off as chained expressions"""
+    ## prep for zip
+    numbers=dict(
+        base={0:("zero","one","two","three","four","five","six","seven","eight","nine"),1:tuple(range(10))},
+        synonym={0:("no","none","single","couple","pair","few","dozen","bakersdozen"),1:(0,0,1,2,2,3,12,13)},
+        special={0:("ten","eleven","twelve","thirteen","fifteen","twenty","thirty","forty","fifty"),1:(10,11,12,13,15,*range(20,60,10))},
+        scale={0:("ty","hundred","thousand","million","billion","trillion","quadrillion",
+                  "quintillion","sextillion","septillion","octillion","nonillion",
+                  "decillion","undecillion","duodecillion","tredecillion","quattuordecillion",
+                  "quindecillion","sexdecillion","septendecillion","octodecillion","novemdecillion",
+                  " vigintillion "),1:tuple(10**i for i in (1,2)+tuple(range(3,64,3)))}
+    )
+    numbers=dct_join(*numbers.values())
+    numbers=tuple(biop(numbers[i],"+") for i in range(2))
+    ## get the words
+    words,new_word=iter(string.lower().split()),[]
+    def try_form(word: str) -> str:
+        """for dealing with combining strings"""
+        if "*" in word:
+            if word[0]=="*":
+                word=word[1:]
+            else:
+                return str(unstr(re.sub("r[a-zA-Z]+","",word)))
+        try:
+            return str(unstr(re.sub(r"\D+","",word)))+re.sub(r"\d+","",word)
+        except Exception:
+            return str(unstr(re.sub(r"\D+","",word)))
+
+    ## replace the words with numbers
+    for word in words:
+        flag=False
+        for key,value in zip(*numbers):
+            if key in word:
+                flag=True
+                if value % 10 == 0 and value > 9:
+                    word=word.replace(key,"*"+str(value))
+                else:
+                    word=word.replace(key,str(value))
+
+        ## for the use of hyphens '-'
+        if flag:
+            if "-" in word:
+                word=word.replace("-","+")
+            word=try_form(word)
+        new_word+=[word]
+    new_word=" ".join(new_word)
+    ## fix the joining of words if applicable
+    if chain:
+        match=lambda string: re.match("\d+",string)!=None
+        joins=[]
+        for join in [" "," and "," point "]:
+            temp_word=new_word.split(join)
+            for i in range(len(temp_word)-1):
+                if match(num1:=temp_word[i].split()[-1]) and match(num2:=temp_word[i+1].split()[0]):
+                    num1,string_part,num2=re.sub(r"\D+","",num1),re.sub(r"\d+","",num2),re.sub(r"\D+","",num2)
+                    if join==" " or join==" and ":
+                        joins+=[str(unstr(num1+"+"+num2))+string_part]
+                    else:
+                        joins+=[num1+"."+num2]
+            if joins:
+                #### needs testing ####
+                try:
+                    new_word=list_join(re.split(f"\d+{join}\d+",new_word),joins)
+                except:
+                    new_word=list_join(re.split(f"\d+\D+{join.strip()}\D+\d+",new_word),joins)
+                joins=[]
+    return new_word
+
 def get_arg_count(attr: Any,values: tuple[Any]=(
     [None]*999,iter([None]*999),[0]*999
                  )) -> list:
