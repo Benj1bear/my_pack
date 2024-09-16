@@ -271,7 +271,7 @@ class chain:
         """Changes scope from global to local or local to global"""
         self.__override=not self.__override ## since it's a bool
         return self
-    @property
+
     def __(self,obj: Any) -> object:
         """Allows methods to be passed in to be set as an attribute e.g. not to be called"""
         return self.__chain(obj)
