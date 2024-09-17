@@ -43,6 +43,10 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
+def get_pointers(*args) -> dict:
+    """Returns all variable names that are also assigned to the same memory location"""
+    return {index:[key for key,value in globals().items() if id(value)==arg] for index,arg in enumerate(map(id,args))}
+
 def list_join(ls1: list[str],ls2: list[str]) -> str:
     """
     joins a list by another list to produce a joined string (usually)
@@ -58,7 +62,8 @@ def use_numbers(string: str,chain: bool=False) -> str:
     numbers=dict(
         base={0:("zero","one","two","three","four","five","six","seven","eight","nine"),1:tuple(range(10))},
         synonym={0:("no","none","single","couple","pair","few","dozen","bakersdozen"),1:(0,0,1,2,2,3,12,13)},
-        special={0:("ten","eleven","twelve","thirteen","fifteen","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"),1:(10,11,12,13,15,*range(20,100,10))},
+        special={0:("ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen",
+                    "nineteen","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"),1:(*range(10,20),*range(20,100,10))},
         scale={0:("hundred","thousand","million","billion","trillion","quadrillion",
                   "quintillion","sextillion","septillion","octillion","nonillion",
                   "decillion","undecillion","duodecillion","tredecillion","quattuordecillion",
