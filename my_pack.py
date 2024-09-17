@@ -45,7 +45,11 @@ from warnings import simplefilter
 import traceback
 
 def name(*var,depth: int=0) -> str:
-    """Extracts the args names passed into a function"""
+    """
+    Extracts the args names passed into a function. 
+    Note: the depth parameter should be how many functions/stacks 
+    deep the args go from the relative point of begining
+    """
     return traceback.extract_stack()[-(2+depth)][-1]
 
 def id_dct(*args) -> dict:
