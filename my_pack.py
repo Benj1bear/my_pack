@@ -76,7 +76,7 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    names=name(depth=1)["args"].split(",")
+    names=name(depth=1)["args"].strip().split(",")
     return dict(zip(names,args))
 
 def refs(*args) -> list:
