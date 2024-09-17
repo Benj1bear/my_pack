@@ -56,7 +56,7 @@ def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
     names=name(*args,depth=1)
     names=re.sub(r"\*|\(|\)|,"," ",names).split()[1:]
-    return {name:arg for name,arg in zip(names,args)}
+    return dict(zip(names,args))
 
 def refs(*args) -> list:
     """Returns all variable names that are also assigned to the same memory location"""
