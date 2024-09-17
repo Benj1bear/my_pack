@@ -43,7 +43,7 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
-def get_refs(*args) -> dict:
+def refs(*args) -> dict:
     """Returns all variable names that are also assigned to the same memory location"""
     return {index:[key for key,value in globals().items() if id(value)==arg] for index,arg in enumerate(map(id,args))}
 
