@@ -51,9 +51,13 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     deep the args go from the relative point of beginning
 
     How to use:
+    a,b,c=range(3)
+    name(a,b,c) # should return 'name(a,b,c)' if raw=True
+                # else          {'FUNC': 'name', 'args': 'a,b,c'}
+    
     def test(*args,**kwargs):
         print(name(depth=1))
-    a,b,c=range(3)
+    
     test(a,b,c,**{"a":3})
     # should return    'test(a,b,c,**{"a":3})' if raw=True
     # else will return {'FUNC': 'test', 'args': 'a,b,c,{"a":3}'}
@@ -62,7 +66,16 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     if raw:
         return string
     func,string=slice_occ(string,"(")
-    return {"FUNC":func,"args":unstr("expose"+string,expose=lambda *args,**kwargs: (args,kwargs))}
+    new_string,depth,string="",0,string[1:-1]
+    for char in string:
+        if char=="*" and depth==0:
+            continue
+        elif char=="(" or char=="{":
+            depth+=1
+        elif char==")" or char=="}":
+            depth-=1
+        new_string+=char
+    return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
