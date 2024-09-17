@@ -42,10 +42,17 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 from warnings import simplefilter
+import traceback
+
+def name(*var,depth: int=0) -> str:
+    """Extracts the args names passed into a function"""
+    return traceback.extract_stack()[-(2+depth)][-1]
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    return {ref:arg for arg in args for ref in refs(arg)[0]}
+    names=name(*args,depth=1)
+    names=re.sub(r"\*|\(|\)|,"," ",names).split()[1:]
+    return {name:arg for name,arg in zip(names,args)}
 
 def refs(*args) -> list:
     """Returns all variable names that are also assigned to the same memory location"""
