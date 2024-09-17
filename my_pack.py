@@ -48,7 +48,7 @@ def name(*var,depth: int=0) -> str:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
-    deep the args go from the relative point of begining
+    deep the args go from the relative point of beginning
     """
     return traceback.extract_stack()[-(2+depth)][-1]
 
