@@ -46,21 +46,16 @@ import traceback
 
 def remove_stars(string: str) -> str:
     """For removing the stars for in-lining tuples or dicts from a string"""
-    indexes,depth=[],0
-    for index,char in enumerate(string):
+    new_string,depth="",0
+    for char in string:
         if char=="*" and depth==0:
-            indexes+=[index]
-        elif char=="(":
+            continue
+        elif char=="(" or char=="{":
             depth+=1
-        elif char==")":
+        elif char==")" or char=="}":
             depth-=1
-    new_ls=[]
-    for i in range(len(string)):
-        if i not in indexes:
-            new_ls+=[i]
-        else:
-            indexes.remove(i)
-    return "".join(itemgetter(*new_ls)(string))
+        new_string+=char
+    return new_string
 
 def name(*args,depth: int=0,**kwargs) -> str:
     """
