@@ -49,7 +49,7 @@ def id_dct(*args) -> dict:
 
 def refs(*args) -> list:
     """Returns all variable names that are also assigned to the same memory location"""
-    return [[key for key,value in globals().items() if id(value)==arg] for index,arg in enumerate(map(id,args))]
+    return [[key for key,value in globals().items() if id(value)==arg] for arg in map(id,args)]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
     """
