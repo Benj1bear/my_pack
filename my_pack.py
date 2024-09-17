@@ -49,6 +49,14 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
     deep the args go from the relative point of beginning
+
+    How to use:
+    def test(*args,**kwargs):
+        print(name(depth=1))
+    a,b,c=range(3)
+    test(a,b,c,**{"a":3})
+    # should return    'test(a,b,c,**{"a":3})' if raw=True
+    # else will return {'FUNC': 'test', 'args': 'a,b,c,{"a":3}'}
     """
     string=traceback.extract_stack()[-(2+depth)][-1]
     if raw:
