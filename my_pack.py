@@ -54,9 +54,7 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str:
     if raw:
         return string
     func,string=slice_occ(string,"(")
-    string=string[1:-1]
-    print(func,string)
-    new_string,depth="",0
+    new_string,depth,string="",0,string[1:-1]
     for char in string:
         if char=="*" and depth==0:
             continue
