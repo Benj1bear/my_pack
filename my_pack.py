@@ -48,7 +48,7 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
-    deep the args go from the relative point of beginning
+    deep the args go relative to the first stack of interest
 
     How to use:
     a,b,c=range(3)
