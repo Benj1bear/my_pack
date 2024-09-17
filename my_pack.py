@@ -43,9 +43,13 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 
-def refs(*args) -> dict:
+def id_dct(*args) -> dict:
+    """Creates a dictionary of values with the values names as keys (ideally)"""
+    return {ref:arg for arg in args for ref in refs(arg)[0]}
+
+def refs(*args) -> list:
     """Returns all variable names that are also assigned to the same memory location"""
-    return {index:[key for key,value in globals().items() if id(value)==arg] for index,arg in enumerate(map(id,args))}
+    return [[key for key,value in globals().items() if id(value)==arg] for index,arg in enumerate(map(id,args))]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
     """
