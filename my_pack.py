@@ -44,8 +44,18 @@ import IPython
 from warnings import simplefilter
 import traceback
 
-def remove_stars(string: str) -> str:
-    """For removing the stars for in-lining tuples or dicts from a string"""
+def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str:
+    """
+    Extracts the args names passed into a function. 
+    Note: the depth parameter should be how many functions/stacks 
+    deep the args go from the relative point of beginning
+    """
+    string=traceback.extract_stack()[-(2+depth)][-1]
+    if raw:
+        return string
+    func,string=slice_occ(string,"(")
+    string=string[1:-1]
+    print(func,string)
     new_string,depth="",0
     for char in string:
         if char=="*" and depth==0:
@@ -55,15 +65,7 @@ def remove_stars(string: str) -> str:
         elif char==")" or char=="}":
             depth-=1
         new_string+=char
-    return new_string
-
-def name(*args,depth: int=0,**kwargs) -> str:
-    """
-    Extracts the args names passed into a function. 
-    Note: the depth parameter should be how many functions/stacks 
-    deep the args go from the relative point of beginning
-    """
-    return traceback.extract_stack()[-(2+depth)][-1]
+    return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
