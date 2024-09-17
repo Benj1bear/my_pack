@@ -44,7 +44,7 @@ import IPython
 from warnings import simplefilter
 import traceback
 
-def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
+def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
@@ -81,11 +81,13 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
         elif char=="(" or char=="{": depth+=1
         elif char==")" or char=="}": depth-=1
         new_string+=char
+    if default:
+        return new_string
     return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    names=name(depth=1)["args"].strip().split(",")
+    names=name(depth=1).strip().split(",")
     return dict(zip(names,args))
 
 def refs(*args) -> list:
