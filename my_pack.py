@@ -54,6 +54,14 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     a,b,c=range(3)
     name(a,b,c) # should return 'name(a,b,c)' if raw=True
                 # else          {'FUNC': 'name', 'args': 'a,b,c'}
+    Note: be aware that if you use this approach to try and go
+    names=name(a,b,c)
+    names["args"]
+    if instead you use 
+    name(a,b,c)["args"] 
+    you will get 'a,b,c)["args"' as the string
+
+    ## I'll see if I can fix this reliably
     
     def test(*args,**kwargs):
         print(name(depth=1))
