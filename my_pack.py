@@ -55,11 +55,11 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     name(a,b,c) # should return 'name(a,b,c)' if raw=True
                 # else          {'FUNC': 'name', 'args': 'a,b,c'}
     Note: be aware that if you use this approach to try and go
-    names=name(a,b,c)
+    names=name(a,b,c,defaults=False)
     names["args"]
     if instead you use 
-    name(a,b,c)["args"] 
-    you will get 'a,b,c)["args"' as the string
+    name(a,b,c,defaults=False)["args"] 
+    you will get 'a,b,c,defaults=False)["args"' as the string
 
     ## I might see if I can fix this reliably at another time as it seems 
     ## the possible edgecase of what can happen are more divergent than I'd like
