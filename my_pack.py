@@ -61,7 +61,8 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     name(a,b,c)["args"] 
     you will get 'a,b,c)["args"' as the string
 
-    ## I'll see if I can fix this reliably
+    ## I might see if I can fix this reliably at another time as it seems 
+    ## the possible edgecase of what can happen are more divergent than I'd like
     
     def test(*args,**kwargs):
         print(name(depth=1))
