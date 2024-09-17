@@ -62,9 +62,7 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     if raw:
         return string
     func,string=slice_occ(string,"(")
-    expose=lambda *args,**kwargs: (args,kwargs)
-    exec(f"temp=expose{string}")
-    return {"FUNC":func,"args":locals()["temp"]}
+    return {"FUNC":func,"args":unstr("expose"+string,expose=lambda *args,**kwargs: (args,kwargs))}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
@@ -2339,12 +2337,14 @@ def git_clone(url: list[str]|str=[],directory: list[str]|str=[],repo: bool=True)
                 print("Failed retrieving "+file+":\n\n")
                 print(e)
 
-def unstr(x: str) -> Any:
+def unstr(x: str,**kwargs) -> Any:
     """
-    Allows simple conversion of a string of a type to its type
-    globals()[x] gets deleted to free the memory so that all
-    variables within this function are strictly only temporary.
+    Allows simple conversion of a string of a type to its type. 
+    kwargs allows you to bring in variables into the scope
     """
+    if kwargs:
+        for key,value in kwargs.items():
+            locals()[key]=value
     exec("temp="+x)
     return locals()["temp"]
 
