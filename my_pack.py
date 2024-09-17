@@ -44,7 +44,7 @@ import IPython
 from warnings import simplefilter
 import traceback
 
-def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str:
+def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
