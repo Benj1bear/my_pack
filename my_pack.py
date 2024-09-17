@@ -62,16 +62,9 @@ def name(*args,depth: int=0,raw: bool=False,**kwargs) -> str|dict:
     if raw:
         return string
     func,string=slice_occ(string,"(")
-    new_string,depth,string="",0,string[1:-1]
-    for char in string:
-        if char=="*" and depth==0:
-            continue
-        elif char=="(" or char=="{":
-            depth+=1
-        elif char==")" or char=="}":
-            depth-=1
-        new_string+=char
-    return {"FUNC":func,"args":new_string}
+    expose=lambda *args,**kwargs: (args,kwargs)
+    exec(f"temp=expose{string}")
+    return {"FUNC":func,"args":locals()["temp"]}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
