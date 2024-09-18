@@ -61,8 +61,12 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     name(a,b,c,defaults=False)["args"] 
     you will get 'a,b,c,defaults=False)["args"' as the string
 
-    ## I might see if I can fix this reliably at another time as it seems 
-    ## the possible edgecase of what can happen are more divergent than I'd like
+    ## Because the traceback does return a raw string this may be
+    ## fixable to an extent but won't fix i.e. 
+    # name(
+    # a,b,c
+    # )
+    # because it will retrieve 'name(' only
     
     def test(*args,**kwargs):
         print(name(depth=1))
