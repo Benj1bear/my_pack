@@ -55,7 +55,7 @@ def name_at_frame(depth: int=0) -> str:
 
 ##### needs testing ####
 CACHE_FOR_NAME={"code":None}
-def name2(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
+def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
