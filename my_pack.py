@@ -45,7 +45,7 @@ from warnings import simplefilter
 import traceback
 import ast
 
-def name_at_frame(depth: int=0):
+def name_at_frame(depth: int=0) -> str:
     """gets the function name at frame-depth"""
     frame=currentframe()
     for i in range(depth):
