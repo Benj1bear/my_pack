@@ -118,9 +118,19 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index-1]
     # update the reduced code
     CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
+    ## get purely the args ##
+    new_string,depth,string="",0,string
+    for char in string:
+        if char=="*" and depth==0: continue
+        if char=="(" and depth==0: depth+=1; continue
+        if char==")" and depth==1: depth-=1; continue
+        elif char=="(" or char=="{" or char=="[": depth+=1
+        elif char==")" or char=="}" or char=="]": depth-=1
+        new_string+=char
+    new_string=new_string.replace(",,",",")
     if default:
-        return string
-    return {"FUNC":func,"args":string}
+        return new_string
+    return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
