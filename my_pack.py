@@ -55,11 +55,35 @@ def name_at_frame(depth: int=0) -> str:
 
 ##### needs testing ####
 CACHE_FOR_NAME={"code":None}
-def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> str|dict:
+def name2(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
-    version 2 of name
+    Extracts the args names passed into a function. 
+    Note: the depth parameter should be how many functions/stacks 
+    deep the args go relative to the first stack of interest
 
-    need to fix the code so that it works with depth as well
+    How to use:
+    a,b,c=range(3)
+    name(a,b,c) # should return 'a,b,c' by default
+                # or            'name(a,b,c)' if raw=True
+                # or             {'FUNC': 'name', 'args': 'a,b,c'} if default=False and raw=False
+    Note: the traceback (in what I know currently) will not capture
+    multiline open bracket expressions but the function should work
+    for most use-cases e.g.
+    # name(
+    # a,b,c
+    # )
+    # will not work because the stack trace will retrieve 'name(' only
+    
+    def test(*args,**kwargs):
+        print(name(depth=1)) # you don't have to pass in any arguements besides the depth
+    
+    test(a,b,c,**{"a":3})
+    # should return    'a,b,c,**{ str :3}' # all strings get removed and replaced by 'str'. 
+    #                                      # You shouldn't really be using this function to 
+    #                                      # figure out the kwargs keys since you can just 
+    #                                      # use kwargs.keys() in the desired function used
+    # or               'test(a,b,c,**{"a":3})' if raw=True
+    # else will return {'FUNC': 'test', 'args': 'a,b,c,**{ str :3}'} if default=False and raw=False
     """
     global CACHE_FOR_NAME
     # get the frame and line of code
@@ -80,7 +104,6 @@ def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> st
     current_refs,span,best,reduced_string=refs(getattr(sys.modules["__main__"],name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
-            print(match)
             if match.start() < best:
                 span,best=match,match.start()
     if span==None:
@@ -98,51 +121,6 @@ def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> st
     if default:
         return string
     return {"FUNC":func,"args":string}
-
-def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
-    """
-    Extracts the args names passed into a function. 
-    Note: the depth parameter should be how many functions/stacks 
-    deep the args go relative to the first stack of interest
-
-    How to use:
-    a,b,c=range(3)
-    name(a,b,c) # should return 'name(a,b,c)' if raw=True
-                # else          {'FUNC': 'name', 'args': 'a,b,c'}
-    Note: be aware that if you use this approach to try and go
-    names=name(a,b,c,defaults=False)
-    names["args"]
-    if instead you use 
-    name(a,b,c,defaults=False)["args"] 
-    you will get 'a,b,c,defaults=False)["args"' as the string
-
-    ## Because the traceback does return a raw string this may be
-    ## fixable to an extent but won't fix i.e. 
-    # name(
-    # a,b,c
-    # )
-    # because it will retrieve 'name(' only
-    
-    def test(*args,**kwargs):
-        print(name(depth=1))
-    
-    test(a,b,c,**{"a":3})
-    # should return    'test(a,b,c,**{"a":3})' if raw=True
-    # else will return {'FUNC': 'test', 'args': 'a,b,c,{"a":3}'}
-    """
-    string=traceback.extract_stack()[-(2+depth)][-1]
-    if raw:
-        return string
-    func,string=slice_occ(string,"(")
-    new_string,depth,string="",0,string[1:-1]
-    for char in string:
-        if char=="*" and depth==0: continue
-        elif char=="(" or char=="{": depth+=1
-        elif char==")" or char=="}": depth-=1
-        new_string+=char
-    if default:
-        return new_string
-    return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
