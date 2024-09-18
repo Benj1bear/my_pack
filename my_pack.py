@@ -43,6 +43,57 @@ from itertools import combinations
 import IPython
 from warnings import simplefilter
 import traceback
+import ast
+
+##### needs testing ####
+CACHE_FOR_NAME={"code":None}
+def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> str|dict:
+    """
+    version 2 of name
+
+    need to fix the code so that it works with depth as well
+    """
+    global CACHE_FOR_NAME
+    # get the frame and line of code
+    frame=traceback.extract_stack()[-(2+depth)]
+    string=frame[-1]
+    if raw:
+        return string
+    # remove all strings since it's a raw string
+    string=extract_code(string).get
+    ast.parse(string) ## check for syntax errors
+    # cache setup
+    if CACHE_FOR_NAME["code"]!=string:
+        CACHE_FOR_NAME["code"],CACHE_FOR_NAME["reduced_code"],CACHE_FOR_NAME["frame"]=*(string,)*2,frame
+    elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
+        CACHE_FOR_NAME["reduced_code"]=string
+    # get the span of the latest reference in the string
+
+    
+    ###### how to determine 'name' in different depths #####
+    
+    
+    current_refs,span,best,reduced_string=refs(name2)[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    for reference in current_refs:
+        for match in re.compile(reference+"\(").finditer(reduced_string):
+            print(match)
+            if match.start() < best:
+                span,best=match,match.start()
+    if span==None:
+        raise Exception("No matches were found")
+    # get the full section
+    depth=0
+    for index,char in enumerate(reduced_string[slice(span.end(),len(reduced_string))]):
+        if depth==-1: break
+        if char=="(": depth+=1
+        if char==")": depth-=1
+    
+    func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index-1]
+    # update the reduced code
+    CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
+    if default:
+        return string
+    return {"FUNC":func,"args":string}
 
 def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
