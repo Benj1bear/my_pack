@@ -45,12 +45,13 @@ from warnings import simplefilter
 import traceback
 import ast
 
-def name_at_frame(depth: int=0) -> str:
+def name_at_frame(depth: int=0):
     """gets the function name at frame-depth"""
-    frame=currentframe()
-    for i in range(depth):
+    frame,name=currentframe(),[]
+    while frame.f_code.co_name!="<module>":
+        name+=[frame.f_code.co_name]
         frame=frame.f_back
-    return frame.f_code.co_name
+    return ".".join(["__main__"]+name[::-1][:-(depth+1)])
 
 ##### needs testing ####
 CACHE_FOR_NAME={"code":None}
@@ -75,12 +76,8 @@ def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> st
     elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
-
-    
-    ###### how to determine 'name' in different depths #####
-    
-    
-    current_refs,span,best,reduced_string=refs(name_at_frame(depth+1))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    name=name_at_frame(depth)[9:]
+    current_refs,span,best,reduced_string=refs(refs(getattr(sys.modules["__main__"],name)))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             print(match)
