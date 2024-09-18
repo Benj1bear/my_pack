@@ -45,7 +45,7 @@ from warnings import simplefilter
 import traceback
 import ast
 
-def name_at_frame(depth: int=0):
+def name_at_frame(depth: int=0) -> str:
     """gets the function name at frame-depth"""
     frame,name=currentframe(),[]
     while frame.f_code.co_name!="<module>":
@@ -77,7 +77,7 @@ def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> st
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
     name=name_at_frame(depth)[9:]
-    current_refs,span,best,reduced_string=refs(refs(getattr(sys.modules["__main__"],name)))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    current_refs,span,best,reduced_string=refs(getattr(sys.modules["__main__"],name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             print(match)
