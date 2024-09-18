@@ -45,6 +45,13 @@ from warnings import simplefilter
 import traceback
 import ast
 
+def name_at_frame(depth: int=0):
+    """gets the function name at frame-depth"""
+    frame=currentframe()
+    for i in range(depth):
+        frame=frame.f_back
+    return frame.f_code.co_name
+
 ##### needs testing ####
 CACHE_FOR_NAME={"code":None}
 def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> str|dict:
@@ -73,7 +80,7 @@ def name2(*args,depth: int=0,default: bool=False,raw: bool=False,**kwargs) -> st
     ###### how to determine 'name' in different depths #####
     
     
-    current_refs,span,best,reduced_string=refs(name2)[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    current_refs,span,best,reduced_string=refs(name_at_frame(depth+1))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             print(match)
