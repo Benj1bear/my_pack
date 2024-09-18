@@ -100,8 +100,8 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
-    name=name_at_frame(depth)[9:]
-    current_refs,span,best,reduced_string=refs(getattr(sys.modules["__main__"],name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    temp_name=name_at_frame(depth)[9:]
+    current_refs,span,best,reduced_string=refs(getattr(sys.modules["__main__"],temp_name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             if match.start() < best:
