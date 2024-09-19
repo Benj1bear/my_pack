@@ -45,7 +45,7 @@ from warnings import simplefilter
 import traceback
 import ast
 
-def staticproperty(func):
+def staticproperty(func: Callable) -> Any:
     """
     Allows a function to be called as a variable.
     Note: staticproperties are generally not advised because
