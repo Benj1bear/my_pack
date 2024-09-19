@@ -78,12 +78,12 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         print(name(depth=1)) # you don't have to pass in any arguements besides the depth
     
     test(a,b,c,**{"a":3})
-    # should return    'a,b,c,**{ str :3}' # all strings get removed and replaced by 'str'. 
+    # should return    'a,b,c,{ str :3}' # all strings get removed and replaced by 'str'. 
     #                                      # You shouldn't really be using this function to 
     #                                      # figure out the kwargs keys since you can just 
     #                                      # use kwargs.keys() in the desired function used
     # or               'test(a,b,c,**{"a":3})' if raw=True
-    # else will return {'FUNC': 'test', 'args': 'a,b,c,**{ str :3}'} if default=False and raw=False
+    # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
     """
     global CACHE_FOR_NAME
     # get the frame and line of code
@@ -101,9 +101,10 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
     temp_name=name_at_frame(depth)[9:]
-    current_refs,span,best,reduced_string=refs(getattr(sys.modules["__main__"],temp_name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"]
+    current_refs,span,best,reduced_string,matches=refs(getattr(sys.modules["__main__"],temp_name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
+            matches+=1
             if match.start() < best:
                 span,best=match,match.start()
     if span==None:
@@ -116,8 +117,11 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         if char==")": depth-=1
     
     func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index-1]
-    # update the reduced code
-    CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
+    # update the reduced code or reset the cache if no more matches are present
+    if matches==1:
+        CACHE_FOR_NAME={"code":None}
+    else:
+        CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
     ## get purely the args ##
     new_string,depth="",0
     for char in string:
