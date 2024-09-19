@@ -127,14 +127,14 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         elif char=="(" or char=="{" or char=="[": depth+=1
         elif char==")" or char=="}" or char=="]": depth-=1
         new_string+=char
-    new_string=new_string.replace(",,",",")
+    new_string=new_string.replace(",,",",").strip()
     if default:
         return new_string
     return {"FUNC":func,"args":new_string}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    names=name(depth=1).strip().split(",")
+    names=name(depth=1).split(",")
     return dict(zip(names,args))
 
 def refs(*args) -> list:
