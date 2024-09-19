@@ -45,6 +45,39 @@ from warnings import simplefilter
 import traceback
 import ast
 
+def module_from_dict(module_name: str,dct: dict) -> ModuleType:
+    """Creates a module object from a dictionary"""
+    module=ModuleType(module_name)
+    for key,value in dct.items():
+        setattr(module,key,value)
+    return module
+
+def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
+    """
+    Gets a dict or list or ModuleType of the builtin functions.
+    There seems to be differences on some applications/platforms/versions
+    """
+    if form not in [dict,list,"module"]:
+        raise ValueError("Accepted inputs: dict|list|'module'")
+    builtins_type=type(__builtins__) # either a module or dict
+    if builtins_type==ModuleType:
+        if form==dict:
+            return __builtins__.__dict__
+        if form==list:
+            return dir(__builtins__)
+    elif builtins_type==dict:
+        if form==list:
+            return list(__builtins__.keys())
+        if form=="module":
+            return module_from_dict("__builtins__",__builtins__)
+    else:
+        raise TypeError(f"__builtins__ is of an unexpected type: {builtins_type}")
+    return __builtins__
+
+## make sure the __builtins__ are a module type ##
+if isinstance(__builtins__,ModuleType)==False:
+    __builtins__=get_builtins("module")
+
 def name_at_frame(depth: int=0) -> str:
     """gets the function name at frame-depth"""
     frame,name=currentframe(),[]
@@ -1442,15 +1475,6 @@ class Timer:
         if diff > self.important:
             print(diff)
         self.time=current
-
-def get_builtins() -> list:
-    """
-    Gets a list of the builtin functions
-    seems to be differences between jupyter notebook and python
-    """
-    if isinstance(__builtins__,dict) == False:
-        return dir(__builtins__)
-    return __builtins__
 
 def remove_docstrings(section: str,round_number: int=0) -> str:
     """For removing multiline strings; sometimes used as docstrings (only raw strings)"""
