@@ -45,6 +45,25 @@ from warnings import simplefilter
 import traceback
 import ast
 
+def staticproperty(func):
+    """
+    Allows a function to be called as a variable.
+    Note: staticproperties are generally not advised because
+    you cannot pass in arguements to the function or access 
+    it's attributes which makes the use cases limited to the 
+    use of global variables.
+    
+    How to use:
+    
+    @staticproperty
+    def test():
+        return 3
+
+    test # should return '3'
+    
+    """
+    return func()
+
 def module_from_dict(module_name: str,dct: dict) -> ModuleType:
     """Creates a module object from a dictionary"""
     module=ModuleType(module_name)
