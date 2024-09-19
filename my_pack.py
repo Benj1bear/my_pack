@@ -96,7 +96,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     ast.parse(string) ## check for syntax errors
     # cache setup
     if CACHE_FOR_NAME["code"]!=string:
-        CACHE_FOR_NAME["code"],CACHE_FOR_NAME["reduced_code"],CACHE_FOR_NAME["frame"]=*(string,)*2,frame
+        dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
     elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
