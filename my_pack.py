@@ -110,7 +110,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         raise Exception("No matches were found")
     # get the full section
     depth=0
-    for index,char in enumerate(reduced_string[slice(span.end(),len(reduced_string))]):
+    for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
         if depth==-1: break
         if char=="(": depth+=1
         if char==")": depth-=1
@@ -119,7 +119,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     # update the reduced code
     CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
     ## get purely the args ##
-    new_string,depth,string="",0,string
+    new_string,depth="",0
     for char in string:
         if char=="*" and depth==0: continue
         if char=="(" and depth==0: depth+=1; continue
