@@ -252,7 +252,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         elif char=="(" or char=="{" or char=="[": depth+=1
         elif char==")" or char=="}" or char=="]": depth-=1
         new_string+=char
-    new_string=new_string.replace(",,",",").strip()
+    new_string=new_string.replace(",,",",").replace(" ","")
     if default:
         return new_string
     return {"FUNC":func,"args":new_string}
