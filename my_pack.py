@@ -54,9 +54,9 @@ def nonlocals() -> dict:
     # changes made: condensed the core concept of using a stackframe with getting the keys from the 
     # locals dict since every nonlocal should be local as well
     """
-    frame=currentframe()
-    local=frame.f_back.f_locals
-    names=frame.f_back.f_code.co_freevars
+    frame=currentframe().f_back
+    local=frame.f_locals
+    names=frame.f_code.co_freevars
     return dct_ext(local)[names]
 
 def staticproperty(func: Callable) -> Any:
