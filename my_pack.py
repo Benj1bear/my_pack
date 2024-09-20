@@ -157,7 +157,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
 
     How to use:
     
-    share(globals())
+    share({"globals":globals()})
     
     a,b,c=range(3)
     name(a,b,c) # should return 'a,b,c' by default
