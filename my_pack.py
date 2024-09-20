@@ -291,7 +291,7 @@ def name2(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    names=name(depth=1).split(",")
+    names=name2(depth=1).split(",")
     return dict(zip(names,args))
 
 def refs(*args,scope_used: dict=None) -> list:
