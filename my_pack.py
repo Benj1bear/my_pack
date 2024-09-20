@@ -66,7 +66,7 @@ def staticproperty(func: Callable) -> Any:
 
 class Store:
     """
-    Stores all variables from one file allowing to be used in-module
+    Stores given variables from __main__ allowing to be used in-module
 
     How to use:
 
