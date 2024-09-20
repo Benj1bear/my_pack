@@ -45,6 +45,18 @@ from warnings import simplefilter
 import traceback
 import ast
 
+def nonlocals() -> dict:
+    """
+    Equivalent of nonlocals()
+    
+    # code reference: jsbueno (2023) https://stackoverflow.com/questions/8968407/where-is-nonlocals
+    # changes made: condensed the core concept of using a stackframe and eval to get values into a 
+    # function that returns a dict like locals() or globals() do
+    """
+    names=currentframe().f_back.f_code.co_freevars
+    values=tuple(eval(name) for name in names)
+    return dict(zip(names,values))
+
 def staticproperty(func: Callable) -> Any:
     """
     Allows a function to be called as a variable.
