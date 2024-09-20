@@ -42,7 +42,7 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 from warnings import simplefilter
-#import traceback
+import traceback
 import ast
 
 def nonlocals() -> dict:
@@ -204,6 +204,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     try:
         global CACHE_FOR_NAME
         # get the frame and line of code
+        stack_trace=traceback.extract_stack()[-(2+depth)][-1]
         frame=currentframe()
         for i in range(depth+1):
             frame=frame.f_back
@@ -216,21 +217,30 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
         # cache setup
         if CACHE_FOR_NAME["code"]!=string:
-            dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
-        ## - need to a a control flow statemnt here to deal with in-line use ##
-        
+            dct_ext(CACHE_FOR_NAME)["code","reduced_code","stack_trace"]=*(string,)*2,stack_trace
+        elif CACHE_FOR_NAME["stack_trace"]!=stack_trace:
+            CACHE_FOR_NAME["reduced_code"]=string
         # get the scope and current name used
         current_scope=scope(depth=depth+2)
         current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
         current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
         # get the span of the latest reference in the string
-        span,best,reduced_string,matches=None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
-        for reference in current_refs:
-            for match in re.compile(reference+"\(").finditer(reduced_string):
-                matches+=1
-                if match.start() < best:
-                    span,best=match,match.start()
-        if span==None:
+        def get_span(reduced_string: str) -> re.match:
+            """Finds the current span"""
+            nonlocal current_refs
+            span,best=None,float('inf')
+            for reference in current_refs:
+                for match in re.compile(reference+"\(").finditer(reduced_string):
+                    if match.start() < best:
+                        span,best=match,match.start()
+            return span
+        
+        reduced_string=CACHE_FOR_NAME["reduced_code"]
+        for i in range(2):
+            span=get_span(reduced_string)
+            if span: break
+            reduced_string=CACHE_FOR_NAME["reduced_code"]=string
+        else:
             raise Exception("No matches were found")
         # get the full section
         depth=0
@@ -240,10 +250,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
             if depth==-1: break
         func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index]
         # update the reduced code or reset the cache if no more matches are present
-        if matches==1:
-            CACHE_FOR_NAME={"code":None}
-        else:
-            CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
+        CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
         ## get purely the args ##
         new_string,depth="",0
         for char in string:
