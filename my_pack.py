@@ -210,15 +210,9 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     if raw:
         return source
     # remove all strings since it's a raw string
-    source=extract_code(source).get
-    ast.parse(source) ## check for syntax errors
-    #
-    call="".join(source.splitlines()[frame.f_lineno - 1:])
-    string=""
-    for char in call:
-        string+=char
-        if char==")": break
-    string=string.replace(" ","")
+    call=extract_code(source).get
+    ast.parse(call) ## check for syntax errors
+    string="".join(call.splitlines()[frame.f_lineno - 1:]).replace(" ","")
     # cache setup
     if CACHE_FOR_NAME["code"]!=string:
         dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
@@ -238,12 +232,12 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     if span==None:
         raise Exception("No matches were found")
     # get the full section
+    
     depth=0
     for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
         if depth==-1: break
         elif char=="(": depth+=1
         elif char==")": depth-=1
-    
     func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index-1]
     # update the reduced code or reset the cache if no more matches are present
     if matches==1:
