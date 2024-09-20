@@ -152,15 +152,23 @@ def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
 if isinstance(__builtins__,ModuleType)==False:
     __builtins__=get_builtins("module")
 
-def name_at_frame(depth: int=0) -> str:
-    """gets the function name at frame-depth"""
+def name_at_frame(depth: int=0) -> dict:
+    """gets the function name at frame-depth and the global scope that's within the main program"""
     frame,name=currentframe(),[]
     while frame.f_code.co_name!="<module>":
         name+=[frame.f_code.co_name]
         frame=frame.f_back
-    return ".".join(["__main__"]+name[::-1][:-(depth+1)])
+    return {"name":".".join(["__main__"]+name[::-1][:-(depth+1)]),"scope":frame.f_locals}
 
-##### needs testing #####
+def scope(depth: int=0):
+    """Gets the available variables to the current scope"""
+    frame,dct=currentframe(),name_at_frame(depth=depth-1)
+    if depth:
+        for i in range(depth):
+            frame=frame.f_back
+        dct["scope"].update(frame.f_locals)
+    return dct
+
 CACHE_FOR_NAME={"code":None}
 def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
@@ -209,9 +217,12 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
     elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
         CACHE_FOR_NAME["reduced_code"]=string
+    # get the scope and current name used
+    current_scope=scope(depth=depth+2)
+    current_name,current_scope=current_scope["name"][9:].split(".")[-1],current_scope["scope"]
+    current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
     # get the span of the latest reference in the string
-    temp_name=name_at_frame(depth)[9:]
-    current_refs,span,best,reduced_string,matches=refs(share["globals"][temp_name])[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
+    span,best,reduced_string,matches=None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             matches+=1
@@ -251,10 +262,11 @@ def id_dct(*args) -> dict:
     names=name(depth=1).split(",")
     return dict(zip(names,args))
 
-def refs(*args) -> list:
-    """Returns all variable names that are also assigned to the same memory location"""
-    global share
-    return [[key for key,value in share["globals"].items() if value is arg] for arg in args]
+def refs(*args,scope_used: dict=None) -> list:
+    """Returns all variable names that are also assigned to the same memory location within a desired scope"""
+    if scope_used==None:
+        scope_used=name_at_frame()["scope"]
+    return [[key for key,value in scope_used.items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
     """
