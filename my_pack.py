@@ -217,6 +217,8 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         # cache setup
         if CACHE_FOR_NAME["code"]!=string:
             dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
+        ## - need to a a control flow statemnt here to deal with in-line use ##
+        
         # get the scope and current name used
         current_scope=scope(depth=depth+2)
         current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
