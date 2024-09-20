@@ -181,7 +181,11 @@ def name(*args,depth: int=0,show_codes: bool=False,**kwargs) -> list:
         elif op_code.opname=="PRECALL" or op_code.opname=="BUILD_CONST_KEY_MAP" or op_code.opname=="CALL_FUNCTION_EX":
             break
 
-    return dict(func=call[0],arg_names=call[1:],arg_values=[*args],kwarg_names=list(kwargs[-1]),kwargs_values=kwargs[:-1])
+    return dict(func=call[0],
+                arg_names=[*call[1:]],
+                arg_values=[*args],
+                kwarg_names=kwargs[-1:],
+                kwargs_values=[*kwargs[:-1]])
 
 def name_at_frame(depth: int=0) -> dict:
     """gets the function name at frame-depth and the global scope that's within the main program"""
