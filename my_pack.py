@@ -46,17 +46,16 @@ import traceback
 import ast
 
 ## needs testing ##
-def nonlocals() -> dict:
+def nonlocals(local: dict) -> dict:
     """
     Equivalent of nonlocals()
     
     # code reference: jsbueno (2023) https://stackoverflow.com/questions/8968407/where-is-nonlocals
-    # changes made: condensed the core concept of using a stackframe and eval to get values into a 
-    # function that returns a dict like locals() or globals() do
+    # changes made: condensed the core concept of using a stackframe with getting the keys from the 
+    # locals dict since every nonlocal should be local as well
     """
     names=currentframe().f_back.f_code.co_freevars
-    values=tuple(eval(name) for name in names)
-    return dict(zip(names,values))
+    return dct_ext(local)[names]
 
 def staticproperty(func: Callable) -> Any:
     """
