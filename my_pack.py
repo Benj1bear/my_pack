@@ -64,11 +64,34 @@ def staticproperty(func: Callable) -> Any:
     """
     return func()
 
+class Store(dict):
+    """Allows sharing variables from a main program with this module allowing to be used in-module"""
+    stored={}
+    def __call__(self,*args: tuple[dict]) -> object:
+        self.stored|=biop(args,"|")
+        return self
+
+    def __repr__(self) -> str:
+        return repr(self.stored)
+
+share=Store()
+    
+def map_set(obj: Any,dct: dict,override: bool=True) -> None:
+    """Sets mutliple attributes or keys to an object from a dict"""
+    if override:
+        for key,value in dct.items():
+            setattr(obj,key,value)
+        return
+    for key,value in dct.items():
+        if hasattr(obj,key)==False:
+            setattr(obj,key,value)
+        else:
+            raise Exception(f"object {obj} already has the key '{key}'")
+
 def module_from_dict(module_name: str,dct: dict) -> ModuleType:
     """Creates a module object from a dictionary"""
     module=ModuleType(module_name)
-    for key,value in dct.items():
-        setattr(module,key,value)
+    map_set(module,dct)
     return module
 
 def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
@@ -105,7 +128,7 @@ def name_at_frame(depth: int=0) -> str:
         frame=frame.f_back
     return ".".join(["__main__"]+name[::-1][:-(depth+1)])
 
-##### needs testing ####
+##### needs testing #####
 CACHE_FOR_NAME={"code":None}
 def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
