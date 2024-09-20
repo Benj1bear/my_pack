@@ -208,7 +208,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     # or               'test(a,b,c,**{"a":3})' if raw=True
     # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
     """
-    global CACHE_FOR_NAME,share
+    global CACHE_FOR_NAME
     # get the frame and line of code
     frame=traceback.extract_stack()[-(2+depth)]
     string=frame[-1]
