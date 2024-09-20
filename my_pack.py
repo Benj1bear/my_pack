@@ -210,9 +210,9 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     if raw:
         return source
     # remove all strings since it's a raw string
-    call=extract_code(source).get
-    ast.parse(call) ## check for syntax errors
-    string="".join(call.splitlines()[frame.f_lineno - 1:]).replace(" ","")
+    source=extract_code(source).get
+    ast.parse(source) ## check for syntax errors
+    string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
     # cache setup
     if CACHE_FOR_NAME["code"]!=string:
         dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
