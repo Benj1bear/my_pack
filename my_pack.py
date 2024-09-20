@@ -210,8 +210,16 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     """
     global CACHE_FOR_NAME
     # get the frame and line of code
-    frame=traceback.extract_stack()[-(2+depth)]
-    string=frame[-1]
+    frame=currentframe()
+    for i in range(depth+1):
+        frame=frame.f_back
+    source=getsource(frame)
+    call="".join(source.splitlines()[frame.f_lineno - 1:])
+    string=""
+    for char in call:
+        string+=char
+        if char==")": break
+    string=string.replace(" "*4,"")
     if raw:
         return string
     # remove all strings since it's a raw string
