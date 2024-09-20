@@ -42,7 +42,7 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 from warnings import simplefilter
-import traceback
+#import traceback
 import ast
 
 def nonlocals() -> dict:
@@ -189,14 +189,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     name(a,b,c) # should return 'a,b,c' by default
                 # or            'name(a,b,c)' if raw=True
                 # or             {'FUNC': 'name', 'args': 'a,b,c'} if default=False and raw=False
-    Note: the traceback (in what I know currently) will not capture
-    multiline open bracket expressions but the function should work
-    for most use-cases e.g.
-    # name(
-    # a,b,c
-    # )
-    # will not work because the stack trace will retrieve 'name(' only
-    
+
     def test(*args,**kwargs):
         print(name(depth=1)) # you don't have to pass in any arguements besides the depth
     
