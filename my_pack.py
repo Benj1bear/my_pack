@@ -90,6 +90,13 @@ class Store:
     To use in-module globals use 
     
     share.globals
+
+    Note: Another way of obtaining global variables from
+    main is to use the name_at_frame function which will
+    enable you to visit the module level frame where the
+    global scope in the main program will be. Therefore,
+    you should be able to also use name_at_frame()["scope"]
+    to view global variables from the main program
     """
     stored,globals={},globals()
     def __call__(self,*args: tuple[dict]) -> object:
