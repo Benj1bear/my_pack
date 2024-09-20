@@ -156,6 +156,9 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     deep the args go relative to the first stack of interest
 
     How to use:
+    
+    share(globals())
+    
     a,b,c=range(3)
     name(a,b,c) # should return 'a,b,c' by default
                 # or            'name(a,b,c)' if raw=True
@@ -179,7 +182,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     # or               'test(a,b,c,**{"a":3})' if raw=True
     # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
     """
-    global CACHE_FOR_NAME
+    global CACHE_FOR_NAME,share
     # get the frame and line of code
     frame=traceback.extract_stack()[-(2+depth)]
     string=frame[-1]
@@ -195,7 +198,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         CACHE_FOR_NAME["reduced_code"]=string
     # get the span of the latest reference in the string
     temp_name=name_at_frame(depth)[9:]
-    current_refs,span,best,reduced_string,matches=refs(getattr(sys.modules["__main__"],temp_name))[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
+    current_refs,span,best,reduced_string,matches=refs(share["globals"][temp_name])[0],None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
     for reference in current_refs:
         for match in re.compile(reference+"\(").finditer(reduced_string):
             matches+=1
@@ -237,7 +240,8 @@ def id_dct(*args) -> dict:
 
 def refs(*args) -> list:
     """Returns all variable names that are also assigned to the same memory location"""
-    return [[key for key,value in globals().items() if value is arg] for arg in args]
+    global share
+    return [[key for key,value in share["globals"].items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
     """
