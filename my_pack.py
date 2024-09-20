@@ -64,8 +64,19 @@ def staticproperty(func: Callable) -> Any:
     """
     return func()
 
-class Store(dict):
-    """Allows sharing variables from a main program with this module allowing to be used in-module"""
+class Store:
+    """
+    Stores all variables from one file allowing to be used in-module
+
+    How to use:
+
+    from my_pack import share
+
+    share({"globals":globals()})
+    # you can now use globals from main in the module
+    # if wanting the other way around then just write a
+    # function that returns globals() in the module
+    """
     stored={}
     def __call__(self,*args: tuple[dict]) -> object:
         self.stored|=biop(args,"|")
@@ -73,6 +84,13 @@ class Store(dict):
 
     def __repr__(self) -> str:
         return repr(self.stored)
+    
+    def __getitem__(self,index: slice|int) -> dict:
+        return self.stored[index]
+    
+    def __setitem__(self,index: slice|int,value: Any) -> object:
+        self.stored[index]=value
+        return self
 
 share=Store()
     
