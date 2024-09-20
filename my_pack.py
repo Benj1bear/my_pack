@@ -91,6 +91,14 @@ class Store:
     def __setitem__(self,index: slice|int,value: Any) -> object:
         self.stored[index]=value
         return self
+    @property
+    def globals(self) -> dict:
+        """
+        Returns in-module globals (not in program globals)
+        use i.e. share["globals"] to access in program globals
+        in-module (assuming you named the key 'globals')
+        """
+        return globals()
 
 share=Store()
     
