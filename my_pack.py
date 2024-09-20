@@ -219,7 +219,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     for char in call:
         string+=char
         if char==")": break
-    string=string.replace(" "*4,"")
+    string=string.replace(" ","")
     if raw:
         return string
     # remove all strings since it's a raw string
