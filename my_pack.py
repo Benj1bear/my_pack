@@ -210,8 +210,8 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     depth=0
     for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
         if depth==-1: break
-        if char=="(": depth+=1
-        if char==")": depth-=1
+        elif char=="(": depth+=1
+        elif char==")": depth-=1
     
     func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index-1]
     # update the reduced code or reset the cache if no more matches are present
