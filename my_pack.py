@@ -51,7 +51,7 @@ def staticproperty(func: Callable) -> Any:
     Note: staticproperties are generally not advised because
     you cannot pass in arguements to the function or access 
     it's attributes which makes the use cases limited to the 
-    use of global variables generally.
+    use of global or nonlocal variables generally.
     
     How to use:
     
