@@ -201,61 +201,63 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     # or               'test(a,b,c,**{"a":3})' if raw=True
     # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
     """
-    global CACHE_FOR_NAME
-    # get the frame and line of code
-    frame=currentframe()
-    for i in range(depth+1):
-        frame=frame.f_back
-    source=getsource(frame)
-    if raw:
-        return source
-    # remove all strings since it's a raw string
-    source=extract_code(source).get
-    ast.parse(source) ## check for syntax errors
-    string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
-    # cache setup
-    if CACHE_FOR_NAME["code"]!=string:
-        dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
-    elif CACHE_FOR_NAME["frame"]!=frame: # if they are not on the same frame then the reduced code is not for that frame
-        CACHE_FOR_NAME["reduced_code"]=string
-    # get the scope and current name used
-    current_scope=scope(depth=depth+2)
-    current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
-    current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
-    # get the span of the latest reference in the string
-    span,best,reduced_string,matches=None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
-    for reference in current_refs:
-        for match in re.compile(reference+"\(").finditer(reduced_string):
-            matches+=1
-            if match.start() < best:
-                span,best=match,match.start()
-    if span==None:
-        raise Exception("No matches were found")
-    # get the full section
-    depth=0
-    for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
-        if char=="(": depth+=1
-        elif char==")": depth-=1
-        if depth==-1: break
-    func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index]
-    # update the reduced code or reset the cache if no more matches are present
-    if matches==1:
+    try:
+        global CACHE_FOR_NAME
+        # get the frame and line of code
+        frame=currentframe()
+        for i in range(depth+1):
+            frame=frame.f_back
+        source=getsource(frame)
+        if raw:
+            return source
+        # remove all strings since it's a raw string
+        source=extract_code(source).get
+        ast.parse(source) ## check for syntax errors
+        string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
+        # cache setup
+        if CACHE_FOR_NAME["code"]!=string:
+            dct_ext(CACHE_FOR_NAME)["code","reduced_code","frame"]=*(string,)*2,frame
+        # get the scope and current name used
+        current_scope=scope(depth=depth+2)
+        current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
+        current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
+        # get the span of the latest reference in the string
+        span,best,reduced_string,matches=None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
+        for reference in current_refs:
+            for match in re.compile(reference+"\(").finditer(reduced_string):
+                matches+=1
+                if match.start() < best:
+                    span,best=match,match.start()
+        if span==None:
+            raise Exception("No matches were found")
+        # get the full section
+        depth=0
+        for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
+            if char=="(": depth+=1
+            elif char==")": depth-=1
+            if depth==-1: break
+        func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index]
+        # update the reduced code or reset the cache if no more matches are present
+        if matches==1:
+            CACHE_FOR_NAME={"code":None}
+        else:
+            CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
+        ## get purely the args ##
+        new_string,depth="",0
+        for char in string:
+            if char=="*" and depth==0: continue
+            if char=="(" and depth==0: depth+=1; continue
+            if char==")" and depth==1: depth-=1; continue
+            elif char=="(" or char=="{" or char=="[": depth+=1
+            elif char==")" or char=="}" or char=="]": depth-=1
+            new_string+=char
+        new_string=new_string.replace(",,",",").replace(" ","")
+        if default:
+            return new_string
+        return {"FUNC":func,"args":new_string}
+    except Exception as e:
         CACHE_FOR_NAME={"code":None}
-    else:
-        CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
-    ## get purely the args ##
-    new_string,depth="",0
-    for char in string:
-        if char=="*" and depth==0: continue
-        if char=="(" and depth==0: depth+=1; continue
-        if char==")" and depth==1: depth-=1; continue
-        elif char=="(" or char=="{" or char=="[": depth+=1
-        elif char==")" or char=="}" or char=="]": depth-=1
-        new_string+=char
-    new_string=new_string.replace(",,",",").replace(" ","")
-    if default:
-        return new_string
-    return {"FUNC":func,"args":new_string}
+        raise e
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
