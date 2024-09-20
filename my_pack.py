@@ -44,6 +44,7 @@ import IPython
 from warnings import simplefilter
 #import traceback
 import ast
+import dis
 
 def nonlocals() -> dict:
     """
@@ -159,6 +160,29 @@ def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
 if isinstance(__builtins__,ModuleType)==False:
     __builtins__=get_builtins("module")
 
+def name(*args,depth: int=0,show_codes: bool=False,**kwargs) -> list:
+    """Potential alternative to name that also integrates with the command line"""
+    # get the frame
+    frame=currentframe()
+    for i in range(depth+1):
+        frame=frame.f_back
+    # get the function and args from the opcodes
+    op_codes=dis.get_instructions(frame.f_code)
+    call,kwargs,build_kwargs=[],[],False
+    for op_code in op_codes:
+        if show_codes:
+            print(op_code)
+        if op_code.opname=="LOAD_NAME":
+            call+=[op_code.argval]
+        elif op_code.opname=="BUILD_MAP":
+            build_kwargs=True
+        elif op_code.opname=="LOAD_CONST" and build_kwargs:
+            kwargs+=[op_code.argval]
+        elif op_code.opname=="PRECALL" or op_code.opname=="BUILD_CONST_KEY_MAP" or op_code.opname=="CALL_FUNCTION_EX":
+            break
+
+    return dict(func=call[0],arg_names=call[1:],arg_values=[*args],kwarg_names=list(kwargs[-1]),kwargs_values=kwargs[:-1])
+
 def name_at_frame(depth: int=0) -> dict:
     """gets the function name at frame-depth and the global scope that's within the main program"""
     frame,name=currentframe(),[]
@@ -177,7 +201,7 @@ def scope(depth: int=0):
     return dct
 
 CACHE_FOR_NAME={"code":None}
-def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
+def name2(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
     """
     Extracts the args names passed into a function. 
     Note: the depth parameter should be how many functions/stacks 
@@ -187,7 +211,6 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     
     a,b,c=range(3)
     name(a,b,c) # should return 'a,b,c' by default
-                # or            'name(a,b,c)' if raw=True
                 # or             {'FUNC': 'name', 'args': 'a,b,c'} if default=False and raw=False
 
     def test(*args,**kwargs):
@@ -198,8 +221,8 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     #                                      # You shouldn't really be using this function to 
     #                                      # figure out the kwargs keys since you can just 
     #                                      # use kwargs.keys() in the desired function used
-    # or               'test(a,b,c,**{"a":3})' if raw=True
     # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
+    # setting raw=True will return the source code i.e. of a cell
     """
     try:
         global CACHE_FOR_NAME
@@ -233,6 +256,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
             return span
         
         reduced_string=CACHE_FOR_NAME["reduced_code"]
+        # loop twice in case executing the same or another identical line of code
         for i in range(2):
             span=get_span(reduced_string)
             if span: break
