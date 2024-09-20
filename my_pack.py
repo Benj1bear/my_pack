@@ -178,8 +178,6 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
 
     How to use:
     
-    share({"globals":globals()})
-    
     a,b,c=range(3)
     name(a,b,c) # should return 'a,b,c' by default
                 # or            'name(a,b,c)' if raw=True
@@ -219,7 +217,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         CACHE_FOR_NAME["reduced_code"]=string
     # get the scope and current name used
     current_scope=scope(depth=depth+2)
-    current_name,current_scope=current_scope["name"][9:].split(".")[-1],current_scope["scope"]
+    current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
     current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
     # get the span of the latest reference in the string
     span,best,reduced_string,matches=None,float('inf'),CACHE_FOR_NAME["reduced_code"],0
