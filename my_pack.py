@@ -42,7 +42,7 @@ from operator import itemgetter
 from itertools import combinations
 import IPython
 from warnings import simplefilter
-import traceback
+#import traceback
 import ast
 
 def nonlocals() -> dict:
@@ -204,7 +204,6 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
     try:
         global CACHE_FOR_NAME
         # get the frame and line of code
-        stack_trace=traceback.extract_stack()[-(2+depth)][-1]
         frame=currentframe()
         for i in range(depth+1):
             frame=frame.f_back
@@ -217,9 +216,7 @@ def name(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|
         string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
         # cache setup
         if CACHE_FOR_NAME["code"]!=string:
-            dct_ext(CACHE_FOR_NAME)["code","reduced_code","stack_trace"]=*(string,)*2,stack_trace
-        elif CACHE_FOR_NAME["stack_trace"]!=stack_trace:
-            CACHE_FOR_NAME["reduced_code"]=string
+            dct_ext(CACHE_FOR_NAME)["code","reduced_code"]=(string,)*2
         # get the scope and current name used
         current_scope=scope(depth=depth+2)
         current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
