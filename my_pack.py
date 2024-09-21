@@ -177,18 +177,15 @@ def name(*args,depth: int=0,show_codes: bool=False,**kwargs) -> list:
         frame=frame.f_back
     # get the function and args from the opcodes
     op_codes=dis.get_instructions(frame.f_code)
-    call,kwargs,build_kwargs=[],[],False
+    call=[]
     for op_code in op_codes:
-        if show_codes:
-            print(op_code)
-        if op_code.opname=="LOAD_NAME":
-            call+=[op_code.argval]
-        elif op_code.opname=="BUILD_MAP":
-            build_kwargs=True
-        elif op_code.opname=="LOAD_CONST":
-            kwargs+=[op_code.argval]
-        elif (op_code.opname=="PRECALL" or op_code.opname=="CALL" or op_code.opname=="BUILD_CONST_KEY_MAP" or 
-             op_code.opname=="BUILD_MAP" or op_code.opname=="CALL_FUNCTION_EX"): break
+        if show_codes: print(op_code)
+        if op_code.opname=="LOAD_NAME": call+=[op_code.argval]
+        elif (op_code.opname=="PRECALL" or 
+              op_code.opname=="CALL" or 
+              op_code.opname=="BUILD_CONST_KEY_MAP" or 
+              op_code.opname=="BUILD_MAP" or 
+              op_code.opname=="CALL_FUNCTION_EX"): break
 
     return dict(func=call[0],arg_names=[*call[1:]],arg_values=[*args])
 
