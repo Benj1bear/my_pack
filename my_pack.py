@@ -183,6 +183,14 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     test(a,c,{"a":{"a":3},"b":3}) # should print {'func':'test','args':['a','c']}
     test(a,c,{"a":"\n","b":3}) # should print {'func':'test','args':['a','c']}
     test(a,b,c) # should print {'func':'test','args':['a','b','c']}
+
+    def test1(*args1):
+        def test2(*args2):
+            print(name(depth=1))
+            return name(depth=2)
+        return test2(*args1)
+    test1(a,b,c) # should print {'func': 'test2', 'args': ['args1']}
+                 # and return   {'func': 'test1', 'args': ['a', 'b', 'c']}
     """
     # get the frame and the start/end position in the stack
     frame=stack()[depth+1]
