@@ -39,7 +39,7 @@ from tkinter import Tk
 import secrets
 import string
 from operator import itemgetter
-from itertools import combinations
+from itertools import combinations,chain as iter_chain # since I have a class called 'chain'
 import IPython
 from warnings import simplefilter
 #import traceback
@@ -202,7 +202,9 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
         for i in dis.get_instructions(frame.f_code): print(i)
         print("\n\n")
         raise ValueError("PUSH_NULL_position was not found in the stack")
-
+    
+    if op_code.opname!="PUSH_NULL": # in case PUSH_NULL is not present i.e. when used inside functions
+        op_codes=iter_chain((op_code,),op_codes)
     # get the function and args loaded
     call=[]
     for op_code in op_codes:
