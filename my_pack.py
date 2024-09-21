@@ -201,6 +201,7 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     for op_code in op_codes:
         if show_codes: print(op_code)
         if (op_code.opname=="LOAD_NAME" or 
+            op_code.opname=="LOAD_FAST" or 
             op_code.opname=="LOAD_GLOBAL"): call+=[op_code.argval]
         elif (op_code.opname=="PRECALL" or 
               op_code.opname=="CALL" or 
