@@ -163,7 +163,14 @@ if isinstance(__builtins__,ModuleType)==False:
     __builtins__=get_builtins("module")
 
 def name(*args,depth: int=0,show_codes: bool=False,**kwargs) -> list:
-    """Potential alternative to name that also integrates with the command line"""
+    """
+    names the arguements passed into it. Note: doesn't do the kwargs.
+    
+    This function is only meant to name args passed in relative from the stack 
+    frame depth as desired. Kwargs can be evaluated via kwargs.keys() assignment
+    kwargs should be easily traceable within a function else pass them as kwargs
+    if necessary.
+    """
     # get the frame
     frame=currentframe()
     for i in range(depth+1):
@@ -178,16 +185,12 @@ def name(*args,depth: int=0,show_codes: bool=False,**kwargs) -> list:
             call+=[op_code.argval]
         elif op_code.opname=="BUILD_MAP":
             build_kwargs=True
-        elif op_code.opname=="LOAD_CONST" and build_kwargs:
+        elif op_code.opname=="LOAD_CONST":
             kwargs+=[op_code.argval]
-        elif op_code.opname=="PRECALL" or op_code.opname=="BUILD_CONST_KEY_MAP" or op_code.opname=="CALL_FUNCTION_EX":
-            break
+        elif (op_code.opname=="PRECALL" or op_code.opname=="CALL" or op_code.opname=="BUILD_CONST_KEY_MAP" or 
+             op_code.opname=="BUILD_MAP" or op_code.opname=="CALL_FUNCTION_EX"): break
 
-    return dict(func=call[0],
-                arg_names=[*call[1:]],
-                arg_values=[*args],
-                kwarg_names=kwargs[-1:],
-                kwargs_values=[*kwargs[:-1]])
+    return dict(func=call[0],arg_names=[*call[1:]],arg_values=[*args])
 
 def name_at_frame(depth: int=0) -> dict:
     """gets the function name at frame-depth and the global scope that's within the main program"""
@@ -206,98 +209,9 @@ def scope(depth: int=0):
         dct["scope"].update(frame.f_locals)
     return dct
 
-CACHE_FOR_NAME={"code":None}
-def name2(*args,depth: int=0,default: bool=True,raw: bool=False,**kwargs) -> str|dict:
-    """
-    Extracts the args names passed into a function. 
-    Note: the depth parameter should be how many functions/stacks 
-    deep the args go relative to the first stack of interest
-
-    How to use:
-    
-    a,b,c=range(3)
-    name(a,b,c) # should return 'a,b,c' by default
-                # or             {'FUNC': 'name', 'args': 'a,b,c'} if default=False and raw=False
-
-    def test(*args,**kwargs):
-        print(name(depth=1)) # you don't have to pass in any arguements besides the depth
-    
-    test(a,b,c,**{"a":3})
-    # should return    'a,b,c,{ str :3}' # all strings get removed and replaced by 'str'. 
-    #                                      # You shouldn't really be using this function to 
-    #                                      # figure out the kwargs keys since you can just 
-    #                                      # use kwargs.keys() in the desired function used
-    # else will return {'FUNC': 'test', 'args': 'a,b,c,{ str :3}'} if default=False and raw=False
-    # setting raw=True will return the source code i.e. of a cell
-    """
-    try:
-        global CACHE_FOR_NAME
-        # get the frame and line of code
-        frame=currentframe()
-        for i in range(depth+1):
-            frame=frame.f_back
-        source=getsource(frame)
-        if raw:
-            return source
-        # remove all strings since it's a raw string
-        source=extract_code(source).get
-        ast.parse(source) ## check for syntax errors
-        string="".join(source.splitlines()[frame.f_lineno - 1:]).replace(" ","")
-        # cache setup
-        if CACHE_FOR_NAME["code"]!=string:
-            dct_ext(CACHE_FOR_NAME)["code","reduced_code"]=(string,)*2
-        # get the scope and current name used
-        current_scope=scope(depth=depth+2)
-        current_name,current_scope=current_scope["name"].split(".")[-1],current_scope["scope"]
-        current_refs=refs(current_scope[current_name],scope_used=current_scope)[0]
-        # get the span of the latest reference in the string
-        def get_span(reduced_string: str) -> re.match:
-            """Finds the current span"""
-            nonlocal current_refs
-            span,best=None,float('inf')
-            for reference in current_refs:
-                for match in re.compile(reference+"\(").finditer(reduced_string):
-                    if match.start() < best:
-                        span,best=match,match.start()
-            return span
-        
-        reduced_string=CACHE_FOR_NAME["reduced_code"]
-        # loop twice in case executing the same or another identical line of code
-        for i in range(2):
-            span=get_span(reduced_string)
-            if span: break
-            reduced_string=CACHE_FOR_NAME["reduced_code"]=string
-        else:
-            raise Exception("No matches were found")
-        # get the full section
-        depth=0
-        for index,char in enumerate(reduced_string[span.end():len(reduced_string)]):
-            if char=="(": depth+=1
-            elif char==")": depth-=1
-            if depth==-1: break
-        func,string=reduced_string[span.start():span.end()-1],reduced_string[span.end():span.end()+index]
-        # update the reduced code or reset the cache if no more matches are present
-        CACHE_FOR_NAME["reduced_code"]=reduced_string[span.end()+index:]
-        ## get purely the args ##
-        new_string,depth="",0
-        for char in string:
-            if char=="*" and depth==0: continue
-            if char=="(" and depth==0: depth+=1; continue
-            if char==")" and depth==1: depth-=1; continue
-            elif char=="(" or char=="{" or char=="[": depth+=1
-            elif char==")" or char=="}" or char=="]": depth-=1
-            new_string+=char
-        new_string=new_string.replace(",,",",").replace(" ","")
-        if default:
-            return new_string
-        return {"FUNC":func,"args":new_string}
-    except Exception as e:
-        CACHE_FOR_NAME={"code":None}
-        raise e
-
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
-    names=name2(depth=1).split(",")
+    names=name(depth=1)["arg_names"]
     return dict(zip(names,args))
 
 def refs(*args,scope_used: dict=None) -> list:
