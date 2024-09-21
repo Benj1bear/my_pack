@@ -28,7 +28,7 @@ from importlib.util import module_from_spec,spec_from_loader
 import re
 import glob
 import shutil
-from inspect import getfile,getsource,signature,_empty,currentframe
+from inspect import getfile,getsource,signature,_empty,currentframe,stack
 import sys
 from functools import partial,wraps,reduce
 from keyword import iskeyword
@@ -171,46 +171,48 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     kwargs should be easily traceable within a function else pass them as kwargs
     if necessary.
 
-    Also, i.e. if using as follows expecting to print the dictionary
-    
-    a,b,c=range(3)
-    print(name(a,b,c))
-
-    then you will need to first assign then print e.g.
-    temp=name(a,b,c)
-    print(temp)
-
     How to use:
 
     a,b,c=range(3)
     name(a,b,c)["args"] # should return ['a','b','c']
 
-    ## needs fixing ## - seems to be the same frame or something
+    print(name(a,b,c)) # should return {'func': 'name', 'args': ['a', 'b', 'c']}
+
     def test(*args,**kwargs):
         print(name(depth=1))
     test(a,c,{"a":{"a":3},"b":3}) # should print {'func':'test','args':['a','c']}
     test(a,c,{"a":"\n","b":3}) # should print {'func':'test','args':['a','c']}
     test(a,b,c) # should print {'func':'test','args':['a','b','c']}
     """
-    # get the frame
-    frame=currentframe()
-    for i in range(depth+1):
-        frame=frame.f_back
-    # get the function and args from the opcodes
+    # get the frame and the start/end position in the stack
+    frame=stack()[depth+1]
+    CALL_position=tuple(frame.positions._asdict().values()) # position of the CALL opcode.opname # the end of the function
+    string=frame.code_context[0][CALL_position[2]:] # the original line of code reduced by its offset
+    PUSH_NULL_position=*(CALL_position[0],)*2,CALL_position[2],CALL_position[2]+len(slice_occ(string,"(")[0]) # the start of the function
+    # get the op_codes
+    frame=frame[0]
     op_codes=dis.get_instructions(frame.f_code)
+    # skip to the starting position in the stack
+    for op_code in op_codes:
+        if tuple(op_code.positions._asdict().values())==PUSH_NULL_position:
+            break
+    else:
+        print("\n\n")
+        print("PREDICTED: ",PUSH_NULL_position)
+        for i in dis.get_instructions(frame.f_code): print(i)
+        print("\n\n")
+        raise ValueError("PUSH_NULL_position was not found in the stack")
+
+    # get the function and args loaded
     call=[]
     for op_code in op_codes:
         if show_codes: print(op_code)
         if (op_code.opname=="LOAD_NAME" or 
             op_code.opname=="LOAD_FAST" or 
             op_code.opname=="LOAD_GLOBAL"): call+=[op_code.argval]
-        elif (op_code.opname=="PRECALL" or 
-              op_code.opname=="CALL" or 
-              op_code.opname=="BUILD_CONST_KEY_MAP" or 
-              op_code.opname=="BUILD_MAP" or 
-              op_code.opname=="CALL_FUNCTION_EX"): break
-
-    return dict(func=call[0],args=[*call[1:]])
+        elif op_code.opname=="CALL": break
+    
+    return {"func":call[0],"args":call[1:]}
 
 def name_at_frame(depth: int=0) -> dict:
     """gets the function name at frame-depth and the global scope that's within the main program"""
