@@ -57,7 +57,9 @@ def nonlocals() -> dict:
     frame=currentframe().f_back
     local=frame.f_locals
     names=frame.f_code.co_freevars
-    return dct_ext(local)[names]
+    if len(names):
+        return dct_ext(local)[names]
+    return {}
 
 def staticproperty(func: Callable) -> Any:
     """
