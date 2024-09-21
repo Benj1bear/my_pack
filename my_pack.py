@@ -185,6 +185,7 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     a,b,c=range(3)
     name(a,b,c)["args"] # should return ['a','b','c']
 
+    ## needs fixing ## - seems to be the same frame or something
     def test(*args,**kwargs):
         print(name(depth=1))
     test(a,c,{"a":{"a":3},"b":3}) # should print {'func':'test','args':['a','c']}
