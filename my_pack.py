@@ -162,7 +162,7 @@ def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
 if isinstance(__builtins__,ModuleType)==False:
     __builtins__=get_builtins("module")
 
-def name(*args,depth: int=0,show_codes: bool=False) -> list:
+def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     """
     names the arguements passed into it. Note: doesn't do the kwargs.
     
