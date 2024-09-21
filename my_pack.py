@@ -179,6 +179,17 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     then you will need to first assign then print e.g.
     temp=name(a,b,c)
     print(temp)
+
+    How to use:
+
+    a,b,c=range(3)
+    name(a,b,c)["args"] # should return ['a','b','c']
+
+    def test(*args,**kwargs):
+        print(name(depth=1))
+    test(a,c,{"a":{"a":3},"b":3}) # should print {'func':'test','args':['a','c']}
+    test(a,c,{"a":"\n","b":3}) # should print {'func':'test','args':['a','c']}
+    test(a,b,c) # should print {'func':'test','args':['a','b','c']}
     """
     # get the frame
     frame=currentframe()
