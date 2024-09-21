@@ -170,6 +170,15 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     frame depth as desired. Kwargs can be evaluated via kwargs.keys() assignment
     kwargs should be easily traceable within a function else pass them as kwargs
     if necessary.
+
+    Also, i.e. if using as follows expecting to print the dictionary
+    
+    a,b,c=range(3)
+    print(name(a,b,c))
+
+    then you will need to first assign then print e.g.
+    temp=name(a,b,c)
+    print(temp)
     """
     # get the frame
     frame=currentframe()
