@@ -52,7 +52,7 @@ def reload(module: str) -> None:
     # reload, and get imports reloaded if there was any
     importlib.reload(__import__(module))
     # globals() has to be a tuple else it's a pointer to globals which can change during iteration
-    imports=set([i.__name__ for i in tuple(globals().values()) if hasattr(i,"__module__") if i.__module__==module])
+    imports=set(i.__name__ for i in tuple(globals().values()) if hasattr(i,"__module__") if i.__module__==module)
     if imports:
         imports=",".join(imports)
         exec("from "+module+" import "+imports,globals())
