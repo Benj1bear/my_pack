@@ -50,7 +50,11 @@ def nonlocals() -> dict:
     """
     Equivalent of nonlocals()
 
-    Note: only globals allows getting, setting, and deleting values; locals and nonlocals only allows getting values (unless the value is not defined in the scope in which case you can edit the value)
+    Note: only globals allows getting, setting, and deleting values; 
+    locals and nonlocals only allows getting values (unless the value 
+    is not defined in the scope in which case you can edit the value
+    e.g. for locals, nonlocals I might add a feature which allows this
+    though it shouldn't really be necessary to add or remove nonlocals)
     
     # code reference: jsbueno (2023) https://stackoverflow.com/questions/8968407/where-is-nonlocals
     # changes made: condensed the core concept of using a stackframe with getting the keys from the 
