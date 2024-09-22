@@ -47,6 +47,24 @@ import ast
 import dis
 import importlib
 
+def load(modules: dict,instantiate: list=[]) -> None:
+    """
+    Allows dynamic importing of many libraries with or without 'as' usage and instantiation
+    Use 'instantiate' to instantiate any classes with the call passed i.e.
+    
+    load({"a":"hi as k,hello,A as b"},["b(3,6)"]) # wil instantiate b=b(3,6)
+    # by default you don't need to pass a call if no args/kwargs ar to be passed i.e.
+    load({"a":"hi as k,hello,A as b"},["b"]) # wil instantiate b=b()
+    """
+    for module,attrs in modules.items(): exec("from "+module+" import "+attrs if attrs else "import "+module,globals())
+    if type(instantiate)!=list:
+        raise TypeError("'instantiate' must be of type 'list'")
+    for attr in instantiate:
+        new_attr,call=slice_occ(attr,"("),"()"
+        if type(new_attr)!=str:
+            attr,call=new_attr
+        exec(attr+"="+attr+call,globals())
+
 def reload(module: str) -> None:
     """For reloading imports i.e. if you make changes to your library code"""
     # reload, and get imports reloaded if there was any
