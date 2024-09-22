@@ -45,6 +45,20 @@ from warnings import simplefilter
 #import traceback
 import ast
 import dis
+import importlib
+
+def reload(module: str) -> None:
+    """For reloading imports i.e. if you make changes to your library code"""
+    # reload, and get imports reloaded if there was any
+    importlib.reload(__import__(module))
+    # globals() has to be a tuple else it's a pointer to globals which can change during iteration
+    imports=set([i.__name__ for i in tuple(globals().values()) if hasattr(i,"__module__") if i.__module__==module])
+    if imports:
+        imports=",".join(imports)
+        exec("from "+module+" import "+imports,globals())
+        return print(imports+" from "+module,"reloaded")
+    exec("import "+module,globals())
+    print(module,"reloaded")
 
 def nonlocals() -> dict:
     """
