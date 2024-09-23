@@ -41,11 +41,91 @@ import string
 from operator import itemgetter
 from itertools import combinations,chain as iter_chain # since I have a class called 'chain'
 import IPython
-from warnings import simplefilter
+from warnings import simplefilter,warn
 #import traceback
 import ast
 import dis
 import importlib
+import psutil
+
+## will implement later ##
+def multi_process(number_of_threads: int,interval_length: int,FUNC: Callable,part: bool=False) -> Any:
+    """
+    multi processor for python code via strings and subprocesses
+    where the results of each subprocess is saved as a pickle (.pkl)
+    file then the results are retrieved and combined by the main program as
+    a singular result.
+    """
+    pass ## the code will be near identical to multi_thread just for processes instead of threads ##
+
+def Process(code: str,save: str="") -> subprocess.Popen:
+    """
+    Runs python code from a string on a separate process
+    
+    Note: indentation is two spaces for the code in your string
+    else use multi-line strings for ease of use
+    
+    How to use:
+    # create code
+    code='''
+    import time
+    while True:
+        print('a')
+        time.sleep(3)
+        print('b')
+        break
+    '''
+    # run in a new process
+    process = Process(code)
+    
+    Things you can do with it
+    ## you can then check on it
+    process.info
+    
+    ## you can wait for it
+    while process.poll()==None: pass ## .poll returns the status of whether it's currently running or not
+    
+    ## show the stdout and stderr as a tuple
+    print(process.communicate())
+    
+    Will add more code later that will pickle the results of processes
+    to files that can be retrieved and then combined as one result
+    
+    After that, multiprocessing should be easily possible so long as code
+    that the processes will be using can be retrieved and that the data
+    structures wanting to be saved can be pickled.
+    """
+    # if running a function, then get it's source code otherwise import it,
+    #  or ask for the code to be written as a string directly
+    if save: ## needs implementation
+        code+=f"""
+import pickle
+
+def to_pickle(obj):
+    with open({save}+'.pkl','wb') as file:
+        pickle.dump(obj, file)
+to_pickle() # will fix later
+"""
+    ## sys.executable is the directory of python.exe; '-c' allows running your code; subprocess.PIPE is used to communicate between processes over a pipe
+    return subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+@property
+def process_info(process: subprocess.Popen) -> None:
+    """Shows common info regarding a subprocess"""
+    pid=process.pid
+    print("Process id:",pid)
+    try:
+        process=psutil.Process(pid)
+        print("Status:", process.status(),
+              "\nCPU usage:", process.cpu_percent(),
+              "\nMemory usage:", process.memory_info(), # might format this better
+              "\nCreated:",process.create_time())
+    except psutil.NoSuchProcess:
+        print("Process terminated")
+
+if hasattr(subprocess.Popen,"info")==False:
+    subprocess.Popen.info=process_info
+else:
+    warn("An attempt to monkey patch 'info' to subprocess.Popen failed")
 
 def load(modules: dict,instantiate: list=[]) -> None:
     """
