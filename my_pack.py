@@ -48,15 +48,20 @@ import dis
 import importlib
 import psutil
 
-## will implement later ##
-def multi_process(number_of_threads: int,interval_length: int,FUNC: Callable,part: bool=False) -> Any:
+## needs testing ##
+def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) -> Any:
     """
     multi processor for python code via strings and subprocesses
     where the results of each subprocess is saved as a pickle (.pkl)
     file then the results are retrieved and combined by the main program as
     a singular result.
+
+    This multiprocessor works by partitioning the interval of a for loop for 
+    each process to work on separately
     """
-    pass ## the code will be near identical to multi_thread just for processes instead of threads ##
+    ## FUNC should be a function returning a string that calls the function 
+    ## or sets a function that can be retrieved in source code
+    return [Process(FUNC(interval[part[0]:part[1]])) for part in partition(number_of_processes,interval_length)]
 
 def Process(code: str,save: str="") -> subprocess.Popen:
     """
