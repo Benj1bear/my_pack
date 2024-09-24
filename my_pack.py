@@ -368,7 +368,7 @@ def id_dct(*args) -> dict:
 def refs(*args,scope_used: dict=None) -> list:
     """Returns all variable names that are also assigned to the same memory location within a desired scope"""
     if scope_used==None:
-        scope_used=scope()["scope"]
+        scope_used=scope(1)["scope"] # depth set to '1' to get passed the the refs stack frame
     return [[key for key,value in scope_used.items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
