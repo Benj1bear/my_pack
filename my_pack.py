@@ -221,7 +221,7 @@ class Store:
     main is to use the name_at_frame function which will
     enable you to visit the module level frame where the
     global scope in the main program will be. Therefore,
-    you should be able to also use name_at_frame()["scope"]
+    you should be able to also use scope()["scope"]
     to view global variables from the main program
     """
     stored,globals={},globals()
@@ -347,22 +347,18 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     
     return {"func":call[0],"args":call[1:]}
 
-def name_at_frame(depth: int=0) -> dict:
-    """gets the function name at frame-depth and the global scope that's within the main program"""
-    frame,name=currentframe(),[]
+def scope(depth: int=0) -> dict:
+    """gets the function name at frame-depth and the current scope that's within the main program"""
+    frame,name,local_scope=currentframe(),[],{}
     while frame.f_code.co_name!="<module>":
         name+=[frame.f_code.co_name]
         frame=frame.f_back
-    return {"name":".".join(["__main__"]+name[::-1][:-(depth+1)]),"scope":frame.f_locals}
-
-def scope(depth: int=0):
-    """Gets the available variables to the current scope"""
-    frame,dct=currentframe(),name_at_frame(depth=depth-1)
-    if depth:
-        for i in range(depth):
-            frame=frame.f_back
-        dct["scope"].update(frame.f_locals)
-    return dct
+        if len(name)==depth+1:
+            local_scope=frame.f_locals
+    # update the global scope
+    current_scope=frame.f_locals
+    current_scope.update(local_scope)
+    return {"name":".".join(["__main__"]+name[::-1][:-(depth+1)]),"scope":current_scope}
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
@@ -372,7 +368,7 @@ def id_dct(*args) -> dict:
 def refs(*args,scope_used: dict=None) -> list:
     """Returns all variable names that are also assigned to the same memory location within a desired scope"""
     if scope_used==None:
-        scope_used=name_at_frame()["scope"]
+        scope_used=scope()["scope"]
     return [[key for key,value in scope_used.items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
@@ -659,7 +655,7 @@ class chain:
             if hasattr(__builtins__,attr) and cls.__use_builtin:
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
-                setattr(cls,attr,globals()[attr])
+                setattr(cls,attr,scope()["scope"][attr])
             cls.__cache+=[attr]
     @classmethod
     def __static_setter(cls,attr: str) -> None:
