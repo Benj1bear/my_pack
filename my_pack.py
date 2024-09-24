@@ -655,7 +655,7 @@ class chain:
             if hasattr(__builtins__,attr) and cls.__use_builtin:
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
-                setattr(cls,attr,scope()["scope"][attr])
+                setattr(cls,attr,scope(2)["scope"][attr]) ## depth has to be set to '2' to get passed the stack frames __getattr__.__add_attr
             cls.__cache+=[attr]
     @classmethod
     def __static_setter(cls,attr: str) -> None:
