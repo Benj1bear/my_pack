@@ -1028,12 +1028,14 @@ def get_tabs(delay: int|float=1.5,close_init: bool=False) -> list[str]:
 
 def to_pickle(obj: object,filename: str,force: bool=False) -> None:
     """Convenience function for pickling objects in python with context management"""
-    with open(filename+'.pkl','wb') as file:
+    if filename[-4:]!='.pkl': filename+='.pkl'
+    with open(filename,'wb') as file:
         if force: return dill.dump(file)
         pickle.dump(obj, file)
 
 def read_pickle(filename: "str",force: bool=False) -> object:
     """Convenience function for reading pickled objects in python with context management"""
+    if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename+'.pkl', 'rb') as file:
         if force: return dill.load(file)
         return pickle.load(file)
