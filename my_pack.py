@@ -68,20 +68,26 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     where the initial .pkl file is deleted last.
     """
     # serialize what is required e.g. the function code,partitions, and the scope used
-    get_name=lambda :tempfile.mktemp(suffix='.pkl')
+    directory=os.getcwd()
+    get_name=lambda :tempfile.NamedTemporaryFile(dir=directory,suffix=".pkl").name # back slashes get reduced
     obj_store=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
                partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},obj_store,force=True)
     # loading the python object
     ## read in the code object to set the scope, function, and which partition it's set to
+    remove_backslash=lambda string: string.replace("\\","\\\\")
     process=lambda index,store_name: f"""import dill
 from types import FunctionType
-with open('{obj_store}', 'rb') as file:
+
+with open('{remove_backslash(obj_store)}', 'rb') as file:
     code=dill.load(file)
+
+print('{remove_backslash(obj_store)}',end=",")
+print('{remove_backslash(store_name)}',end="")
 
 for key,value in code["scope"]: globals()[key]=value
 FUNC=FunctionType(code["FUNC"], globals(), "temp_process")
-with open('{store_name}','wb') as file:
+with open('{remove_backslash(store_name)}','wb') as file:
     dill.dump(
                 FUNC(code["part"][{index}]),
                 file)
@@ -90,6 +96,8 @@ with open('{store_name}','wb') as file:
     def retrieve() -> dict:
         """Used to wait for the processes to finish to retrieve and then combine the results after if desired"""
         nonlocal store_names,process
+        
+        for i in store_names: print(i)
         processes=[Process(process(index,store_name)) for index,store_name in enumerate(store_names)]
         results={}
         for count,(process,file_name) in enumerate(zip(processes,store_names)):
@@ -97,8 +105,8 @@ with open('{store_name}','wb') as file:
                 pass
             if process.poll()!=0:
                 print(process.communicate())
-            else: 
-                results["result_"+count]=read_pickle(file_name)
+            else:
+                results[f"result_{count}"]=read_pickle(file_name)
                 os.remove(file_name)
         return results
 
