@@ -71,7 +71,7 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     get_name=lambda :tempfile.mktemp(suffix='.pkl')
     obj_store=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
-               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True)
+               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},obj_store,force=True)
     # loading the python object
     ## read in the code object to set the scope, function, and which partition it's set to
     process=lambda index,store_name: f"""import dill
