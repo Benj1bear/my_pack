@@ -50,15 +50,21 @@ import psutil
 import dill
 
 ## needs testing ##
-def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) -> Any:
+def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
     """
-    multi processor for python code via strings and subprocesses
-    where the results of each subprocess is saved as a pickle (.pkl)
-    file then the results are retrieved and combined by the main program as
-    a singular result.
+    multi processor for python code via strings and subprocesses.
 
     This multiprocessor works by partitioning the interval of a for loop for 
     each process to work on separately
+    
+    This multi processor works by serializing the code, partitions used,
+    and scope used for a function to be transferable over to a separate
+    and independent process. This process then deserializes or reads in
+    the objects from the pickle file (.pkl) and executes it on the partition
+    desired saving the result in a temporary pickle file that gets retrieved
+    by the main program and combined if desired into a full result. On 
+    satisfactory retrieval of the results the .pkl files are then deleted
+    where the initial .pkl file is deleted last.
     """
     # serialize what is required e.g. the function code,partitions, and the scope used
     get_name=lambda :tempfile.mktemp(suffix='.pkl')
@@ -80,6 +86,24 @@ with open('{store_name}','wb') as file:
                 file)
 """
     store_names=[get_name() for i in range(number_of_processes)]
+    def retrieve() -> dict:
+        """Used to wait for the processes to finish to retrieve and then combine the results after if desired"""
+        nonlocal store_names
+        processes=[Process(process(index,store_name)) for index,store_name in enumerate(store_names)]
+        results={}
+        for count,process,file_name in enumerate(zip(processes,store_names)):
+            while process.poll()==None:
+                pass
+            if process.poll()!=0:
+                print(process.communicate())
+            else: 
+                results["result_"+count]=read_pickle(file_name)
+        return results
+
+    if wait or combine:
+        result=retrieve()
+        if combine: return biop(result.items(),combine)
+        return result
     # start the processes
     return [Process(process(index,store_name)) for index,store_name in enumerate(store_names)],store_names
 
