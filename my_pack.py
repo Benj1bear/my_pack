@@ -55,9 +55,7 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     multi processor for python code via strings and subprocesses.
 
     This multiprocessor works by partitioning the interval of a for loop for 
-    each process to work on separately
-    
-    This multi processor works by serializing the code, partitions used,
+    each process to work on separately and serializing the code, partitions used,
     and scope used for a function to be transferable over to a separate
     and independent process. This process then deserializes or reads in
     the objects from the pickle file (.pkl) and executes it on the partition
