@@ -66,16 +66,17 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) 
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
                partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True)
     # loading the python object
+    ## read in the code object to set the scope, function, and which partition it's set to
     process=lambda index,store_name: f"""import dill
 from types import FunctionType
 with open('{file_name}', 'rb') as file:
     code=dill.load(file)
 
+for key,value in code["scope"]: globals()[key]=value
 FUNC=FunctionType(code["FUNC"], globals(), "temp_process")
-
 with open('{store_name}','wb') as file:
     dill.dump(
-                (process["part"][{index}]),
+                FUNC(process["part"][{index}]),
                 file)
 """
     store_names=[get_name() for i in range(number_of_processes)]
