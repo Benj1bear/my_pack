@@ -92,7 +92,7 @@ with open('{store_name}','wb') as file:
         nonlocal store_names,process
         processes=[Process(process(index,store_name)) for index,store_name in enumerate(store_names)]
         results={}
-        for count,process,file_name in enumerate(zip(processes,store_names)):
+        for count,(process,file_name) in enumerate(zip(processes,store_names)):
             while process.poll()==None:
                 pass
             if process.poll()!=0:
