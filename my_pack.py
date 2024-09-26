@@ -68,14 +68,14 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     """
     # serialize what is required e.g. the function code,partitions, and the scope used
     get_name=lambda :tempfile.mktemp(suffix='.pkl')
-    file_name=get_name()
+    obj_store=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
                partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True)
     # loading the python object
     ## read in the code object to set the scope, function, and which partition it's set to
     process=lambda index,store_name: f"""import dill
 from types import FunctionType
-with open('{file_name}', 'rb') as file:
+with open('{obj_store}', 'rb') as file:
     code=dill.load(file)
 
 for key,value in code["scope"]: globals()[key]=value
@@ -98,10 +98,12 @@ with open('{store_name}','wb') as file:
                 print(process.communicate())
             else: 
                 results["result_"+count]=read_pickle(file_name)
+                os.remove(file_name)
         return results
 
     if wait or combine:
         result=retrieve()
+        os.remove(obj_store)
         if combine: return biop(result.items(),combine)
         return result
     # start the processes
