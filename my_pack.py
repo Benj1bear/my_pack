@@ -66,6 +66,17 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     
     On satisfactory retrieval of the results the .pkl files are then deleted
     where the initial .pkl file is deleted last.
+
+    How to use:
+
+    from my_pack import multi_process
+
+    def test(parts):
+        return [1,2,3,4][parts[0]:parts[1]]
+    
+    multi_process(4,4,test) # should return {'result_0': [1], 'result_1': [2], 'result_2': [3], 'result_3': [4]}
+    
+    multi_process(4,4,test,"+") # should return [1,2,3,4]
     """
     # serialize what is required e.g. the function code,partitions, and the scope used
     directory=os.getcwd()
