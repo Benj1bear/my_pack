@@ -54,11 +54,8 @@ def nb_globals() -> dict:
     current_globals,allowed,not_allowed=globals().copy(),[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
     for key in current_globals.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
-            if key in not_allowed:
-                not_allowed.remove(key)
-                print(key)
-            else:
-                allowed+=[key]
+            if key in not_allowed: not_allowed.remove(key)
+            else: allowed+=[key]
     return dct_ext(current_globals)[allowed]
 
 ## needs testing ## - need to edit the scope when using jupyter notebook e.g. IPython software can't be pickled
