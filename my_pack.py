@@ -60,11 +60,11 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) 
     This multiprocessor works by partitioning the interval of a for loop for 
     each process to work on separately
     """
-    # serialize what is required
+    # serialize what is required e.g. the function code,partitions, and the scope used
     get_name=lambda :tempfile.mktemp(suffix='.pkl')
     file_name=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
-               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True) ## get's its scope
+               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True)
     # loading the python object
     process=lambda index,store_name: f"""import dill
 from types import FunctionType
