@@ -51,8 +51,8 @@ import dill
 
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
-    current_globals=tuple(globals().items())
-    allowed=[key for key,_ in current_globals if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None and 
+    current_globals=globals().copy()
+    allowed=[key for key in current_globals.keys() if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None and 
      (key in ("_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"))==False]
     current_globals=dct_ext(dict(current_globals))[allowed]
     del current_globals["allowed"]; del current_globals["current_globals"]
