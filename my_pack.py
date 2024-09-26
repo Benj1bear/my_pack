@@ -47,6 +47,7 @@ import ast
 import dis
 import importlib
 import psutil
+import dill
 
 ## needs testing ##
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) -> Any:
@@ -59,9 +60,27 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) 
     This multiprocessor works by partitioning the interval of a for loop for 
     each process to work on separately
     """
-    ## FUNC should be a function returning a string that calls the function 
-    ## or sets a function that can be retrieved in source code
-    return [Process(FUNC(interval[part[0]:part[1]])) for part in partition(number_of_processes,interval_length)]
+    # serialize what is required
+    get_name=lambda :tempfile.mktemp(suffix='.pkl')
+    file_name=get_name()
+    to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
+               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name) ## get's its scope
+    # loading the python object
+    process=lambda index,store_name: f"""import dill
+from types import FunctionType
+with open('{file_name}', 'rb') as file:
+    code=dill.load(file)
+
+FUNC=FunctionType(code["FUNC"], globals(), "temp_process")
+
+with open('{store_name}','wb') as file:
+    dill.dump(
+                (process["part"][{index}]),
+                file)
+"""
+    store_names=[get_name() for i in range(number_of_processes)]
+    # start the processes
+    return [Process(process(index,store_name)) for index,store_name in enumerate(store_names)],store_names
 
 def Process(code: str,save: str="") -> subprocess.Popen:
     """
@@ -100,17 +119,6 @@ def Process(code: str,save: str="") -> subprocess.Popen:
     that the processes will be using can be retrieved and that the data
     structures wanting to be saved can be pickled.
     """
-    # if running a function, then get it's source code otherwise import it,
-    #  or ask for the code to be written as a string directly
-    if save: ## needs implementation
-        code+=f"""
-import pickle
-
-def to_pickle(obj):
-    with open({save}+'.pkl','wb') as file:
-        pickle.dump(obj, file)
-to_pickle() # will fix later
-"""
     ## sys.executable is the directory of python.exe; '-c' allows running your code; subprocess.PIPE is used to communicate between processes over a pipe
     return subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 @property
