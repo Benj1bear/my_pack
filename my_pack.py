@@ -1058,7 +1058,7 @@ def to_pickle(obj: object,filename: str,force: bool=False) -> None:
     """Convenience function for pickling objects in python with context management"""
     if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename,'wb') as file:
-        if force: return dill.dump(file)
+        if force: return dill.dump(obj, file)
         pickle.dump(obj, file)
 
 def read_pickle(filename: "str",force: bool=False) -> object:
