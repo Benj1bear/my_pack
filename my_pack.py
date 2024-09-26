@@ -51,7 +51,7 @@ import dill
 
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
-    current_globals,allowed,not_allowed=globals().copy(),[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
+    current_globals,allowed,not_allowed=scope(1)["scope"],[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
     for key in current_globals.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
             if key in not_allowed: not_allowed.remove(key)
