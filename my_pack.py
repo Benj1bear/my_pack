@@ -49,7 +49,7 @@ import importlib
 import psutil
 import dill
 
-## needs testing ##
+## needs testing ## - need to edit the scope when using jupyter notebook e.g. IPython software can't be pickled
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
     """
     multi processor for python code via strings and subprocesses.
