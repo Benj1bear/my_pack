@@ -51,12 +51,15 @@ import dill
 
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
-    current_globals=globals().copy()
-    allowed=[key for key in current_globals.keys() if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None and 
-     (key in ("_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"))==False]
-    current_globals=dct_ext(dict(current_globals))[allowed]
-    del current_globals["allowed"]; del current_globals["current_globals"]
-    return current_globals
+    current_globals,allowed,not_allowed=globals().copy(),[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
+    for key in current_globals.keys():
+        if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
+            if key in not_allowed:
+                not_allowed.remove(key)
+                print(key)
+            else:
+                allowed+=[key]
+    return dct_ext(current_globals)[allowed]
 
 ## needs testing ## - need to edit the scope when using jupyter notebook e.g. IPython software can't be pickled
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
