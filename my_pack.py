@@ -82,11 +82,9 @@ from types import FunctionType
 with open('{remove_backslash(obj_store)}', 'rb') as file:
     code=dill.load(file)
 
-print('{remove_backslash(obj_store)}',end=",")
-print('{remove_backslash(store_name)}',end="")
-
 for key,value in code["scope"]: globals()[key]=value
 FUNC=FunctionType(code["FUNC"], globals(), "temp_process")
+
 with open('{remove_backslash(store_name)}','wb') as file:
     dill.dump(
                 FUNC(code["part"][{index}]),
@@ -96,8 +94,6 @@ with open('{remove_backslash(store_name)}','wb') as file:
     def retrieve() -> dict:
         """Used to wait for the processes to finish to retrieve and then combine the results after if desired"""
         nonlocal store_names,process
-        
-        for i in store_names: print(i)
         processes=[Process(process(index,store_name)) for index,store_name in enumerate(store_names)]
         results={}
         for count,(process,file_name) in enumerate(zip(processes,store_names)):
