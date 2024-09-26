@@ -109,7 +109,7 @@ with open('{remove_backslash(store_name)}','wb') as file:
     if wait or combine:
         result=retrieve()
         os.remove(obj_store)
-        if combine: return biop(result.items(),combine)
+        if combine: return biop(result.values(),combine)
         return result
     # start the processes
     return [Process(process(index,store_name)) for index,store_name in enumerate(store_names)],store_names
