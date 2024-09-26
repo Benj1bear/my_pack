@@ -57,11 +57,14 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     This multiprocessor works by partitioning the interval of a for loop for 
     each process to work on separately and serializing the code, partitions used,
     and scope used for a function to be transferable over to a separate
-    and independent process. This process then deserializes or reads in
+    and independent process. 
+    
+    This process then deserializes or reads in
     the objects from the pickle file (.pkl) and executes it on the partition
     desired saving the result in a temporary pickle file that gets retrieved
-    by the main program and combined if desired into a full result. On 
-    satisfactory retrieval of the results the .pkl files are then deleted
+    by the main program and combined if desired into a full result. 
+    
+    On satisfactory retrieval of the results the .pkl files are then deleted
     where the initial .pkl file is deleted last.
     """
     # serialize what is required e.g. the function code,partitions, and the scope used
