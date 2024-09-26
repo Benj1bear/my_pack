@@ -64,7 +64,7 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable) 
     get_name=lambda :tempfile.mktemp(suffix='.pkl')
     file_name=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
-               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name) ## get's its scope
+               partition(number_of_processes,interval_length)),"scope":tuple(globals().items())},file_name,force=True) ## get's its scope
     # loading the python object
     process=lambda index,store_name: f"""import dill
 from types import FunctionType
@@ -1026,14 +1026,16 @@ def get_tabs(delay: int|float=1.5,close_init: bool=False) -> list[str]:
         pyautogui.hotkey('ctrl', 'w')
     return links
 
-def to_pickle(obj: object,filename: str) -> None:
+def to_pickle(obj: object,filename: str,force: bool=False) -> None:
     """Convenience function for pickling objects in python with context management"""
     with open(filename+'.pkl','wb') as file:
+        if force: return dill.dump(file)
         pickle.dump(obj, file)
 
-def read_pickle(filename: "str") -> object:
+def read_pickle(filename: "str",force: bool=False) -> object:
     """Convenience function for reading pickled objects in python with context management"""
     with open(filename+'.pkl', 'rb') as file:
+        if force: return dill.load(file)
         return pickle.load(file)
 
 def cwd() -> None:
