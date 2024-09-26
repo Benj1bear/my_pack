@@ -89,7 +89,7 @@ with open('{store_name}','wb') as file:
     store_names=[get_name() for i in range(number_of_processes)]
     def retrieve() -> dict:
         """Used to wait for the processes to finish to retrieve and then combine the results after if desired"""
-        nonlocal store_names
+        nonlocal store_names,process
         processes=[Process(process(index,store_name)) for index,store_name in enumerate(store_names)]
         results={}
         for count,process,file_name in enumerate(zip(processes,store_names)):
