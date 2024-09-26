@@ -1646,6 +1646,10 @@ class dct_ext:
             raise Exception(f"in dct_ext.__setitem__: Mismatch between number of keys to set and arguements to be assigned\nkeys: {keys}\nargs: {args}")
         for key,arg in zip(keys,args):
             self.dct[key]=arg
+
+    def __delitem__(self,index: int|str|slice) -> None:
+        if type(index)==slice: index=self.__getitem__(index).keys()
+        for i in index: del self.dct[i]    
     @property
     def keys(self) -> list:
         return list(self.dct.keys())
