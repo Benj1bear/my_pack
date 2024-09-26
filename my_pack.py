@@ -76,7 +76,7 @@ for key,value in code["scope"]: globals()[key]=value
 FUNC=FunctionType(code["FUNC"], globals(), "temp_process")
 with open('{store_name}','wb') as file:
     dill.dump(
-                FUNC(process["part"][{index}]),
+                FUNC(code["part"][{index}]),
                 file)
 """
     store_names=[get_name() for i in range(number_of_processes)]
