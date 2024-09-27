@@ -58,7 +58,7 @@ def nb_globals() -> dict:
             else: allowed+=[key]
     return dct_ext(current_globals)[allowed]
 
-## needs testing ## - need to edit the scope when using jupyter notebook e.g. IPython software can't be pickled
+## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
     """
     multi processor for python code via strings and subprocesses.
