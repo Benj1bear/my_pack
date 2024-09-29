@@ -52,7 +52,17 @@ import dill
 class Standard_class: pass
 
 class mute:
-    """Turns mutable objects immutable or immutable objects to mutable"""
+    """
+    Turns mutable objects immutable or immutable objects to mutable
+
+    How to use:
+
+    a=mute(type,[]) # is immutable
+    a(int)
+    #a.a=3  ## should raise a TypeError
+    mute(a) # is mutable
+    a.a=3
+    """
     def __immute(self,attr: str,value: Any) -> Exception:
         raise TypeError(f"cannot set '{attr}' attribute to an immutable type. To create a mutable object use mute(obj)")
     
