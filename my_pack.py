@@ -58,7 +58,7 @@ class mute:
         self.__obj=obj
         self.__get_attrs(obj)
         if slots!=tuple():
-            self.__share_attrs("__setattr__",self.__immute) ## but won't allow references
+            self.__share_attrs("__setattr__",self.__immute)
 
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
