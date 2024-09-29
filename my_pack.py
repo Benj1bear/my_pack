@@ -57,22 +57,31 @@ class mute:
 
     How to use:
 
-    a=mute(type,[]) # is immutable
+    a=mute(type) # is mutable
     a(int)
-    #a.a=3  ## should raise a TypeError
-    mute(a) # is mutable
     a.a=3
+    mute(a) # is immutable
+    #a.a=3  ## should raise a TypeError
     """
     def __immute(self,attr: str,value: Any) -> Exception:
         raise TypeError(f"cannot set '{attr}' attribute to an immutable type. To create a mutable object use mute(obj)")
     
-    def __init__(self,obj: Any,*slots: Any) -> None:
+    def __init__(self,obj: Any,immute: bool=False) -> None:
         if self.__setattr__.__name__=="__immute":
             self.__share_attrs("__setattr__",Standard_class.__setattr__)
         self.__obj=obj
         self.__get_attrs(obj)
-        if slots!=tuple():
+        if immute:
+            self.__immute_flag=True
             self.__share_attrs("__setattr__",self.__immute)
+        elif self.__class__.__name__=="mute" and hasattr(obj,"_mute__immute_flag"):
+            if self.__obj._mute__immute_flag:
+                self.__immute_flag=False
+                self.__share_attrs("__setattr__",self.__immute)
+            else:
+                self.__immute_flag=True
+        else:
+            self.__immute_flag=True
 
     def __get_attrs(self,obj: Any) -> None:
         """Finds the new dunder methods to be added to the class"""
