@@ -49,12 +49,16 @@ import importlib
 import psutil
 import dill
 
+class Standard_class: pass
+
 class mute:
     """Turns mutable objects immutable or immutable objects to mutable"""
     def __immute(self,attr: str,value: Any) -> Exception:
         raise TypeError(f"cannot set '{attr}' attribute to an immutable type. To create a mutable object use mute(obj)")
     
     def __init__(self,obj: Any,*slots: Any) -> None:
+        if self.__setattr__.__name__=="__immute":
+            self.__share_attrs("__setattr__",Standard_class.__setattr__)
         self.__obj=obj
         self.__get_attrs(obj)
         if slots!=tuple():
