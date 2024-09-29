@@ -49,6 +49,46 @@ import importlib
 import psutil
 import dill
 
+class mute:
+    """Turns mutable objects immutable or immutable objects to mutable"""
+    def __immute(self,attr: str,value: Any) -> Exception:
+        raise TypeError(f"cannot set '{attr}' attribute to an immutable type. To create a mutable object use mute(obj)")
+    
+    def __init__(self,obj: Any,*slots: Any) -> None:
+        self.__obj=obj
+        self.__get_attrs(obj)
+        if slots!=tuple():
+            self.__share_attrs("__setattribute__",self.__immute)
+
+    def __get_attrs(self,obj: Any) -> None:
+        """Finds the new dunder methods to be added to the class"""
+        # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
+        not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
+                   "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
+                   "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
+                   "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
+        for key,value in class_dict(obj).items():
+            if re.match("__.*__",key)!=None:
+                if key in not_allowed:
+                    not_allowed.remove(key)
+                elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
+                    self.__share_attrs(key,value)
+    __show_errors=False
+    @classmethod
+    def __share_attrs(cls,key: Any,value: Any) -> None:
+        """Shares the dunder methods of an object with the class"""
+        try:
+            setattr(cls,key,value)
+        except:
+            if cls.__show_errors:
+                print(cls,key,value)
+
+    def __repr__(self) -> str:
+        return repr(self.__obj)
+    
+    def __call__(self,*args,**kwargs) -> Any:
+        return self.__obj(*args,**kwargs)
+
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
     current_globals,allowed,not_allowed=scope(1)["scope"],[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
