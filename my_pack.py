@@ -20,7 +20,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-from types import ModuleType,BuiltinFunctionType
+from types import ModuleType,BuiltinFunctionType,FrameType
 from typing import Any,Callable
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
@@ -48,6 +48,8 @@ import dis
 import importlib
 import psutil
 import dill
+import ctypes
+import copy
 
 class Standard_class: pass
 
@@ -114,7 +116,7 @@ class mute:
 
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
-    current_globals,allowed,not_allowed=scope(1)["scope"],[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
+    current_globals,allowed,not_allowed=scope(1)._scope,[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
     for key in current_globals.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
             if key in not_allowed: not_allowed.remove(key)
@@ -286,27 +288,57 @@ def reload(module: str) -> None:
     exec("import "+module,globals())
     print(module,"reloaded")
 
-def nonlocals() -> dict:
+class nonlocals:
     """
     Equivalent of nonlocals()
 
     Note: only globals allows getting, setting, and deleting values; 
     locals and nonlocals only allows getting values (unless the value 
     is not defined in the scope in which case you can edit the value
-    e.g. for locals, nonlocals I might add a feature which allows this
-    though it shouldn't really be necessary to add or remove nonlocals)
+    e.g. for locals, nonlocals)
     
     # code reference: jsbueno (2023) https://stackoverflow.com/questions/8968407/where-is-nonlocals
     # changes made: condensed the core concept of using a stackframe with getting the keys from the 
     # locals dict since every nonlocal should be local as well
     """
-    frame=currentframe().f_back
-    local=frame.f_locals
-    names=frame.f_code.co_freevars
-    if len(names):
-        return dct_ext(local)[names]
-    return {}
+    def __init__(self,frame: FrameType|None=None) -> None:
+        self.frame=frame if frame else currentframe().f_back
+        self.locals=self.frame.f_locals
+    
+    def __repr__(self) -> str:
+        """displays the current frames scope"""
+        return repr(self.nonlocals)
+    @property
+    def nonlocals(self):
+        names=self.frame.f_code.co_freevars
+        return dct_ext(self.locals)[names] if len(names) else {}
 
+    def check(self,key):
+        if key not in self.nonlocals: raise KeyError(key)
+    
+    def __getitem__(self,key: Any) -> Any:
+        return self.nonlocals[key]
+
+    def update(self,**dct) -> None:
+        for key,value in dct.items(): self[key]=value
+
+    def __setitem__(self,key,value) -> None:
+        self.check(key)
+        self.locals[key]=value
+        return self.__update
+
+    def __delitem__(self,key) -> None:
+        self.check(key)
+        del self.locals[key]
+        return self.__update
+    @property
+    def __update(self) -> FrameType:
+        """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
+        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(0))
+        return self.frame
+
+## may add a feature to show the correct names when using stackframes if possible
 def staticproperty(func: Callable) -> Any:
     """
     Allows a function to be called as a variable.
@@ -341,10 +373,10 @@ class Store:
     share.globals
 
     Note: Another way of obtaining global variables from
-    main is to use the name_at_frame function which will
+    main is to instantiate a scope class which will
     enable you to visit the module level frame where the
     global scope in the main program will be. Therefore,
-    you should be able to also use scope()["scope"]
+    you should be able to also use scope()._scope
     to view global variables from the main program
     """
     stored,globals={},globals()
@@ -470,18 +502,55 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     
     return {"func":call[0],"args":call[1:]}
 
-def scope(depth: int=0) -> dict:
+class scope:
     """gets the function name at frame-depth and the current scope that's within the main program"""
-    frame,name,local_scope=currentframe(),[],{}
-    while frame.f_code.co_name!="<module>":
-        name+=[frame.f_code.co_name]
-        frame=frame.f_back
-        if len(name)==depth+1:
-            local_scope=frame.f_locals
-    # update the global scope
-    current_scope=frame.f_locals
-    current_scope.update(local_scope)
-    return {"name":".".join(["__main__"]+name[::-1][:-(depth+1)]),"scope":current_scope}
+    def __init__(self,depth: int=0) -> None:
+        ## get the global_frame, local_frame, and name of the call in the stack
+        global_frame,local_frame,name=currentframe(),{},[]
+        while global_frame.f_code.co_name!="<module>":
+            name+=[global_frame.f_code.co_name]
+            global_frame=global_frame.f_back
+            if len(name)==depth+1:
+                local_frame=(global_frame,) # to create a copy otherwise it's a pointer
+        ## instantiate
+        self.local_frame,self.global_frame=local_frame[0],global_frame
+        self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
+
+    def __repr__(self) -> str:
+        """displays the current frames scope"""
+        return repr(self._scope)
+    @property
+    def _scope(self) -> dict:
+        """The full current scope"""
+        current_scope=self.globals.copy()
+        current_scope.update(self.locals)
+        return current_scope
+    
+    def __getitem__(self,key: Any) -> Any:
+        return self.locals[key] if key in self.locals else self.globals[key]
+
+    def update(self,**dct) -> None:
+        for key,value in dct.items(): self[key]=value
+
+    def __setitem__(self,key,value) -> None:
+        if key in self.locals:
+            self.locals[key]=value
+            return self.__update
+        else:
+            self.globals[key]=value
+
+    def __delitem__(self,key) -> None:
+        if key in self.locals:
+            del self.locals[key]
+            return self.__update
+        else:
+            del self.globals[key]
+    @property
+    def __update(self) -> FrameType:
+        """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
+        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
+        return self.local_frame
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
@@ -491,7 +560,7 @@ def id_dct(*args) -> dict:
 def refs(*args,scope_used: dict=None) -> list:
     """Returns all variable names that are also assigned to the same memory location within a desired scope"""
     if scope_used==None:
-        scope_used=scope(1)["scope"] # depth set to '1' to get passed the the refs stack frame
+        scope_used=scope(1)._scope # depth set to '1' to get passed the the refs stack frame
     return [[key for key,value in scope_used.items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
@@ -778,7 +847,7 @@ class chain:
             if hasattr(__builtins__,attr) and cls.__use_builtin:
                 setattr(cls,attr,getattr(__builtins__,attr))
             else:
-                setattr(cls,attr,scope(2)["scope"][attr]) ## depth has to be set to '2' to get passed the stack frames __getattr__.__add_attr
+                setattr(cls,attr,scope(2)[attr]) ## depth has to be set to '2' to get passed the stack frames __getattr__.__add_attr
             cls.__cache+=[attr]
     @classmethod
     def __static_setter(cls,attr: str) -> None:
