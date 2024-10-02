@@ -43,13 +43,13 @@ from itertools import combinations,chain as iter_chain # since I have a class ca
 import IPython
 from warnings import simplefilter,warn
 #import traceback
-import ast
+#import ast
 import dis
 import importlib
 import psutil
 import dill
 import ctypes
-import copy
+#import copy
 
 class Standard_class: pass
 
@@ -325,18 +325,17 @@ class nonlocals:
     def __setitem__(self,key,value) -> None:
         self.check(key)
         self.locals[key]=value
-        return self.__update
+        self.__update
 
     def __delitem__(self,key) -> None:
         self.check(key)
         del self.locals[key]
-        return self.__update
+        self.__update
     @property
-    def __update(self) -> FrameType:
+    def __update(self) -> None:
         """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
         # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(0))
-        return self.frame
 
 ## may add a feature to show the correct names when using stackframes if possible
 def staticproperty(func: Callable) -> Any:
@@ -535,14 +534,14 @@ class scope:
     def __setitem__(self,key,value) -> None:
         if key in self.locals:
             self.locals[key]=value
-            return self.__update
+            self.__update
         else:
             self.globals[key]=value
 
     def __delitem__(self,key) -> None:
         if key in self.locals:
             del self.locals[key]
-            return self.__update
+            self.__update
         else:
             del self.globals[key]
     @property
@@ -550,7 +549,6 @@ class scope:
         """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
         # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
-        return self.local_frame
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
