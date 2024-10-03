@@ -53,6 +53,7 @@ import ctypes
 
 class Standard_class: pass
 
+# needs some more features # ## probably needs a chain like wrapper to access methods etc. ##
 class mute:
     """
     Turns mutable objects immutable or immutable objects to mutable
@@ -116,12 +117,13 @@ class mute:
 
 def nb_globals() -> dict:
     """Returns all non-jupyternotebook specific global variables"""
-    current_globals,allowed,not_allowed=scope(1)._scope,[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
+    current_globals,allowed,not_allowed=scope(1),[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
     for key in current_globals.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
-            if key in not_allowed: not_allowed.remove(key)
-            else: allowed+=[key]
-    return dct_ext(current_globals)[allowed]
+            if key in not_allowed:
+                del current_globals[key]
+                not_allowed.remove(key)
+    return current_globals
 
 ## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
@@ -309,11 +311,12 @@ class nonlocals:
         """displays the current frames scope"""
         return repr(self.nonlocals)
     @property
-    def nonlocals(self):
+    def nonlocals(self) -> dict:
         names=self.frame.f_code.co_freevars
         return dct_ext(self.locals)[names] if len(names) else {}
 
-    def check(self,key):
+    def check(self,key: Any) -> None:
+        """Check if the key is in nonlocals and if so we will then use locals since every nonlocal is also local"""
         if key not in self.nonlocals: raise KeyError(key)
     
     def __getitem__(self,key: Any) -> Any:
@@ -322,12 +325,12 @@ class nonlocals:
     def update(self,**dct) -> None:
         for key,value in dct.items(): self[key]=value
 
-    def __setitem__(self,key,value) -> None:
+    def __setitem__(self,key: Any,value: Any) -> None:
         self.check(key)
         self.locals[key]=value
         self.__update
 
-    def __delitem__(self,key) -> None:
+    def __delitem__(self,key: Any) -> None:
         self.check(key)
         del self.locals[key]
         self.__update
@@ -531,21 +534,21 @@ class scope:
     def update(self,**dct) -> None:
         for key,value in dct.items(): self[key]=value
 
-    def __setitem__(self,key,value) -> None:
+    def __setitem__(self,key: Any,value: Any) -> None:
         if key in self.locals:
             self.locals[key]=value
             self.__update
         else:
             self.globals[key]=value
 
-    def __delitem__(self,key) -> None:
+    def __delitem__(self,key: Any) -> None:
         if key in self.locals:
             del self.locals[key]
             self.__update
         else:
             del self.globals[key]
     @property
-    def __update(self) -> FrameType:
+    def __update(self) -> None:
         """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
         # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
