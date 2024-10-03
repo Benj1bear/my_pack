@@ -115,15 +115,15 @@ class mute:
     def __call__(self,*args,**kwargs) -> Any:
         return self.__obj(*args,**kwargs)
 
-def nb_globals() -> dict:
-    """Returns all non-jupyternotebook specific global variables"""
-    current_globals,allowed,not_allowed=scope(1),[],["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
+def nb_scope() -> dict:
+    """Returns all non-jupyternotebook specific variables within the current scope"""
+    current_scope,not_allowed=scope(1),["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
     for key in current_globals.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
             if key in not_allowed:
-                del current_globals[key]
+                del current_scope[key]
                 not_allowed.remove(key)
-    return current_globals
+    return current_scope
 
 ## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
