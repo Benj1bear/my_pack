@@ -651,8 +651,13 @@ def get_arg_count(attr: Any,values: tuple[Any]=(
     if attr.__name__ not in dir(__builtins__):
         try: ## see if it has a signature
             return [len(signature(attr).parameters)]
-        except:
-            pass
+        except: ## see if it uses an initialization
+            try:
+                return [len(signature(attr.__init__).parameters)]
+            except:
+                pass
+    ## this next section of code shouldn't be used since builtins like 'type' use __init__ rather than __call__ for the signature which was a previous oversight ##
+    ## but if for whatever reason it has no __init__ signature then it defaults to a brute force like approach ##
     length=len(values[0])
     if attr==print or attr==display:
         return [length]
