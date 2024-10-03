@@ -118,7 +118,7 @@ class mute:
 def nb_scope() -> dict:
     """Returns all non-jupyter notebook specific variables within the current scope"""
     current_scope,not_allowed=scope(1),["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
-    for key in current_globals.keys():
+    for key in current_scope.keys():
         if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
             if key in not_allowed:
                 del current_scope[key]
