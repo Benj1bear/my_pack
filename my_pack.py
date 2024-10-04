@@ -514,7 +514,7 @@ class scope:
     @property
     def scope(self) -> dict:
         """The full current scope"""
-        if has_IPython:
+        if has_IPython():
             ## certain attributes needs to be removed since it's causing recursion errors e.g. it'll be the notebook trying to record inputs and outputs most likely ##
             not_allowed,allowed=["_ih","_oh","_dh","In","Out","_","__","___"],[]
             keys=set(tuple(self.locals)+tuple(self.globals))
