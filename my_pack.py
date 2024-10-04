@@ -495,7 +495,13 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
     return {"func":call[0],"args":call[1:]}
 
 class scope:
-    """gets the function name at frame-depth and the current scope that's within the main program"""
+    """
+    gets the function name at frame-depth and the current scope that's within the main program
+    
+    Note: if using in jupyter notebook scope.scope will remove jupyter notebook specific attributes
+    that record in program inputs and outputs. These attributes will still be available just not via 
+    scope.scope because it causes a recursion error from some of the attributes changing while in use
+    """
     def __init__(self,depth: int=0) -> None:
         ## get the global_frame, local_frame, and name of the call in the stack
         global_frame,local_frame,name=currentframe(),{},[]
