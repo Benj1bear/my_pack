@@ -115,16 +115,6 @@ class mute:
     def __call__(self,*args,**kwargs) -> Any:
         return self.__obj(*args,**kwargs)
 
-def nb_scope() -> dict:
-    """Returns all non-jupyter notebook specific variables within the current scope"""
-    current_scope,not_allowed=scope(1),["_ih","_oh","_dh","In","Out","_","__","___","get_ipython","exit","quit"]
-    for key in current_scope.keys():
-        if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
-            if key in not_allowed:
-                del current_scope[key]
-                not_allowed.remove(key)
-    return current_scope
-
 ## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
     """
@@ -378,7 +368,7 @@ class Store:
     main is to instantiate a scope class which will
     enable you to visit the module level frame where the
     global scope in the main program will be. Therefore,
-    you should be able to also use scope()._scope
+    you should be able to also use scope().scope
     to view global variables from the main program
     """
     stored,globals={},globals()
@@ -520,10 +510,20 @@ class scope:
 
     def __repr__(self) -> str:
         """displays the current frames scope"""
-        return repr(self._scope)
+        return repr(self.scope)
     @property
-    def _scope(self) -> dict:
+    def scope(self) -> dict:
         """The full current scope"""
+        if has_IPython:
+            ## certain attributes needs to be removed since it's causing recursion errors e.g. it'll be the notebook trying to record inputs and inputs most likely ##
+            not_allowed,allowed=["_ih","_oh","_dh","In","Out","_","__","___"],[]
+            keys=set(tuple(self.locals)+tuple(self.globals))
+            for key in keys:
+                if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
+                    if key in not_allowed: not_allowed.remove(key)
+                    else: allowed+=[key]
+            self.locals=dct_ext(self.locals)[allowed]
+            self.globals=dct_ext(self.globals)[allowed]
         current_scope=self.globals.copy()
         current_scope.update(self.locals)
         return current_scope
@@ -561,7 +561,7 @@ def id_dct(*args) -> dict:
 def refs(*args,scope_used: dict=None) -> list:
     """Returns all variable names that are also assigned to the same memory location within a desired scope"""
     if scope_used==None:
-        scope_used=scope(1)._scope # depth set to '1' to get passed the the refs stack frame
+        scope_used=scope(1).scope # depth set to '1' to get passed the the refs stack frame
     return [[key for key,value in scope_used.items() if value is arg] for arg in args]
 
 def list_join(ls1: list[str],ls2: list[str]) -> str:
