@@ -516,14 +516,19 @@ class scope:
         """The full current scope"""
         if has_IPython():
             ## certain attributes needs to be removed since it's causing recursion errors e.g. it'll be the notebook trying to record inputs and outputs most likely ##
-            not_allowed,allowed=["_ih","_oh","_dh","In","Out","_","__","___"],[]
-            keys=set(tuple(self.locals)+tuple(self.globals))
-            for key in keys:
+            not_allowed,current_scope=["_ih","_oh","_dh","In","Out","_","__","___"],{}
+            local_keys,global_keys=list(self.locals),list(self.globals)
+            for key in set(local_keys+global_keys):
                 if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
-                    if key in not_allowed: not_allowed.remove(key)
-                    else: allowed+=[key]
-            self.locals=dct_ext(self.locals)[allowed]
-            self.globals=dct_ext(self.globals)[allowed]
+                    if key in not_allowed:
+                        not_allowed.remove(key)
+                    elif key in local_keys:
+                        current_scope[key]=self.locals[key]
+                        local_keys.remove(key)
+                    else:
+                        current_scope[key]=self.globals[key]
+                        globals_keys.remove(key)
+            return current_scope
         current_scope=self.globals.copy()
         current_scope.update(self.locals)
         return current_scope
