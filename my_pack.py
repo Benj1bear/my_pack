@@ -501,6 +501,34 @@ class scope:
     Note: if using in jupyter notebook scope.scope will remove jupyter notebook specific attributes
     that record in program inputs and outputs. These attributes will still be available just not via 
     scope.scope because it causes a recursion error from some of the attributes changing while in use
+
+    How to use:
+
+    def a():
+        c=3
+        def b():
+            c
+            y=4
+            print(scope(1).locals)
+            print(scope().locals)
+            print(scope().nonlocals)
+            scope(1)["c"]=7
+            print(scope(1).locals)
+            print(scope().locals)
+            print(scope().nonlocals)
+        b()
+        print(c)
+    a()
+    ## i.e. should print:
+    {'b': <function a.<locals>.b at 0x000001DD9DFEDB20>, 'c': 3}
+    {'y': 4, 'c': 3}
+    {'c': 3}
+    {'b': <function a.<locals>.b at 0x000001DD9DFEDB20>, 'c': 7}
+    {'y': 4, 'c': 7}
+    {'c': 7}
+    7
+    
+    This allows us to change variables at any stack frame so long as it's on the stack
     """
     def __init__(self,depth: int=0) -> None:
         ## get the global_frame, local_frame, and name of the call in the stack
