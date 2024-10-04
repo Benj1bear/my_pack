@@ -94,11 +94,28 @@ class mute:
                    "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
                    "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
         for key,value in class_dict(obj).items():
-            if re.match("__.*__",key)!=None:
-                if key in not_allowed:
-                    not_allowed.remove(key)
-                elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
-                    self.__share_attrs(key,value)
+            if key in not_allowed:
+                not_allowed.remove(key)    
+            else:
+                self.__share_attrs(key,self.__wrap(key,value))
+
+    def __wrap(self,key: str,method: Callable) -> Callable:
+        """
+        wrapper function to ensure methods assigned are instance based 
+        and that the dunder methods return values are wrapped in a chain object
+        if i.e. used in a binary operation or that these are left as is if 
+        type casting a chain object e.g. float(chain(1)) should return 1.0
+        and its type should be float and not my_pack.chain or __main__.chain if 
+        defined in program
+        """
+        @wraps(method) ## retains the docstring
+        def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
+            try:
+                return getattr(_self.__obj,key)()
+            except:
+                return getattr(_self.__obj,key)(_self.__obj)
+        return wrapper
+    
     __show_errors=False
     @classmethod
     def __share_attrs(cls,key: Any,value: Any) -> None:
