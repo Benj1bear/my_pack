@@ -527,7 +527,6 @@ class scope:
                         local_keys.remove(key)
                     else:
                         current_scope[key]=self.globals[key]
-                        globals_keys.remove(key)
             return current_scope
         current_scope=self.globals.copy()
         current_scope.update(self.locals)
