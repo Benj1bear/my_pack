@@ -540,6 +540,7 @@ class scope:
             if len(name)==depth+1:
                 local_frame=(global_frame,) # to create a copy otherwise it's a pointer
         ## instantiate
+        self.name=name
         self.local_frame,self.global_frame=local_frame[0],global_frame
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
 
