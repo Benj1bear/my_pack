@@ -149,7 +149,7 @@ def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,c
     get_name=lambda :tempfile.NamedTemporaryFile(dir=directory,suffix=".pkl").name # back slashes get reduced
     obj_store=get_name()
     to_pickle({"FUNC":FUNC.__code__,"part":tuple((part[0],part[1]) for part in 
-               partition(number_of_processes,interval_length)),"scope":nb_globals().items()},obj_store,force=True)
+               partition(number_of_processes,interval_length)),"scope":scope(1).scope.items()},obj_store,force=True)
     # loading the python object
     ## read in the code object to set the scope, function, and which partition it's set to
     remove_backslash=lambda string: string.replace("\\","\\\\")
