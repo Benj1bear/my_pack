@@ -323,7 +323,8 @@ class nonlocals:
     def __delitem__(self,key: Any) -> None:
         self.check(key)
         del self.locals[key]
-        self.__update
+        # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
     @property
     def __update(self) -> None:
         """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
@@ -582,7 +583,8 @@ class scope:
     def __delitem__(self,key: Any) -> None:
         if key in self.locals:
             del self.locals[key]
-            self.__update
+            # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error
+            ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
         else:
             del self.globals[key]
     @property
