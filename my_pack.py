@@ -53,6 +53,7 @@ import ctypes
 
 class Standard_class: pass
 
+## wrapper needs fixing and some objects will work without it ##
 class mute:
     """
     Turns mutable objects immutable or immutable objects to mutable
