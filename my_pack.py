@@ -53,7 +53,6 @@ import ctypes
 
 class Standard_class: pass
 
-# needs some more features # ## probably needs a chain like wrapper to access methods etc. ##
 class mute:
     """
     Turns mutable objects immutable or immutable objects to mutable
@@ -102,11 +101,7 @@ class mute:
     def __wrap(self,key: str,method: Callable) -> Callable:
         """
         wrapper function to ensure methods assigned are instance based 
-        and that the dunder methods return values are wrapped in a chain object
-        if i.e. used in a binary operation or that these are left as is if 
-        type casting a chain object e.g. float(chain(1)) should return 1.0
-        and its type should be float and not my_pack.chain or __main__.chain if 
-        defined in program
+        if i.e. used in a binary operation or type casting etc.
         """
         @wraps(method) ## retains the docstring
         def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
@@ -119,7 +114,7 @@ class mute:
     __show_errors=False
     @classmethod
     def __share_attrs(cls,key: Any,value: Any) -> None:
-        """Shares the dunder methods of an object with the class"""
+        """Shares the attribute of an object with the class"""
         try:
             setattr(cls,key,value)
         except:
@@ -308,7 +303,7 @@ class nonlocals:
     
     # code reference: jsbueno (2023) https://stackoverflow.com/questions/8968407/where-is-nonlocals
     # changes made: condensed the core concept of using a stackframe with getting the keys from the 
-    # locals dict since every nonlocal should be local as well
+    # locals dict since every nonlocal should be local as well and made a class
     """
     def __init__(self,frame: FrameType|None=None) -> None:
         self.frame=frame if frame else currentframe().f_back
@@ -781,6 +776,7 @@ def class_dict(obj: Any,warn: bool=False) -> dict:
         except: pass
     return dict(zip(keys,attrs))
 
+## will need to change classproperty to something custom for 3.13 where python disallows exactly this ##
 def classproperty(obj: Any) -> classmethod:
     """Short hand for:
     @classmethod
@@ -788,7 +784,7 @@ def classproperty(obj: Any) -> classmethod:
     """
     return classmethod(property(obj))
 
-#### needs testing ####
+#### needs testing but seems fine ####
 class chain:
     """
     if wanting to apply to the object and keep a chain going
@@ -984,49 +980,6 @@ class chain:
     def BREAK(self) -> Any:
         """Breaks the chain e.g. returns the final object"""
         return self.__obj
-
-class ext:
-    """
-    Extensions for python data types whereby you can now dynamically create/use methods
-
-    i.e. you can now do:
-    def method(self):
-        print("hi")
-        return self
-    @staticmethod
-    def testing(self):
-        print("hello")
-    @classmethod
-    def testing2(cls):
-        print(cls)
-    @property
-    def testing3(self):
-        print("is a property")
-    ext().method().testing()
-    ext().testing2()
-    ext().testing3()
-    # should print:
-    # hi
-    # hello
-    # <class '__main__.ext'>
-    # is a property
-    Note: these instance based methods are dynamically added e.g. they were not
-    part of the original class definition but were already defined elsewhere
-    """
-    def __init__(self,obj: Any=[]) -> None:
-        self.obj=obj
-        
-    def __repr__(self) -> str:
-        return str(self.obj)
-    @classmethod
-    def __add_attr(cls,attr: str) -> None:
-        """Dynamically adds new attributes to a class"""
-        if hasattr(cls,attr)==False:
-            setattr(cls,attr,globals()[attr])
-
-    def __getattr__(self,attr: str) -> Any:
-        self.__add_attr(attr)
-        return getattr(self,attr)
 
 class tup_ext:
     """Extensions for tuples"""
