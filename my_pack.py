@@ -777,15 +777,45 @@ def class_dict(obj: Any,warn: bool=False) -> dict:
         except: pass
     return dict(zip(keys,attrs))
 
-## will need to change classproperty to something custom for 3.13 where python disallows exactly this ##
-def classproperty(obj: Any) -> classmethod:
-    """Short hand for:
+class classproperty:
+    """
+    In python version 3.13 class properties are disallowed
+    This would be the equivalent of:
+
+    classmethod(property(obj))
+    or 
     @classmethod
     @property
+    def some_function():
     """
-    return classmethod(property(obj))
+    def __init__(self, fget: Callable=None) -> None:
+        self.fget,self.__doc__=fget,fget.__doc__
 
-#### needs testing but seems fine ####
+    def __get__(self, obj: None, objtype: type|None=None) -> Any:
+        return self.class_method(self.fget)(obj)
+    
+    def class_method(self,FUNC: Callable) -> Callable:
+        """Creates a classmethod wrapper"""
+        if hasattr(self,"wrapper"):
+            return self.wrapper
+        if hasattr(self,"cls")==False:
+            name=FUNC.__qualname__.split(".")[0] # get the classes name
+            self.cls=scope()[name] # it should be in the global scope
+        number_of_args=get_arg_count(FUNC)[0]
+        if number_of_args==0:
+            raise TypeError(f"method '{FUNC.__name__}' must have at least one arguement as the class for it to be a classproperty")
+        if number_of_args==1:
+            @wraps(FUNC)
+            def wrapper(*args,**kwargs):
+                return FUNC(self.cls)
+        else:
+            @wraps(FUNC)
+            def wrapper(*args,**kwargs):
+                return FUNC(self.cls,*args,**kwargs)
+        self.wrapper=wrapper
+        return wrapper
+
+#### needs testing but seems fine #### - will need to stop using classmethods to keep the chain instances as individuals
 class chain:
     """
     if wanting to apply to the object and keep a chain going
