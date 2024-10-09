@@ -51,8 +51,6 @@ import dill
 import ctypes
 #import copy
 
-class Standard_class: pass
-
 ## needs testing but seems fine ##
 class mute:
     """
