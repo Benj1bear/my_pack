@@ -53,7 +53,7 @@ import ctypes
 
 class Standard_class: pass
 
-## wrapper needs fixing and some objects will work without it ##
+## needs testing but seems fine ##
 class mute:
     """
     Turns mutable objects immutable or immutable objects to mutable
@@ -66,67 +66,27 @@ class mute:
     mute(a) # is immutable
     #a.a=3  ## should raise a TypeError
     """
-    def __immute(self,attr: str,value: Any) -> Exception:
-        raise TypeError(f"cannot set '{attr}' attribute to an immutable type. To create a mutable object use mute(obj)")
-    
+    _mute__immute_flag=0
     def __init__(self,obj: Any,immute: bool=False) -> None:
-        if self.__class__.__name__=="mute" and self.__setattr__.__name__=="__immute":
-            self.__share_attrs("__setattr__",Standard_class.__setattr__)
-        self.__obj=obj
-        self.__get_attrs(obj)
-        if immute:
-            self.__immute_flag=True
-            self.__share_attrs("__setattr__",self.__immute)
-        elif self.__class__.__name__=="mute" and hasattr(obj,"_mute__immute_flag"):
-            if self.__obj._mute__immute_flag:
-                self.__immute_flag=False
-                self.__share_attrs("__setattr__",self.__immute)
-            else:
-                self.__immute_flag=True
-        else:
-            self.__immute_flag=True
-
-    def __get_attrs(self,obj: Any) -> None:
-        """Finds the new dunder methods to be added to the class"""
-        # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
-        not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
-                   "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
-                   "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
-                   "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
-        for key,value in class_dict(obj).items():
-            if key in not_allowed:
-                not_allowed.remove(key)    
-            else:
-                self.__share_attrs(key,self.__wrap(key,value))
-
-    def __wrap(self,key: str,method: Callable) -> Callable:
-        """
-        wrapper function to ensure methods assigned are instance based 
-        if i.e. used in a binary operation or type casting etc.
-        """
-        @wraps(method) ## retains the docstring
-        def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
-            try:
-                return getattr(_self.__obj,key)()
-            except:
-                return getattr(_self.__obj,key)(_self.__obj)
-        return wrapper
+        self.__obj,self.__immute_flag=(obj,(obj.__immute_flag+1) % 2) if obj.__class__.__name__=="mute" else (obj,immute)
     
-    __show_errors=False
-    @classmethod
-    def __share_attrs(cls,key: Any,value: Any) -> None:
-        """Shares the attribute of an object with the class"""
-        try:
-            setattr(cls,key,value)
-        except:
-            if cls.__show_errors:
-                print(cls,key,value)
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Set an attribute on the wrapped object or the mute object itself."""
+        if hasattr(self, "_mute__immute_flag") and self._mute__immute_flag:
+            raise TypeError(f"cannot set attribute '{key}' to an immutable type. To create a mutable object use mute(obj)")
+        super().__setattr__(key, value)
 
+    def __getattr__(self, key: str) -> Any:
+        try:
+            return super().__getattr__(key)
+        except AttributeError:
+            return getattr(self.__obj, key)
+    
     def __repr__(self) -> str:
         return repr(self.__obj)
     
-    def __call__(self,*args,**kwargs) -> Any:
-        return self.__obj(*args,**kwargs)
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return self.__obj(*args, **kwargs)
 
 ## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
 def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
@@ -546,15 +506,18 @@ class scope:
     """
     def __init__(self,depth: int=0) -> None:
         ## get the global_frame, local_frame, and name of the call in the stack
-        global_frame,local_frame,name=currentframe(),{},[]
+        global_frame,local_frame,name=currentframe(),0,[]
         while global_frame.f_code.co_name!="<module>":
             name+=[global_frame.f_code.co_name]
             global_frame=global_frame.f_back
             if len(name)==depth+1:
                 local_frame=(global_frame,) # to create a copy otherwise it's a pointer
         ## instantiate
-        self.name=".".join(["__main__"]+name[::-1][:-1])
-        self.local_frame,self.global_frame=local_frame[0],global_frame
+        self.name=".".join(["__main__"]+name[::-1][:-(1+depth)])
+        if local_frame!=0:
+            self.local_frame,self.global_frame=local_frame[0],global_frame
+        else:
+            raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {len(name)-1}")
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
 
     def __repr__(self) -> str:
@@ -815,7 +778,7 @@ class classproperty:
         self.wrapper=wrapper
         return wrapper
 
-#### needs testing but seems fine #### - will need to stop using classmethods to keep the chain instances as individuals
+#### needs testing but seems fine ####
 class chain:
     """
     if wanting to apply to the object and keep a chain going
@@ -861,123 +824,59 @@ class chain:
     chain._chain__cache
     and can be assigned new values or overwritten
     """
-    __cache=[]
-    def __init__(self,obj: Any=[],**kwargs) -> None:
+    _chain__obj,_chain__use_locals,_chain__use_builtin=0,False,True
+    def __init__(self,obj: Any) -> None:
         self.__obj=obj
-        self.__clear
-        if hasattr(kwargs,"override"):
-            self.__override=kwargs["override"]
-        self.__get_attrs(obj) ## should be all that needs testing
 
-    def __get_attrs(self,obj: Any) -> None:
-        """Finds the new dunder methods to be added to the class"""
-        # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
-        not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
-                   "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
-                   "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
-                   "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
-        self.__selection=["__del__","__hash__","__str__","__bool__","__int__","__float__","__bytes__","__complex__","__format__","__enter__","__exit__","__len__",
-                   "__iter__","__setitem__","__delitem__","__contains__","__reversed__","__next__","__missing__","__length_hint__","__post_init__","__getnewargs__",
-                   "__getnewargs_ex__","__getstate__","__reduce__","__reduce_ex__","__setstate__","__await__","__aenter__","__aexit__","__aiter__","__anext__","__release_buffer__"]
-        for key,value in class_dict(obj).items():
-            if re.match("__.*__",key)!=None:
-                if key in not_allowed:
-                    not_allowed.remove(key)
-                elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
-                    self.__share_attrs(key,self.__wrap(key,value))
-    
-    def __wrap(self,key: str,method: Callable) -> Callable:
-        """
-        wrapper function to ensure methods assigned are instance based 
-        and that the dunder methods return values are wrapped in a chain object
-        if i.e. used in a binary operation or that these are left as is if 
-        type casting a chain object e.g. float(chain(1)) should return 1.0
-        and its type should be float and not my_pack.chain or __main__.chain if 
-        defined in program
-        """
-        if key in self.__selection:
-            @wraps(method) ## retains the docstring
-            def wrapper(_self) -> object: ## will return an instance based method since those are the methods we're after
-                try:
-                    return getattr(_self.__obj,key)()
-                except:
-                    return getattr(_self.__obj,key)(_self.__obj)
-            self.__selection.remove(key)
-        else:
-            @wraps(method) ## retains the docstring
-            def wrapper(_self,*args) -> object:
-                return _self.__chain(method(*args))
-        return wrapper
-
-    __show_errors=False
-    @classmethod
-    def __share_attrs(cls,key: Any,value: object) -> None:
-        """Shares the dunder methods of an object with the class"""
-        try:
-            setattr(cls,key,value)
-            cls.__cache+=[key]
-        except:
-            if cls.__show_errors:
-                print(cls,key,value)
-    
-    def __call__(self,*args,**kwargs) -> Any:
-        """For calling or instantiating the object. If wanting to pass in methods as an object then use .__(method)"""
-        try:
-            return self.__chain(self.__obj(*args,**kwargs))
-        except:
-            if isinstance(args[0],Callable):
-                return self.__chain(args[0](self.__obj,*args[1:],**kwargs))
-            return self.__chain(args[0])
-    
     def __repr__(self) -> str:
         return repr(self.__obj)
-    @classmethod
-    def __add_attr(cls,attr: str) -> None:
-        """Dynamically adds new attributes to a class"""
-        if hasattr(cls,attr)==False:
-            if hasattr(__builtins__,attr) and cls.__use_builtin:
-                setattr(cls,attr,getattr(__builtins__,attr))
-            else:
-                setattr(cls,attr,scope(2)[attr]) ## depth has to be set to '2' to get passed the stack frames __getattr__.__add_attr
-            cls.__cache+=[attr]
-    @classmethod
-    def __static_setter(cls,attr: str) -> None:
-        """Sets an attribute as a staticmethod"""
-        setattr(cls,attr,staticmethod(getattr(cls,attr)))
     
-    def __getattr__(self,attr: str) -> Any:
-        """Modified to instantiate return values as chain objects"""
-        # if attr=="chain" and self.__override==False: # probably not needed
-        #     return partial(chain,self.__obj,override=self.__override)
-        ## consider global vs local overrides
-        if hasattr(self.__obj,attr) and self.__override:
-            return self.__chain(getattr(self.__obj,attr))
-        self.__add_attr(attr)
-        attribute=getattr(self,attr)
+    def __call__(self,*args: Any, **kwargs: Any) -> object:
+        """Modified to update the object in the chain to keep the chain going"""
+        try:
+            self.__obj=self.__obj(*args, **kwargs)
+        except:
+            self.__obj=args[0](self.__obj,*args[1:],**kwargs) if isinstance(args[0],Callable) else args[0]
+        return self
+    
+    def __get_attr(self,key: str) -> Any:
+        try: ## the class always comes first
+            return super().__getattr__(key)
+        except:
+            if self.__use_locals:
+                try: return getattr(self.__obj, key)
+                except: pass
+            # attribute does not exist in either class or object, therefore, it must be either a builtin or in the current scope
+            if hasattr(__builtins__,key) and self.__use_builtin:
+                return getattr(__builtins__,key)
+            else:
+                return scope(2)[key]
+        raise AttributeError(f"Attribute '{key}' does not exist in the current scope or in the current objects configuration")
+    
+    def __check(self,attribute: Any) -> Any:
         if isinstance(attribute,Callable):
             ## pass in the object stored to the Callable
-            for arg_num in get_arg_count(attribute):  ## need to add more functionality
-                if arg_num > 0:
-                    if type(attribute).__name__=="method":
-                        return attribute ## seems only the attribute needs to be passed since setting it to an instance already passes the self.__obj through
-                    return self.__chain(partial(attribute,self.__obj))
+            if sum(get_arg_count(attribute)) > 0:
+                if type(attribute).__name__=="method":
+                    return attribute
+                return partial(attribute,self.__obj)
             ## if the Callable has no params then it has to be a staticmethod
             ## (because it's set to an instance of a class which means it will expect 'self' as the first arg)
             if isinstance(attribute,staticmethod):
-                return self.__chain(attribute)
-            self.__static_setter(attr)
-            return self.__chain(getattr(self,attr))
-        return self.__chain(attribute)
-
-    def __chain(self,attr: Any) -> object:
-        """For creating new chain objects"""
-        return chain(attr,override=self.__override)
+                return attribute
+            return staticmethod(attribute)
+        return attribute
     
-    __override,__use_builtin=False,True
+    def __getattr__(self,key: str) -> object:
+        """Modified to update the object in the chain to keep the chain going"""
+        # check the class first then the object
+        attribute=self.__get_attr(key)
+        self.__obj=self.__check(attribute)
+        return self
     @property
     def _(self) -> object:
         """Changes scope from global to local or local to global"""
-        self.__override=not self.__override ## since it's a bool
+        self.__use_locals=not self.__use_locals ## since it's a bool
         return self
 
     def __(self,obj: Any) -> object:
@@ -986,7 +885,8 @@ class chain:
         Note: this method is basically just self.__chain but for short hand global use which 
         assumes it's more likely to get overriden even though it shouldn't.
         """
-        return self.__chain(obj)
+        self.__obj=obj
+        return self
     @property
     def _g(self) -> object:
         """
@@ -994,19 +894,9 @@ class chain:
         if for whatever reason monkey patching builtins seems 
         appropriate then this allows use of them in the chain
         """
-        self.__change_use_builtin_status
+        self.__use_builtin=not self.__use_builtin
         return self
-    @classproperty
-    def __change_use_builtin_status(cls) -> None:
-        """changes its status via a classmethod"""
-        cls.__use_builtin=not cls.__use_builtin
-    @classproperty
-    def __clear(cls) -> None:
-        """Clears the cache"""
-        for attr in cls.__cache:
-            if hasattr(cls,attr):
-                delattr(cls,attr)
-        cls.__cache=[]
+
     @property
     def BREAK(self) -> Any:
         """Breaks the chain e.g. returns the final object"""
