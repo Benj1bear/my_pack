@@ -72,7 +72,7 @@ class mute:
     
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute on the wrapped object or the mute object itself."""
-        if hasattr(self, "_mute__immute_flag") and self._mute__immute_flag:
+        if self._mute__immute_flag:
             raise TypeError(f"cannot set attribute '{key}' to an immutable type. To create a mutable object use mute(obj)")
         super().__setattr__(key, value)
 
@@ -506,18 +506,17 @@ class scope:
     """
     def __init__(self,depth: int=0) -> None:
         ## get the global_frame, local_frame, and name of the call in the stack
-        global_frame,local_frame,name=currentframe(),0,[]
+        global_frame,local_frame,name=currentframe(),{},[]
         while global_frame.f_code.co_name!="<module>":
             name+=[global_frame.f_code.co_name]
             global_frame=global_frame.f_back
             if len(name)==depth+1:
                 local_frame=(global_frame,) # to create a copy otherwise it's a pointer
         ## instantiate
+        if depth > (temp:=(len(name)-1)):
+            raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
         self.name=".".join(["__main__"]+name[::-1][:-(1+depth)])
-        if local_frame!=0:
-            self.local_frame,self.global_frame=local_frame[0],global_frame
-        else:
-            raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {len(name)-1}")
+        self.local_frame,self.global_frame=local_frame[0],global_frame
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
 
     def __repr__(self) -> str:
