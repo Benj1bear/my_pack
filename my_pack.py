@@ -775,8 +775,14 @@ class classproperty:
         self.wrapper=wrapper
         return wrapper
 
-#### needs testing but seems fine ####
-class chain:
+def class_copy(cls: type) -> type:
+    """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
+    return type(cls.__name__, tuple(), class_dict(cls))
+
+#### needs testing #### - need to fix the wrapper
+# class_copy decorator is used to ensure that the @classmethod decorators are acting on different types by making a copy of the type first.
+@class_copy
+class BaseChain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
@@ -821,35 +827,67 @@ class chain:
     chain._chain__cache
     and can be assigned new values or overwritten
     """
-    _chain__obj,_chain__use_locals,_chain__use_builtin=0,False,True
+    _BaseChain__obj,_BaseChain__use_locals,_BaseChain__use_builtin=0,False,True
     def __init__(self,obj: Any) -> None:
         self.__obj=obj
+        self.__update_bases
+    @property
+    def __update_bases(self) -> None:
+        """Finds the new dunder methods to be added to the class"""
+        # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
+        not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
+                   "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
+                   "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
+                   "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
+        for key,value in class_dict(self.__obj).items():
+            if re.match("__.*__",key)!=None:
+                if key in not_allowed:
+                    not_allowed.remove(key)
+                elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
+                    self.__class_support(self,key,self.__wrap(key,value)) ## class methods # we need to link it to a new class
+        return self
+
+    def __wrap(self,key: str,method: Callable) -> Callable:
+        """
+        wrapper function to ensure methods assigned are instance based 
+        and that the dunder methods return values are wrapped in a chain object
+        if i.e. used in a binary operation or that these are left as is if 
+        type casting a chain object e.g. float(chain(1)) should return 1.0
+        and its type should be float and not my_pack.chain or __main__.chain if 
+        defined in program
+        """
+        @staticmethod
+        @wraps(method)
+        def wrapper(*args):
+            print(method(*args[1:]))
+        return wrapper
+    @classmethod
+    def __class_support(cls,self,key: str,value: Any) -> None:
+        setattr(cls,key,value)
 
     def __repr__(self) -> str:
         return repr(self.__obj)
-    
-    def __call__(self,*args: Any, **kwargs: Any) -> object:
+
+    def __call__(self,*args, **kwargs) -> object:
         """Modified to update the object in the chain to keep the chain going"""
-        try:
-            self.__obj=self.__obj(*args, **kwargs)
-        except:
-            self.__obj=args[0](self.__obj,*args[1:],**kwargs) if isinstance(args[0],Callable) else args[0]
-        return self
-    
+        self.__obj=self.__obj(*args, **kwargs) if hasattr(self.__obj,"__init__") or hasattr(self.__obj,"__call__") else \
+        args[0](self.__obj,*args[1:],**kwargs) if isinstance(args[0],Callable) else args[0]
+        return self.__update_bases
+
     def __get_attr(self,key: str) -> Any:
-        try: ## the class always comes first
+        if key in self.__dict__: ## the class instance always comes first
             return super().__getattr__(key)
-        except:
-            if self.__use_locals:
-                try: return getattr(self.__obj, key)
-                except: pass
-            # attribute does not exist in either class or object, therefore, it must be either a builtin or in the current scope
-            if hasattr(__builtins__,key) and self.__use_builtin:
-                return getattr(__builtins__,key)
-            else:
+        if key in dir(self.__obj) and self.__use_locals: ## then the object
+            return getattr(self.__obj, key)
+        # attribute does not exist in either class or object, therefore, it must be either a builtin or in the current scope
+        if hasattr(__builtins__,key) and self.__use_builtin:
+            return getattr(__builtins__,key)
+        else:
+            try:
                 return scope(2)[key]
-        raise AttributeError(f"Attribute '{key}' does not exist in the current scope or in the current objects configuration")
-    
+            except KeyError:
+                raise AttributeError(f"Attribute '{key}' does not exist in the current scope or in the current objects configuration")
+
     def __check(self,attribute: Any) -> Any:
         if isinstance(attribute,Callable):
             ## pass in the object stored to the Callable
@@ -869,7 +907,7 @@ class chain:
         # check the class first then the object
         attribute=self.__get_attr(key)
         self.__obj=self.__check(attribute)
-        return self
+        return self.__update_bases
     @property
     def _(self) -> object:
         """Changes scope from global to local or local to global"""
@@ -883,7 +921,7 @@ class chain:
         assumes it's more likely to get overriden even though it shouldn't.
         """
         self.__obj=obj
-        return self
+        return self.__update_bases
     @property
     def _g(self) -> object:
         """
