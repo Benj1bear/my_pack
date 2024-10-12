@@ -940,6 +940,7 @@ class tup_ext:
     """Extensions for tuples"""
     def __init__(self,tup: tuple) -> None:
         self.tup=tup
+        #self.match(tup)
 
     def __repr__(self) -> str:
         return str(self.tup)
@@ -947,18 +948,24 @@ class tup_ext:
     def __len__(self) -> int:
         return len(self.tup)
     
-    def __getitem__(self,index) -> tuple:
-        return itemgetter(index)(self.tup)
+    def __getitem__(self,index: int|tuple|list|slice) -> tuple:
+        return self.__getter(index,self.tup)
+    @staticmethod
+    def __getter(index: int|tuple|list|slice,indexes: tuple|list) -> Any:
+        return itemgetter(*index)(indexes) if type(index)==tuple or type(index)==list else itemgetter(index)(indexes)
     
-    def __setitem__(self,indexes,values) -> None:
+    def __setitem__(self,indexes: int|tuple|list|slice,values: tuple[Any]) -> None:
         temp=list(self.tup)
-        for index,value in zip(indexes,values): temp[index]=value
+        if type(indexes)!=tuple or type(indexes)!=list:
+            temp[indexes]=values
+        else:
+            for index,value in zip(indexes,values): temp[index]=value
         self.tup=tuple(temp)
         return self
 
     def __delitem__(self,index: int|slice|tuple) -> None:
         indexes=list(range(len(self.tup)))
-        remove=itemgetter(*index)(indexes) if type(index)==tuple or type(index)==list else itemgetter(index)(indexes)
+        remove=self.__getter(index,indexes)
         if type(remove)!=list: remove=[*remove]
         new_tup=tuple()
         for index,value in enumerate(self.tup):
