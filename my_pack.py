@@ -940,7 +940,6 @@ class tup_ext:
     """Extensions for tuples"""
     def __init__(self,tup: tuple) -> None:
         self.tup=tup
-        #self.match(tup)
 
     def __repr__(self) -> str:
         return str(self.tup)
