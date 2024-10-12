@@ -950,16 +950,22 @@ class tup_ext:
     def __getitem__(self,index) -> tuple:
         return itemgetter(index)(self.tup)
     
-    def __setitem__(self,index,value) -> None:
+    def __setitem__(self,indexes,values) -> None:
         temp=list(self.tup)
-        temp[index]=value
+        for index,value in zip(indexes,values): temp[index]=value
         self.tup=tuple(temp)
+        return self
 
-    def __delitem__(self,index) -> None:
-        remove=list(range(len(self.tup)))[index]
-        if type(remove)!=list:
-            remove=[remove]
-        self.tup=tuple(value for index,value in enumerate(self.tup) if index not in remove)
+    def __delitem__(self,index: int|slice|tuple) -> None:
+        indexes=list(range(len(self.tup)))
+        remove=itemgetter(*index)(indexes) if type(index)==tuple or type(index)==list else itemgetter(index)(indexes)
+        if type(remove)!=list: remove=[*remove]
+        new_tup=tuple()
+        for index,value in enumerate(self.tup):
+            if index not in remove: new_tup+=(value,)
+            else: remove.remove(index)
+        self.tup=new_tup
+        return self
 
 class Print:
     """In-time display"""
