@@ -782,7 +782,7 @@ def class_copy(cls: type) -> type:
 #### needs testing #### - need to fix the wrapper
 # class_copy decorator is used to ensure that the @classmethod decorators are acting on different types by making a copy of the type first.
 @class_copy
-class BaseChain:
+class chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
@@ -827,7 +827,7 @@ class BaseChain:
     chain._chain__cache
     and can be assigned new values or overwritten
     """
-    _BaseChain__obj,_BaseChain__use_locals,_BaseChain__use_builtin=0,False,True
+    _chain__obj,_chain__use_locals,_chain__use_builtin=0,False,True
     def __init__(self,obj: Any) -> None:
         self.__obj=obj
         self.__update_bases
@@ -856,10 +856,9 @@ class BaseChain:
         and its type should be float and not my_pack.chain or __main__.chain if 
         defined in program
         """
-        @staticmethod
-        @wraps(method)
-        def wrapper(*args):
-            print(method(*args[1:]))
+        @wraps(method) ## retains the docstring
+        def wrapper(_self,*args) -> Any:
+            return method(*args)
         return wrapper
     @classmethod
     def __class_support(cls,self,key: str,value: Any) -> None:
