@@ -779,7 +779,7 @@ def class_copy(cls: type) -> type:
     """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
     return type(cls.__name__,(cls,),{})
 
-def create_seperate_chain(func: Callable) -> Callable:
+def create_separate_chain(func: Callable) -> Callable:
     """creates a new chain class seperate from the original chain class"""
     def wrapper(*args,**kwargs) -> Callable:
         return class_copy(func)(*args,**kwargs)
