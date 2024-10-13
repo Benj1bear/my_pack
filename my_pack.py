@@ -786,7 +786,7 @@ def create_seperate_chain(func: Callable) -> Callable:
     return wrapper
 
 #### needs testing #### - need to fix the wrapper
-@create_seperate_chain
+@create_separate_chain
 class chain:
     """
     if wanting to apply to the object and keep a chain going
