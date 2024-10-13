@@ -855,10 +855,10 @@ class chain:
                 if key in not_allowed:
                     not_allowed.remove(key)
                 elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
-                    self.__class_support(key,self.__wrap(key,value)) ## class methods # we need to link it to a new class
+                    self.__class_support(key,self.__wrap(value)) ## class methods # we need to link it to a new class
         return self
 
-    def __wrap(self,key: str,method: Callable) -> Callable:
+    def __wrap(self,method: Callable) -> Callable:
         """
         wrapper function to ensure methods assigned are instance based 
         and that the dunder methods return values are wrapped in a chain object
@@ -869,7 +869,7 @@ class chain:
         """
         @wraps(method) ## retains the docstring
         def wrapper(*args):
-            return getattr(self.__obj, key)(*args[1:])
+            return method(*args[1:])
         return wrapper
     @classmethod
     def __class_support(cls,key: str,value: Any) -> None:
