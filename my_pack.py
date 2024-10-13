@@ -779,8 +779,15 @@ def class_copy(cls: type) -> type:
     """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
     return type(cls.__name__,(cls,),{})
 
+def create_seperate_chain(func: Callable) -> Callable:
+    """creates a new chain class seperate from the original chain class"""
+    def wrapper(*args,**kwargs) -> Callable:
+        return class_copy(func)(*args,**kwargs)
+    return wrapper
+
 #### needs testing #### - need to fix the wrapper
-class Chain:
+@create_seperate_chain
+class chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
@@ -825,7 +832,7 @@ class Chain:
     chain._chain__cache
     and can be assigned new values or overwritten
     """
-    _Chain__obj,_Chain__use_locals,_Chain__use_builtin=0,False,True
+    _chain__obj,_chain__use_locals,_chain__use_builtin=0,False,True
     def __init__(self,obj: Any) -> None:
         self.__obj=obj
         self.__update_bases
@@ -934,10 +941,6 @@ class Chain:
     def BREAK(self) -> Any:
         """Breaks the chain e.g. returns the final object"""
         return self.__obj
-
-@staticproperty
-def chain():
-    return class_copy(Chain)
 
 class tup_ext:
     """Extensions for tuples"""
