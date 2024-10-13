@@ -51,7 +51,7 @@ import dill
 import ctypes
 import copy
 
-## needs fixing ##
+## needs testing ##
 def mutable(obj1: Any) -> bool:
     """determines if an object is mutable. Won't work for very large data sizes where 'internaling' does not cache the ids potentially"""
     return obj1 is not copy.deepcopy(obj1)
