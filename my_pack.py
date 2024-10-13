@@ -55,9 +55,9 @@ def mutable(obj: Any) -> bool:
     """
     determines if an object is mutable.
     
-    Potentially, or just for older versions of python, it may not work for
-    very large data sizes where 'interning' does not cache the ids potentially,
-    however, it seems to work fine even with large data sizes
+    Will always work for builtin immutable types and likely derivatives because the
+    source code for copy.deepcopy in cpython returns the identical object for builtin 
+    immutable types
     """
     return obj is not copy.deepcopy(obj)
 
