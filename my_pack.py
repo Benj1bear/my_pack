@@ -51,7 +51,7 @@ import dill
 import ctypes
 import copy
 
-def mutable(obj1: Any) -> bool:
+def mutable(obj: Any) -> bool:
     """
     determines if an object is mutable.
     
@@ -59,7 +59,7 @@ def mutable(obj1: Any) -> bool:
     very large data sizes where 'interning' does not cache the ids potentially,
     however, it seems to work fine even with large data sizes
     """
-    return obj1 is not copy.deepcopy(obj1)
+    return obj is not copy.deepcopy(obj)
 
 OVERLOADS={}
 def overload(func: Callable) -> Callable:
