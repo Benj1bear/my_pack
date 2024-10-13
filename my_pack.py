@@ -779,14 +779,20 @@ def class_copy(cls: type) -> type:
     """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
     return type(cls.__name__,(cls,),{})
 
-def create_separate_chain(func: Callable) -> Callable:
-    """creates a new chain class seperate from the original chain class"""
+def create_separate_class(func: Callable) -> Callable:
+    """
+    defines a wrapper function that can be repeatedly called allowing new classes at different ids to be created.
+    We cannot use only the wrapper as say a static property otherwise we cannot repeatdly call new classes because
+    being used as a decorator will call it upon definition which therefore is the same class
+    """
+    @wraps(func)
     def wrapper(*args,**kwargs) -> Callable:
+        """creates a new class seperate from the original class"""
         return class_copy(func)(*args,**kwargs)
     return wrapper
 
 #### needs testing #### - need to fix the wrapper
-@create_separate_chain
+@create_separate_class
 class chain:
     """
     if wanting to apply to the object and keep a chain going
