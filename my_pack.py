@@ -858,7 +858,14 @@ class classproperty:
         return wrapper
 
 def class_copy(cls: type) -> type:
-    """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
+    """
+    copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types
+    
+    strictly speaking it doesn't create a new copy of the object in the usual way but creates a 
+    new class that is practically identical to the original class e.g. allocating a new memory 
+    location for a child class inheriting from the original class. Child classes can set attributes 
+    indepent of their parent classes which enables a separation between the types
+    """
     return type(cls.__name__,(cls,),{})
 
 def create_separate_class(func: Callable) -> Callable:
