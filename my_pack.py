@@ -65,7 +65,7 @@ OVERLOADS={}
 def overload(func: Callable) -> Callable:
     """
     overloader for overloading of simple functions i.e. no 
-    self,*,a,b or self,/,a,b supprot has been implemented
+    self,*,a,b or self,/,a,b support has been implemented
     
     Also, this function probably doesn't work for *args,**kwargs
     potentially
@@ -864,7 +864,7 @@ def class_copy(cls: type) -> type:
     strictly speaking it doesn't create a new copy of the object in the usual way but creates a 
     new class that is practically identical to the original class e.g. allocating a new memory 
     location for a child class inheriting from the original class. Child classes can set attributes 
-    indepent of their parent classes which enables a separation between the types
+    independent of their parent classes which enables a separation between the types
     """
     return type(cls.__name__,(cls,),{})
 
