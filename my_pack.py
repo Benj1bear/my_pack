@@ -54,12 +54,36 @@ import copy
 def mutable(obj: Any) -> bool:
     """
     determines if an object is mutable.
+
+    Note: this function will always work assuming the creation of it's state (it's __new__
+    method) does not vary unpredictably e.g. a general test for mutability is not possible
+    because it's unknowable as to all the different ways in which a state is formed if there's 
+    unpredicatability. So something like the following or using a random number generator will 
+    always be part of a family of edge cases:
     
-    Will always work for builtin immutable types and likely derivatives because the
-    source code for copy.deepcopy in cpython returns the identical object for builtin 
-    immutable types
+    count=0
+    class EdgeCase(object):
+        def __new__(cls, *args, **kwargs):
+            global count
+            count+=1
+            if count % 2:
+                return [1,2,3]
+            else:
+                return tuple()
+    
+    print(mutable(EdgeCase())) # True
+    print(mutable(EdgeCase())) # False
+                .                .
+                .                .
+                .                .
+
+    Generally these don't occur but are possible. Hence why mutability tests
+    are not possible unless somehow the source code were taken into consideration
+    or a docstring mentions this kind of behavior.
     """
-    return obj is not copy.deepcopy(obj)
+    cls=obj.__class__
+    if cls==type: return False ## types are immutable
+    return cls.__new__(cls) is not cls.__new__(cls)
 
 OVERLOADS={}
 def overload(func: Callable) -> Callable:
