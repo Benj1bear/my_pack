@@ -863,8 +863,7 @@ class chain:
         """
         @wraps(method) ## retains the docstring
         def wrapper(*args):
-            print(args)
-            return getattr(self.__obj, key)
+            return getattr(self.__obj, key)(*args[1:])
         return wrapper
     @classmethod
     def __class_support(cls,key: str,value: Any) -> None:
