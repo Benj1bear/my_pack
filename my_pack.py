@@ -51,9 +51,14 @@ import dill
 import ctypes
 import copy
 
-## needs testing ##
 def mutable(obj1: Any) -> bool:
-    """determines if an object is mutable. Won't work for very large data sizes where 'internaling' does not cache the ids potentially"""
+    """
+    determines if an object is mutable.
+    
+    Potentially, or just for older versions of python, it may not work for
+    very large data sizes where 'interning' does not cache the ids potentially,
+    however, it seems to work fine even with large data sizes
+    """
     return obj1 is not copy.deepcopy(obj1)
 
 OVERLOADS={}
