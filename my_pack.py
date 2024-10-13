@@ -49,7 +49,11 @@ import importlib
 import psutil
 import dill
 import ctypes
-#import copy
+import copy
+
+def mutable(obj1: Any) -> bool:
+    """determines if an object is mutable. Not sure if it always works but it generally should"""
+    return obj1 is not copy.deepcopy(obj1)
 
 OVERLOADS={}
 def overload(func: Callable) -> Callable:
