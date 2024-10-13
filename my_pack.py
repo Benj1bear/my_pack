@@ -51,6 +51,78 @@ import dill
 import ctypes
 #import copy
 
+OVERLOADS={}
+def overload(func: Callable) -> Callable:
+    """
+    overloader for overloading of simple functions i.e. no 
+    self,*,a,b or self,/,a,b supprot has been implemented
+    
+    Also, this function probably doesn't work for *args,**kwargs
+    potentially
+    
+    The overloader overloads based on two criteria:
+    1. number of args given
+    2. type of args given
+    
+    Note: the second criteria at the moment is very strict e.g. 
+    you couldn't implement an Any type and have it work though
+    generally many things are of an Any type. Will implement 
+    something for it later to allow wider support and flexibility. 
+    However, if you're not going to type annotate the function 
+    definitions inputs then only the first criteria needs to be 
+    met but it will use the earliest definition.
+    
+    How to use:
+    
+    @overload
+    def t() -> None: # all functions must be overloaded otherwise they get overwritten
+        return 1
+    @overload
+    def t(a: int):
+        return 2
+    @overload
+    def t(*args: int,**kwargs: int):
+        return 3
+    """
+    global OVERLOADS
+    ## store
+    args,annotations=get_arg_count(func)[-1],func.__annotations__
+    if "return" in annotations:
+        del annotations["return"]
+    annotations=tuple(annotations.values())
+    if func.__name__ in OVERLOADS: ## replace
+        for dct in OVERLOADS[func.__name__]:
+            if (dct["args"],dct["annotations"])==(args,annotations):
+                dct["func"]=func
+        else:
+            OVERLOADS[func.__name__]+=(dict(args=args,annotations=annotations,func=func),)
+    else:
+        OVERLOADS[func.__name__]=(dict(args=args,annotations=annotations,func=func),)
+    ## pass back function that first does a lookup
+    @wraps(func)
+    def wrapper(*Args,**kwargs) -> Callable:
+        """Since all the functions are the same name we have to look them up before executing"""
+        annotations=tuple()
+        args=(*Args,*kwargs.values())
+        if args:
+            for args,item in enumerate(args):
+                annotations+=(item.__class__,)
+            args+=1 # since it was used as an indexer
+        else:
+            args,annotations=0,tuple()
+        
+        for dct in OVERLOADS[func.__name__]:
+            if dct["args"]==args:
+                temp=dct["annotations"]
+                if temp:
+                    if temp==annotations:
+                        return dct["func"](*Args,**kwargs)
+                else:
+                    return dct["func"](*Args,**kwargs)
+        else:
+            raise TypeError(f"No functions with {args} args and annotations: {annotations}")
+    return wrapper
+
 ## needs testing but seems fine ##
 class mute:
     """
