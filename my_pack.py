@@ -777,12 +777,10 @@ class classproperty:
 
 def class_copy(cls: type) -> type:
     """copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types"""
-    return type(cls.__name__, tuple(), class_dict(cls))
+    return type(cls.__name__,(cls,),{})
 
 #### needs testing #### - need to fix the wrapper
-# class_copy decorator is used to ensure that the @classmethod decorators are acting on different types by making a copy of the type first.
-@class_copy
-class chain:
+class Chain:
     """
     if wanting to apply to the object and keep a chain going
     Examples of how to use:
@@ -827,7 +825,7 @@ class chain:
     chain._chain__cache
     and can be assigned new values or overwritten
     """
-    _chain__obj,_chain__use_locals,_chain__use_builtin=0,False,True
+    _Chain__obj,_Chain__use_locals,_Chain__use_builtin=0,False,True
     def __init__(self,obj: Any) -> None:
         self.__obj=obj
         self.__update_bases
@@ -844,7 +842,7 @@ class chain:
                 if key in not_allowed:
                     not_allowed.remove(key)
                 elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
-                    self.__class_support(self,key,self.__wrap(key,value)) ## class methods # we need to link it to a new class
+                    self.__class_support(key,self.__wrap(key,value)) ## class methods # we need to link it to a new class
         return self
 
     def __wrap(self,key: str,method: Callable) -> Callable:
@@ -857,13 +855,14 @@ class chain:
         defined in program
         """
         @wraps(method) ## retains the docstring
-        def wrapper(_self,*args) -> Any:
-            return method(*args)
+        def wrapper(*args):
+            print(args)
+            return getattr(self.__obj, key)
         return wrapper
     @classmethod
-    def __class_support(cls,self,key: str,value: Any) -> None:
+    def __class_support(cls,key: str,value: Any) -> None:
         setattr(cls,key,value)
-
+        
     def __repr__(self) -> str:
         return repr(self.__obj)
 
@@ -935,6 +934,10 @@ class chain:
     def BREAK(self) -> Any:
         """Breaks the chain e.g. returns the final object"""
         return self.__obj
+
+@staticproperty
+def chain():
+    return class_copy(Chain)
 
 class tup_ext:
     """Extensions for tuples"""
