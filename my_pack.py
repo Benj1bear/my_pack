@@ -95,6 +95,7 @@ def mutable(obj: Any) -> bool:
                         return True
                 except:
                     pass
+            return False
         try:
             cls.__test=3
             del cls.__test
