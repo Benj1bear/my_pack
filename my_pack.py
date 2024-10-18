@@ -82,22 +82,26 @@ def mutable(obj: Any) -> bool:
     or a docstring mentions this kind of behavior.
     """
     cls=obj.__class__
-    if cls==type: ## types can be mutable if you can set attrs to them
+    if cls==type: ## types can be mutable if you can set attrs to them and the memory location stays the same
         if hasattr(cls,"__slots__"):
             if len(cls.__slots__) > 0:
                 try:
+                    previous_id=id(cls)
                     slot=cls.__slots__[0]
                     temp=getattr(cls,slot,3)
                     setattr(cls,slot,3)
                     setattr(cls,slot,temp)
-                    return True
+                    if previous_id==id(cls):
+                        return True
                 except:
                     pass
             return False
         try:
+            previous_id=id(cls)
             cls.__test=3
             del cls.__test
-            return True
+            if previous_id==id(cls):
+                return True
         except:
             return False
     return cls.__new__(cls) is not cls.__new__(cls)
