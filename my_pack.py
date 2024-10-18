@@ -82,7 +82,13 @@ def mutable(obj: Any) -> bool:
     or a docstring mentions this kind of behavior.
     """
     cls=obj.__class__
-    if cls==type: return False ## types are immutable
+    if cls==type:
+        try: ## types can be mutable if you can set attrs to them
+            cls.________________test=3
+            del cls.________________test
+            return True
+        except:
+            return False
     return cls.__new__(cls) is not cls.__new__(cls)
 
 OVERLOADS={}
