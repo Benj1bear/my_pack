@@ -84,6 +84,14 @@ def mutable(obj: Any) -> bool:
     cls=obj.__class__
     if cls==type: ## types can be mutable if you can set attrs to them
         if hasattr(cls,"__slots__"):
+            if len(cls.__slots__) > 0:
+                try:
+                    temp=getattr(cls,cls.__slots__,3)
+                    setattr(cls,cls.__slots__,3)
+                    setattr(cls,cls.__slots__,temp)
+                    return True
+                except:
+                    pass
             return False
         try:
             cls.________________test=3
