@@ -82,8 +82,10 @@ def mutable(obj: Any) -> bool:
     or a docstring mentions this kind of behavior.
     """
     cls=obj.__class__
-    if cls==type:
-        try: ## types can be mutable if you can set attrs to them
+    if cls==type: ## types can be mutable if you can set attrs to them
+        if hasattr(cls,"__slots__"):
+            return False
+        try:
             cls.________________test=3
             del cls.________________test
             return True
