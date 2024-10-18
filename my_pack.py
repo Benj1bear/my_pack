@@ -83,10 +83,10 @@ def mutable(obj: Any) -> bool:
     """
     cls=obj.__class__
     if cls==type: ## types can be mutable if you can set attrs to them and the memory location stays the same
+        previous_id=id(cls)
         if hasattr(cls,"__slots__"):
             if len(cls.__slots__) > 0:
                 try:
-                    previous_id=id(cls)
                     slot=cls.__slots__[0]
                     temp=getattr(cls,slot,3)
                     setattr(cls,slot,3)
@@ -95,15 +95,14 @@ def mutable(obj: Any) -> bool:
                         return True
                 except:
                     pass
-            return False
         try:
-            previous_id=id(cls)
             cls.__test=3
             del cls.__test
             if previous_id==id(cls):
                 return True
         except:
-            return False
+            pass
+        return False
     return cls.__new__(cls) is not cls.__new__(cls)
 
 OVERLOADS={}
