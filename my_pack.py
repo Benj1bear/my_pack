@@ -1497,7 +1497,7 @@ def extract_code(code: str,repl: str=" str ") -> str:
     sub.code+="\n"
     return sub(r"#(.+?)\n","\n")
 
-# needs more testing but works in simple cases
+## needs testing ##
 def export(section: str | Callable,source: str | None=None,to: str | None=None,option: str="w",show: bool=False,recursion_limit: int=10) -> str | None:
     """
     Exports code to a string that can then be used to write to a file or for use elsewhere
@@ -1579,56 +1579,69 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     --------------------
     """
     # get source_code if Callable
-    if isinstance(section,Callable)==True:
-        section,FUNC,source=source_code(section),[section.__name__],section.__module__
+    if isinstance(section,Callable):
+        section,callables,source=source_code(section),[section.__name__],section.__module__
     else:
-        ## check for functions ## raw strings only
-        FUNC=extract_code(FUNC).get
-        FUNC=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",FUNC)]
+        ## since it's a section of code with no source file it belongs to
+        if source==None:
+            ## TODO: make this work for ipynb
+            # scope().scope['__name__'] # ? # use the current process ## (not sure how for .ipynb)
+            raise NotImplementedError("Not yet implemented the source == None case")
+        ## check for functions + classes ## raw strings only
+        callables=extract_code(section).get
+        callables=[i[3:-1].strip() for i in re.findall(r"def\s*\w*\s*\(",callables)]+\
+                  [i[5:-1].strip() for i in re.findall(r"class\s*\w*\s*\(|\:",callables)]#+\
+                  #[i[5:-1].strip() for i in re.findall(r"class\s*\w*\s*\(|\:",callables)] # from ... import ...
+        ###########################################################################
+        ## there's an edge case I need to explore later where there's 
+        ## a runtime error here on definitions of functions, classes, and variables etc.
+        # * This applies to both sections and functions source code * #
+        ###########################################################################
+        """
+        def t():
+            h()
+        
+        from mod import h
+        
+        """
+        ###########################################################################
+        ###########################################################################
     # prep section
     variables,code_export=get_variables(section),section
-    if len(variables)>0:
-        # gather all functions,classes available to the .py file
-        callables,source=all_callables(source,True)
-        if len(FUNC)>0:
-            callables=[func for func in callables if func.__name__ not in FUNC]
+    if len(variables) > 0:
+        # why all the callables and not all the attrs???
+        # gather all functions and classes available to the source file of interest
+        new_callables,source=all_callables(source,True)
+        callables_in_source=new_callables.difference(callables)
         # start exporting code
-        if show:print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
-        ######################### add an option to keep the initial section separate from the rest of the code??
-        code_export,modules,module_names=get_code_requirements(*(section,callables,variables,variables,source,show,{},pd.DataFrame()),limit=recursion_limit)
+        if show: print("initial section:\n"+"-"*20+"\n"+section+"\n"+"-"*20)
+        code_export,modules,module_names=get_code_requirements(*(section,callables_in_source,variables,variables,source,show),limit=recursion_limit)
         ## add the modules ##
-        if len(modules)>0:
-            header=""
-            for key in list(modules.keys()):
-                module=modules[key]
+        if len(modules) > 0:
+            header="\n" if option=="a" else ""
+            for key,module in modules.items():
                 if len(module)==0:
                     header+="import "+key
                     name=module_names[module_names[0]==key][2]
-                    if len(name)>0:
+                    if len(name) > 0:
                         header+=" as "+list(name)[0]
-                    header+="\n"
                 else:
-                    header+=f"from {key} import "+", ".join(module)+"\n"
+                    header+=f"from {key} import "+", ".join(module)
+                header+="\n"
             # append all modules to the top of the section
             code_export=header+"\n"+code_export
-    if to==None:
-        return code_export
-    #####################################################################
-    print("----------final results---------- \n")
-    print(code_export)
-    #####################################################################
-    with open(to,option) as file:
-        file.write(code_export)
+    if to==None: return code_export
+    with open(to,option) as file: file.write(code_export)
 
 def split_list(reference: list[str],condition: Callable) -> (list,list):
     """For splitting one list into two based on a condition function"""
     new,remaining=[],[]
-    for i in reference:
+    for item in reference:
         try:
             if condition(i):
-                new+=[i]
+                new+=[item]
             else:
-                remaining+=[i]
+                remaining+=[item]
         except:
             None
     return new,remaining
@@ -1696,6 +1709,7 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
             raise TypeError(f"Variable '{local_temp}' from new_exports is not a Callable or module type")
     return section,modules
 
+## needs testing
 def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable],pd.DataFrame):
     """Traverses an attribute to uncover where each of the individual attribute came from"""
     new_exports=[]
@@ -1763,7 +1777,7 @@ def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (lis
         return allowed_exports,definitions,callables,new_exports[new_exports.isnull()==False]
     return [],"",callables,[]
 
-def all_callables(module: str,return_module: bool=False) -> list[str] or (list[str],str):
+def all_callables(module: str,return_module: bool=False) -> list[str] | tuple[list[str],str]:
     """Returns a list of all callables available in a module"""
     try:
         source=__import__(module)
@@ -1778,16 +1792,9 @@ def all_callables(module: str,return_module: bool=False) -> list[str] or (list[s
         except Exception as e:
             os.chdir(current)
             raise e
-    callables=[]
-    for i in dir(source):
-        exec("temp=source."+i)
-        if isinstance(locals()["temp"],Callable)==True:
-            callables+=[locals()["temp"]]
-        if return_module==True and isinstance(locals()["temp"],ModuleType)==True:
-            callables+=[locals()["temp"]]
-    if return_module:
-        return callables,module
-    return callables
+    callables=[temp for attr in dir(source)
+                if isinstance((temp:=getattr(source,attr)),Callable) or (return_module and isinstance(temp,ModuleType))]
+    return callables,module if return_module else callables
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
     """
@@ -2071,7 +2078,7 @@ Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types""")
     variables=set(sub.get.split(" "))
     # filter to identifier and non keywords only with builtins removed
     builtins=get_builtins()
-    return [i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i]
+    return {i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i}
 
 def str_ascii(obj: str | list[int,...]) -> list[int,...] | str:
     """
