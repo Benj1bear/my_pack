@@ -86,16 +86,17 @@ def mutable(obj: Any) -> bool:
         if hasattr(cls,"__slots__"):
             if len(cls.__slots__) > 0:
                 try:
-                    temp=getattr(cls,cls.__slots__,3)
-                    setattr(cls,cls.__slots__,3)
-                    setattr(cls,cls.__slots__,temp)
+                    slot=cls.__slots__[0]
+                    temp=getattr(cls,slot,3)
+                    setattr(cls,slot,3)
+                    setattr(cls,slot,temp)
                     return True
                 except:
                     pass
             return False
         try:
-            cls.________________test=3
-            del cls.________________test
+            cls.__test=3
+            del cls.__test
             return True
         except:
             return False
