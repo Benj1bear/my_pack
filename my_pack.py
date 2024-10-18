@@ -1633,7 +1633,7 @@ def export(section: str | Callable,source: str | None=None,to: str | None=None,o
     if to==None: return code_export
     with open(to,option) as file: file.write(code_export)
 
-def split_list(reference: list[str],condition: Callable) -> (list,list):
+def split_list(reference: list[str],condition: Callable) -> tuple[list,list]:
     """For splitting one list into two based on a condition function"""
     new,remaining=[],[]
     for item in reference:
