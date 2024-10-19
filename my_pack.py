@@ -56,7 +56,7 @@ def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     initial_obj=module_copy(obj.__name__) if isinstance(obj,ModuleType) else getattr(module_copy(obj.__module__),obj.__name__)
     if hasattr(initial_obj,attr):
         return getattr(initial_obj,attr)!=getattr(obj,attr)
-    return True if hasattr(obj,attr) else False
+    return hasattr(obj,attr)
 
 def module_copy(module: str,name: str="") -> ModuleType:
     """creates a copy of a module"""
