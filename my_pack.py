@@ -51,13 +51,13 @@ import dill
 import ctypes
 from copy import deepcopy
 
-def copy(*args) -> tuple[Any]:
+def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in args:
         if isinstance(arg,FunctionType):
             new_args+=(deepcopy(arg),)
-        if isinstance(arg,Callable):
+        elif isinstance(arg,Callable):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
