@@ -55,7 +55,9 @@ def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in args:    
-        if isinstance(arg,type):
+        if isinstance(arg,FunctionType):
+            new_args+=(FunctionType(arg.__code__,{}),)
+        elif isinstance(arg,type):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
