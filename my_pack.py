@@ -64,6 +64,7 @@ def copy(*args) -> Any|tuple[Any]:
         else:
             try:
                 new_args+=(deepcopy(arg),)
+                continue
             except:
                 pass
             extend="" if mutable(arg) else " but is likely an immutable type"
