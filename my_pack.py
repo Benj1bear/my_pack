@@ -54,16 +54,18 @@ from copy import deepcopy
 def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
-    for arg in args:
-        if isinstance(arg,FunctionType):
-            new_args+=(deepcopy(arg),)
-        elif isinstance(arg,Callable):
+    for arg in args:    
+        if isinstance(arg,type):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
         elif hasattr(arg,"copy"):
             new_args+=(arg.copy(),)
         else:
+            try:
+                new_args+=(deepcopy(arg),)
+            except:
+                pass
             extend="" if mutable(arg) else " but is likely an immutable type"
             warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
             new_args+=(arg,)
