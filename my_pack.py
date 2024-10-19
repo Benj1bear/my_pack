@@ -49,13 +49,15 @@ import importlib
 import psutil
 import dill
 import ctypes
-#import copy
+from copy import deepcopy
 
 def copy(*args) -> tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in (*args,):
-        if isinstance(arg,Callable) and not isinstance(arg,FunctionType):
+        if isinstance(arg,FunctionType):
+            new_args+=(deepcopy(arg),)
+        if isinstance(arg,Callable):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
