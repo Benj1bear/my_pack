@@ -1633,7 +1633,7 @@ def split_list(reference: list[str],condition: Callable) -> tuple[list,list]:
     new,remaining=[],[]
     for item in reference:
         try:
-            if condition(i):
+            if condition(item):
                 new+=[item]
             else:
                 remaining+=[item]
