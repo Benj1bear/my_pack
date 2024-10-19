@@ -67,7 +67,7 @@ def copy(*args) -> tuple[Any]:
             extend="" if mutable(arg) else " but is likely a mutable type"
             warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
             new_args+=(arg,)
-    return new_args
+    return new_args[0] if len(new_args)==1 else new_args
 
 def module_copy(module: ModuleType) -> ModuleType:
     """Creates a copy of a module"""
