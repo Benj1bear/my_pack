@@ -51,7 +51,7 @@ import dill
 import ctypes
 #import copy
 
-def module_copy(module: ModuleType):
+def module_copy(module: ModuleType) -> ModuleType:
     """Creates a copy of a module"""
     module_copied = ModuleType(module.__name__, module.__doc__)
     module_copied.__dict__.update(module.__dict__)
