@@ -53,11 +53,11 @@ import ctypes
 
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
-    initial_obj=module_copy(obj.__name__) if isinstance(obj,ModuleType) else getattr(module_copy(obj.__module__),obj.__name__)
+    initial_obj=new_module(obj.__name__) if isinstance(obj,ModuleType) else getattr(new_module(obj.__module__),obj.__name__)
     return getattr(initial_obj,attr)!=getattr(obj,attr) if hasattr(initial_obj,attr) else hasattr(obj,attr)
 
-def module_copy(module: str,name: str="") -> ModuleType:
-    """creates a copy of a module"""
+def new_module(module: str,name: str="") -> ModuleType:
+    """creates a new version of a module"""
     spec=importlib.util.find_spec(module)
     module=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
