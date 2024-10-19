@@ -64,7 +64,6 @@ def copy(*args) -> Any|tuple[Any]:
         else:
             try:
                 new_args+=(deepcopy(arg),)
-                continue
             except:
                 extend="" if mutable(arg) else " but is likely an immutable type"
                 warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
