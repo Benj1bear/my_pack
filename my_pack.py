@@ -56,9 +56,7 @@ def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     initial_obj=module_copy(obj.__name__) if isinstance(obj,ModuleType) else getattr(module_copy(obj.__module__),obj.__name__)
     if hasattr(initial_obj,attr):
         return getattr(initial_obj,attr)!=getattr(obj,attr)
-    if hasattr(obj,attr):
-        return True
-    raise AttributeError(f"attribute '{attr}' is not monkey patched to '{obj}'")
+    return True if hasattr(obj,attr) else False
 
 def module_copy(module: str,name: str="") -> ModuleType:
     """creates a copy of a module"""
