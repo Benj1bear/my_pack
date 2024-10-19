@@ -20,7 +20,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-from types import ModuleType,BuiltinFunctionType,FrameType
+from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType
 from typing import Any,Callable
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
@@ -55,7 +55,7 @@ def copy(*args) -> tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in (*args,):
-        if isinstance(arg,Callable) and not isinstance(arg,types.FunctionType):
+        if isinstance(arg,Callable) and not isinstance(arg,FunctionType):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
