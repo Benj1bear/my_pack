@@ -51,6 +51,12 @@ import dill
 import ctypes
 #import copy
 
+def module_copy(module: ModuleType):
+    """Creates a copy of a module"""
+    module_copied = ModuleType(module.__name__, module.__doc__)
+    module_copied.__dict__.update(module.__dict__)
+    return module_copied
+
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
     initial_obj=new_module(obj.__name__) if isinstance(obj,ModuleType) else getattr(new_module(obj.__module__),obj.__name__)
