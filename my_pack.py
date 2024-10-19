@@ -50,18 +50,19 @@ import psutil
 import dill
 import ctypes
 #import copy
-    
+
 def copy(*args) -> tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in (*args,):
-        if type(arg).__name__!="function" and type(arg).__name__!="method":
+        if isinstance(arg,Callable) and not isinstance(arg,types.FunctionType):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
         elif hasattr(arg,"copy"):
             new_args+=(arg.copy(),)
         else:
+            warn(f"{arg.__name__} was not copied")
             new_args+=(arg,)
     return new_args
 
