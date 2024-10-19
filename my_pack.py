@@ -59,8 +59,10 @@ def copy(*args) -> tuple[Any]:
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
             new_args+=(module_copy(arg),)
-        else:
+        elif hasattr(arg,"copy"):
             new_args+=(arg.copy(),)
+        else:
+            new_args+=(arg,)
     return new_args
 
 def module_copy(module: ModuleType) -> ModuleType:
