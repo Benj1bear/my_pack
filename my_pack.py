@@ -214,7 +214,7 @@ class mute:
         return self.__obj(*args, **kwargs)
 
 ## needs testing ## - might re-write the code to allow starting with multiple .pkl files so that the processes are not locking up on one file if it's causing slow downs
-def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> Any:
+def multi_process(number_of_processes: int,interval_length: int,FUNC: Callable,combine: str|None=None,wait: bool=True) -> dict|Any|list[subprocess.Popen]:
     """
     multi processor for python code via strings and subprocesses.
 
@@ -416,18 +416,14 @@ class nonlocals:
     def __setitem__(self,key: Any,value: Any) -> None:
         self.check(key)
         self.locals[key]=value
-        self.__update
+        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(0))
 
     def __delitem__(self,key: Any) -> None:
         self.check(key)
         del self.locals[key]
         # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
-    @property
-    def __update(self) -> None:
-        """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
-        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
-        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(0))
 
 ## may add a feature to show the correct names when using stackframes if possible
 def staticproperty(func: Callable) -> Any:
@@ -484,6 +480,9 @@ class Store:
     def __setitem__(self,index: slice|int,value: Any) -> object:
         self.stored[index]=value
         return self
+
+    def __delitem__(self,index: int) -> None:
+        del self.stored[index]
 
 share=Store()
     
@@ -677,7 +676,8 @@ class scope:
     def __setitem__(self,key: Any,value: Any) -> None:
         if key in self.locals:
             self.locals[key]=value
-            self.__update
+            # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+            ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
         else:
             self.globals[key]=value
 
@@ -688,18 +688,13 @@ class scope:
             ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
         else:
             del self.globals[key]
-    @property
-    def __update(self) -> None:
-        """Updates the frame in program. Note: the global frame gets updated anyway e.g. it's only needed for local frames"""
-        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
-        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
     names=name(depth=1)["args"]
     return dict(zip(names,args))
 
-def refs(*args,scope_used: dict=None) -> list:
+def refs(*args,scope_used: dict=None) -> list[list[str]]:
     """Returns all variable names that are also assigned to the same memory location within a desired scope"""
     if scope_used==None:
         scope_used=scope(1).scope # depth set to '1' to get passed the the refs stack frame
@@ -977,7 +972,7 @@ class chain:
         self.__obj=obj
         self.__update_bases
     @property
-    def __update_bases(self) -> None:
+    def __update_bases(self) -> object:
         """Finds the new dunder methods to be added to the class"""
         # all dunder methods not allowed to be shared (else the chain classes attributes needed for it to work will get overwritten)
         not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
@@ -1179,7 +1174,7 @@ def all_combinations(ls: list,start: int=1,stop: int=0) -> iter:
     return (combo for i in range(start,stop) for combo in combinations(ls,i))
 
 SKLEARN_IMPORTED=False
-def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tuple[Callable,str]:
+def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tuple[Callable,str]|Callable:
     """Convenience function for obtaining common sklearn and other classifier models"""
     global SKLEARN_IMPORTED
     if show:
@@ -1215,7 +1210,7 @@ def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tu
         return FUNC,depth
     return FUNC
 
-def dct_join(*dcts) -> dict:
+def dct_join(*dcts: tuple[dict]) -> dict:
     """For concatenating multiple dicts together where all have the same keys"""
     keys=biop(map(lambda x:x.keys(),dcts),"|")
     return {key: [dct[key] if key in dct else None for dct in dcts] for key in keys}
@@ -1307,7 +1302,7 @@ def browse_from_file(filename: str) -> None:
         urls=[url for line in file if (url:=line.strip())]
     browse(urls) if urls else print("No links found in the file.")
 
-def browse(urls: list[str]) -> None:
+def browse(urls: list[str]) -> list[None]:
     """Uses Google Chrome to browse a selection of links"""
     return [webbrowser.open(url, new=2, autoraise=True) for url in urls]
 
@@ -1346,7 +1341,7 @@ def to_pickle(obj: object,filename: str,force: bool=False) -> None:
         if force: return dill.dump(obj, file)
         pickle.dump(obj, file)
 
-def read_pickle(filename: "str",force: bool=False) -> object:
+def read_pickle(filename: "str",force: bool=False) -> Any:
     """Convenience function for reading pickled objects in python with context management"""
     if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename, 'rb') as file:
@@ -1453,12 +1448,12 @@ class sanitize:
             __check(self.FUNC,args=args,kwargs=kwargs)
         return self.FUNC(*args,**kwargs)
     @classmethod  ## if we want global class manipulation before instantiation we have to use @classmethod ##
-    def add(cls,*args: Callable) -> object:
+    def add(cls,*args: Callable) -> type:
         """adds additional custom checks to inputs (globally e.g. for all instances)"""
         cls.checks=(*cls.checks,*args)
         return cls
     @classmethod
-    def remove(cls,*args: Callable) -> object:
+    def remove(cls,*args: Callable) -> type:
         """removes checks from all instances of the class"""
         cls.checks=tuple(__check for __check in cls.checks if __check not in args)
         return cls
@@ -1484,7 +1479,7 @@ class Sub:
     def get(self) -> str:
         return self.code
 
-def extract_code(code: str,repl: str=" str ") -> str:
+def extract_code(code: str,repl: str=" str ") -> Sub:
     """Removes all strings and comments from code"""
     sub=Sub(code)
     ## remove all double backslashes (i.e. "\\" is possible for a string) and distinguish strings ##
@@ -1689,7 +1684,7 @@ def get_code_requirements(section: str,callables: list[str],temp_variables: list
         return get_code_requirements(*(section,callables,temp_variables,new_variables_present,source,show,modules,current_modules,recursions))
     return section+definitions,modules,current_modules
 
-def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (str,dict):
+def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> tuple[str,dict]:
     """For retrieving and appending necessary code the section depends on"""
     try:
         ## assume it's a function or class ##
@@ -1710,7 +1705,7 @@ def add_code(section: str,modules: dict,local_temp: Callable,source: str) -> (st
     return section,modules
 
 ## needs testing
-def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> (list[str],str,list[Callable],pd.DataFrame):
+def search_attrs(attrs: list[str],source: str,callables: list[Callable]) -> tuple[list[str],str,list[Callable],pd.DataFrame]:
     """Traverses an attribute to uncover where each of the individual attribute came from"""
     new_exports=[]
     # only add it in if there's a callable for it
@@ -1796,7 +1791,7 @@ def all_callables(module: str,return_module: bool=False) -> list[str] | tuple[li
                 if isinstance((temp:=getattr(source,attr)),Callable) or (return_module and isinstance(temp,ModuleType))]
     return callables,module if return_module else callables
 
-def side_display(dfs:pd.DataFrame | list[pd.DataFrame,...], captions: str | list=[], spacing: int=0) -> None:
+def side_display(dfs:pd.DataFrame | list[pd.DataFrame], captions: str | list=[], spacing: int=0) -> None:
     """
     # code reference: Lysakowski, R., Aristide, (2021) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA,
     # changes made: Added flexibility to user input and exception handling, made minor adjustments to type annotations and code style preferences, implemented my comments
@@ -2048,7 +2043,7 @@ def remove_strings(section: str) -> str:
     ## remove the various types of string (since the starting piece is still there) ##
     return re.sub(r"r\"|r'|b\"|b'|f\"|f'|\"|'"," str ",new_section)
 
-def get_variables(code: str) -> list[str]:
+def get_variables(code: str) -> set[str]:
     """
     Extract only variable names from strings
     
@@ -2080,7 +2075,7 @@ Cannot have i.e. 1.method() but you can have (1).method() e.g. for int types""")
     builtins=get_builtins()
     return {i for i in variables if (i.isidentifier() == True and iskeyword(i) == False and i not in builtins) or "." in i}
 
-def str_ascii(obj: str | list[int,...]) -> list[int,...] | str:
+def str_ascii(obj: str | list[int]) -> list[int] | str:
     """
     for converting a string to list of ascii or list of 
     ints to string according to ascii convention
@@ -2166,9 +2161,9 @@ def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
     # should print
     # '3'
     """
-    def wrap_wrapper(func: Callable): # function to wrap
+    def wrap_wrapper(func: Callable) -> Callable: # function to wrap
         @wraps(func) # transfers the docstring since the functions redefined as the wrapper
-        def wrapper(*args,**kwargs) -> None: # its args
+        def wrapper(*args,**kwargs) -> Any: # its args
             return FUNC(func(*args,**kwargs),*wrap_args,**wrap_kwargs)
         return wrapper
     return wrap_wrapper
@@ -2211,7 +2206,7 @@ def user_yield(gen: iter) -> None:
                 elif user_input.strip() == "cls":
                     clear_display()
 
-def slice_occ(string: str,occurance: str,times: int=1) -> str:
+def slice_occ(string: str,occurance: str,times: int=1) -> str|tuple[str,str]:
     """
     slices a string at an occurance after a specified number of times occuring
     """
@@ -2223,7 +2218,7 @@ def slice_occ(string: str,occurance: str,times: int=1) -> str:
             count+=1
     return string
 
-def source_code(FUNC: Callable,join: bool=True,key: str="original") -> (str,str,str):
+def source_code(FUNC: Callable,join: bool=True,key: str="original") -> tuple[str,str,str,str]|str:
     """
     my function for breaking up source code
     (will further develop later once I've
@@ -2409,10 +2404,10 @@ def refresh() -> None:
     """Refreshes jupyter notebook; it will save the current page as well"""
     display(Javascript("Jupyter.notebook.save_checkpoint();window.onbeforeunload=null;location.reload();"))
 
-def dynamic_js_wrapper(func: Callable[bool,...]) -> None:
+def dynamic_js_wrapper(func: Callable[...,bool]) -> Callable:
     """wrapper function for dynamically created javascript functions to save code"""
     @wraps(func)
-    def wrapper(reload: bool=False)->None:
+    def wrapper(reload: bool=False) -> None:
         if reload:
             return refresh()
         name=str(func).split()[1]
@@ -2427,7 +2422,7 @@ if(document.querySelectorAll("[id={name}]").length == 1){{
     return wrapper
 
 @dynamic_js_wrapper
-def generate_exec_ids(reload: bool=False) -> None:
+def generate_exec_ids(reload: bool=False) -> tuple[str,str]:
     """
     For generating execution order ids and status in jupyter notebook
     Note: if it causes crashes then it's because the kernel was restarted
@@ -2481,7 +2476,7 @@ function start_obs(){
     return script,call
 
 @dynamic_js_wrapper
-def generate_cell_ids(reload: bool=False) -> None:
+def generate_cell_ids(reload: bool=False) -> tuple[str,str]:
     """
     For generating execution order ids and status in jupyter notebook
     
@@ -2623,7 +2618,7 @@ def all_packs() -> pd.DataFrame:
     ls = [re.split(r"\s{2,}",i) for i in ls]
     return pd.DataFrame(ls[1:],columns=ls[0])
 
-def get_functions(code: str) -> (list[int],list[int]):
+def get_functions(code: str) -> tuple[list[int],list[int]]:
     """finds function definitions in strings"""
     # get starting indexes for all 'def ' statements made
     indexes=line_sep(code,"def ",exact_index=True)
@@ -2667,19 +2662,9 @@ def to_module(code: str) -> Callable[..., Any]:
     sys.modules[module_name] = module
     return module
 
-def inherit(class_name: object,*args: object) -> object:
+def inherit(cls: type,*bases: tuple[type]) -> type:
     """Adds inheritence to a choosen classname. This works for nested classes as well"""
-    # get the names
-    def get_name(x):
-        """gets the literal name of the variable that's passed in"""
-        return x.split("__main__.")[1][:-2]
-    name = get_name(str(class_name))
-    cls=name+","
-    for arg in args:
-        cls+=get_name(str(arg))+","
-    # define / redefine class with inheritance
-    exec(compile(f"class temp(*("+cls[:-1]+")):pass","","exec"))
-    return locals()["temp"] # works
+    return type(cls.__name__,bases,cls.__dict__)
 
 @property
 class str_df:
@@ -3004,7 +2989,7 @@ def indx_split(indx: list[int]=[],string: str="") -> list[str]:
     """Allows splitting of strings via indices"""
     return [string[start:end] for start,end in zip(indx, indx[1:]+[None])]
 
-def line_sep(string: str,op: str,sep: str="",split: bool=True,index: bool=False,exact_index: bool=False,avoid :str="\"'") -> list[int]|str|list[str]:
+def line_sep(string: str,op: str,sep: str="",split: bool=True,index: bool=False,exact_index: bool=False,avoid :str="\"'") -> list[int|str]|str:
     """separates lines in code by op avoiding op in strings"""
     in_string=0
     indx=0
@@ -3092,7 +3077,7 @@ def bracket_up(string: str,start :str="(",end: str=")",avoid: str="\"'") -> pd.D
 def func_dict(string: str) -> str:
     """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """
 
-    def dict_format(temp: int,commas: pd.Series|pd.DataFrame,section: list,old_section_length: int,adjust: int) -> (list,int):
+    def dict_format(temp: int,commas: pd.Series|pd.DataFrame,section: list,old_section_length: int,adjust: int) -> tuple[list,int]:
         """For formatting (a=3) into {"a":3}"""
         comma=commas[commas <= temp].iloc[0] # the min it can be is 0 so... does this matter?
         # getting (no temp + 1 here because we want to exclude the '=')
@@ -3491,7 +3476,7 @@ def skip(iter_val: iter,n: int) -> None:
     for _ in range(n):
         next(iter_val)
 
-def argmiss(returns: dict|tuple,temp: dict|tuple,func: Callable) -> Callable[Any,...]:
+def argmiss(returns: dict|tuple,temp: dict|tuple,func: Callable) -> Callable[...,Any]:
     """
     Sorts out the combinations of missing arguements
     
@@ -3516,7 +3501,7 @@ def argmiss(returns: dict|tuple,temp: dict|tuple,func: Callable) -> Callable[Any
             return func(*(*returns,*temp))
         return func(*(*returns,temp))
 
-def pipe(*args,reverse: bool=False) -> Callable[Any,...]:
+def pipe(*args,reverse: bool=False) -> Callable[...,Any]:
     """
     pipe operator for python without class overriding methods (that require additional overhead)
         
@@ -3617,7 +3602,7 @@ def cprop_plot(occ: pd.DataFrame,part: pd.DataFrame,args={"figsize":(15.5,7.5),"
         plt.scatter(part[i],occ[i],alpha=args["alpha"])
     plt.show()
 
-def multi_cprop(df: pd.DataFrame,cols: list) -> (pd.DataFrame,pd.DataFrame,pd.DataFrame):
+def multi_cprop(df: pd.DataFrame,cols: list) -> tuple[pd.DataFrame,pd.DataFrame,pd.DataFrame]:
     """
     cprop but for multi-classes; though drops the target column as you probably shouldn't include it anyway, 
     else it's not difficult to correct e.g. just use cprop on itself.
@@ -3662,7 +3647,7 @@ def multi_cprop(df: pd.DataFrame,cols: list) -> (pd.DataFrame,pd.DataFrame,pd.Da
     participation.columns.name = "participation"
     return occurances,participation,cts
 
-def cprop(df: pd.DataFrame,occurance: pd.DataFrame) -> (pd.DataFrame,pd.DataFrame):
+def cprop(df: pd.DataFrame,occurance: pd.DataFrame) -> tuple[pd.DataFrame,pd.DataFrame]:
     """
     occurance must be a binary indicator; Try to use categorical variables for better results
     How to use:
