@@ -54,7 +54,11 @@ import ctypes
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
     initial_obj=module_copy(obj.__name__) if isinstance(obj,ModuleType) else getattr(module_copy(obj.__module__),obj.__name__)
-    return getattr(initial_obj,attr)!=getattr(obj,attr) if hasattr(initial_obj,attr) else True
+    if hasattr(initial_obj,attr):
+        return getattr(initial_obj,attr)!=getattr(obj,attr)
+    if hasattr(obj,attr):
+        return True
+    raise AttributeError(f"attribute '{attr}' is not monkey patched to '{obj}'")
 
 def module_copy(module: str,name: str="") -> ModuleType:
     """creates a copy of a module"""
