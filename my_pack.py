@@ -54,7 +54,7 @@ from copy import deepcopy
 def copy(*args) -> tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
-    for arg in (*args,):
+    for arg in args:
         if isinstance(arg,FunctionType):
             new_args+=(deepcopy(arg),)
         if isinstance(arg,Callable):
