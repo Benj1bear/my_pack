@@ -50,6 +50,18 @@ import psutil
 import dill
 import ctypes
 #import copy
+    
+def copy(*args) -> tuple[Any]:
+    """general purpose function for copying python objects"""
+    new_args=tuple()
+    for arg in (*args,):
+        if type(arg).__name__!="function" and type(arg).__name__!="method":
+            new_args+=(class_copy(arg),)
+        elif isinstance(arg,ModuleType):
+            new_args+=(module_copy(arg),)
+        else:
+            new_args+=(arg.copy(),)
+    return new_args
 
 def module_copy(module: ModuleType) -> ModuleType:
     """Creates a copy of a module"""
@@ -918,12 +930,9 @@ def class_copy(cls: type) -> type:
     """
     copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types
     
-    strictly speaking it doesn't create a new copy of the object in the usual way but creates a 
-    new class that is practically identical to the original class e.g. allocating a new memory 
-    location for a child class inheriting from the original class. Child classes can set attributes 
-    independent of their parent classes which enables a separation between the types
+    creates a new class that is identical to the original class
     """
-    return type(cls.__name__,(cls,),{})
+    return type(cls.__name__,(),dict(cls.__dict__))
 
 def create_separate_class(func: Callable) -> Callable:
     """
