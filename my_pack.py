@@ -85,16 +85,15 @@ def mutable(obj: Any) -> bool:
     if cls==type: ## types can be mutable if you can set attrs to them and the memory location stays the same
         previous_id=id(obj)
         if hasattr(obj,"__slots__"):
-            if len(obj.__slots__) > 0:
-                try:
-                    slot=obj.__slots__[0]
-                    temp=getattr(obj,slot,3)
-                    setattr(obj,slot,3)
-                    setattr(obj,slot,temp)
-                    if previous_id==id(obj):
-                        return True
-                except:
-                    pass
+            try:
+                slot=obj.__slots__[0]
+                temp=getattr(obj,slot,3)
+                setattr(obj,slot,3)
+                setattr(obj,slot,temp)
+                if previous_id==id(obj):
+                    return True
+            except:
+                pass
             return False
         try:
             obj.__test=3
