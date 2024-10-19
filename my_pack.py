@@ -64,7 +64,7 @@ def copy(*args) -> Any|tuple[Any]:
         elif hasattr(arg,"copy"):
             new_args+=(arg.copy(),)
         else:
-            extend="" if mutable(arg) else " but is likely a mutable type"
+            extend="" if mutable(arg) else " but is likely an immutable type"
             warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
             new_args+=(arg,)
     return new_args[0] if len(new_args)==1 else new_args
