@@ -59,7 +59,9 @@ def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
 def module_copy(module: str,name: str="") -> ModuleType:
     """creates a copy of a module"""
     spec=importlib.util.find_spec(module)
-    return importlib.util.module_from_spec(spec)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 def mutable(obj: Any) -> bool:
     """
