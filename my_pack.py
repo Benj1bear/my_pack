@@ -74,7 +74,7 @@ def copy(*args) -> Any|tuple[Any]:
     new_args=tuple()
     for arg in args:    
         if isinstance(arg,FunctionType):
-            new_args+=(FunctionType(arg.__code__,globals()),)
+            new_args+=(FunctionType(arg.__code__,locals()),)
         elif isinstance(arg,type):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
