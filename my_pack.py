@@ -69,7 +69,7 @@ class BuiltinInstance:
         isinstance(None,instance) ## it shouldn't raise an error if it's a valid arguement for isinstance
         self.instance,self.builtins=instance,__builtins__.__dict__.values()
     
-    def __instancecheck__(self,instance) -> bool:
+    def __instancecheck__(self,instance: type|tuple[type]) -> bool:
         return isinstance(instance,self.instance) and instance in self.builtins
 
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
