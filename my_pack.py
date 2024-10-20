@@ -51,6 +51,27 @@ import dill
 import ctypes
 from copy import deepcopy
 
+class BuiltinInstance:
+    """
+    Used for checking instances of types specific to builtin types
+    
+    How to use:
+    
+    i.e.
+    BuiltinClassType: isinstance(int,BuiltinInstance(type))
+    BuiltinCallableType: isinstance(int,BuiltinInstance(Callable))
+            .                            .
+            .                            .
+            .                            .
+    
+    """
+    def __init__(self,instance: type|tuple[type]) -> None:
+        isinstance(None,instance) ## it shouldn't raise an error if it's a valid arguement for isinstance
+        self.instance,self.builtins=instance,__builtins__.__dict__.values()
+    
+    def __instancecheck__(self,instance) -> bool:
+        return isinstance(instance,self.instance) and instance in self.builtins
+
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
     functions=(FUNC,)
