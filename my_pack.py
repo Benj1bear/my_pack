@@ -21,7 +21,7 @@ from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
 from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType
-from typing import Any,Callable
+from typing import Any,Callable,NoReturn
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
@@ -50,6 +50,13 @@ import psutil
 import dill
 import ctypes
 from copy import deepcopy
+
+class readonly:
+    """allows readonly attributes"""
+    def __init__(self, fget) -> None: self.fget,self.__doc__=fget,fget.__doc__
+    def __get__(self, obj, objtype) -> Any: return self.fget(obj)
+    def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
+    def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
 def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
