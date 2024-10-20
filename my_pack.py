@@ -53,14 +53,7 @@ from copy import deepcopy
 
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
-    functions=(decorated,)
-    while True:
-        try:
-            FUNC=FUNC.__closure__[0].cell_contents
-            functions+=(FUNC,)
-        except:
-            break
-    return functions
+return tuple(func.cell_contents for func in FUNC.__closure__)
 
 class readonly:
     """allows readonly attributes"""
