@@ -97,7 +97,7 @@ def copy(*args) -> Any|tuple[Any]:
     new_args=tuple()
     for arg in args:    
         if isinstance(arg,FunctionType):
-            new_args+=(FunctionType(arg.__code__,locals()),)
+            new_args+=(func_copy(arg),)
         elif isinstance(arg,type):
             new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType):
@@ -112,6 +112,10 @@ def copy(*args) -> Any|tuple[Any]:
                 warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
                 new_args+=(arg,)
     return new_args[0] if len(new_args)==1 else new_args
+
+def func_copy(FUNC: Callable) -> Callable:
+    """for copying a function"""
+    return FunctionType(FUNC.__code__,locals())
 
 def module_copy(module: ModuleType) -> ModuleType:
     """Creates a copy of a module"""
