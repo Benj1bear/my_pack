@@ -77,6 +77,9 @@ class BuiltinInstance:
     
     def __or__(self,type: type|tuple[type]) -> Union[type]:
         return Union[self.type,type]
+    
+    def __ror__(self,type: type|tuple[type]) -> Union[type]:
+        return Union[self.type,type]
 
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
