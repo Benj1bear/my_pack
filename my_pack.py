@@ -20,7 +20,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType
+from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType
 from typing import Any,Callable,NoReturn,Union
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
