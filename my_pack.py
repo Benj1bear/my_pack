@@ -50,6 +50,7 @@ import psutil
 import dill
 import ctypes
 from copy import deepcopy
+import urllib
 
 def load_notebook_url() -> None:
     """
@@ -65,7 +66,7 @@ load_notebook_url()
 
 def IPython_getcwd() -> str:
     """Gets the full file path if using jupyter notebook"""
-    return os.getcwd()+"\\"+NOTEBOOK_URL.split("/")[-1]
+    return os.getcwd()+"\\"+urllib.parse.unquote(NOTEBOOK_URL.split("/")[-1])
 
 class BuiltinInstance:
     """
