@@ -51,6 +51,21 @@ import dill
 import ctypes
 from copy import deepcopy
 
+NOTEBOOK_URL=""
+def load_notebook_url() -> None:
+    """
+    if you reload the library you may need to call this function
+    within the main program. Also Note: for some reason you need 
+    to access NOTEBOOK_URL twice before it shows anything.
+    """
+    display(Javascript("""IPython.notebook.kernel.execute("NOTEBOOK_URL='"+window.location.href+"'")"""))
+
+load_notebook_url()
+
+def IPython_getcwd() -> str:
+    """Gets the full file path if using jupyter notebook"""
+    return os.getcwd()+"\\"+NOTEBOOK_URL.split("/")[-1]
+
 class BuiltinInstance:
     """
     Used for checking instances of types specific to builtin types
