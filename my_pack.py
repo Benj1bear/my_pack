@@ -69,17 +69,10 @@ class BuiltinInstance:
         isinstance(None,type) ## it shouldn't raise an error if it's a valid arguement for isinstance
         self.type,self.builtins=type,__builtins__.__dict__.values()
     
-    def __instancecheck__(self,instance: Any) -> bool:
-        return isinstance(instance,self.type) and instance in self.builtins
-    
-    def __subclasscheck__(self,subclass: type):
-        return issubclass(subclass,self.type) and subclass in self.builtins
-    
-    def __or__(self,type: type|tuple[type]) -> Union[type]:
-        return Union[self.type,type]
-    
-    def __ror__(self,type: type|tuple[type]) -> Union[type]:
-        return Union[self.type,type]
+    def __instancecheck__(self,instance: Any) -> bool: return isinstance(instance,self.type) and instance in self.builtins
+    def __subclasscheck__(self,subclass: type): return issubclass(subclass,self.type) and subclass in self.builtins
+    def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
+    def __ror__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
 
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
