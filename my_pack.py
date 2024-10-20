@@ -21,7 +21,7 @@ from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
 from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType
-from typing import Any,Callable,NoReturn
+from typing import Any,Callable,NoReturn,Union
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
