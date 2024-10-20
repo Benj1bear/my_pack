@@ -61,7 +61,7 @@ def load_notebook_url() -> None:
     display(Javascript("""IPython.notebook.kernel.execute("NOTEBOOK_URL='"+window.location.href+"'")"""))
 
 load_notebook_url()
-
+## doesn't work in library because of the executing/async problem
 def IPython_getcwd() -> str:
     """Gets the full file path if using jupyter notebook"""
     return os.getcwd()+"\\"+NOTEBOOK_URL.split("/")[-1]
