@@ -2767,7 +2767,7 @@ def req_file(directory: str="") -> None:
         file.write(required)
     print("done")
 
-def read_ipynb(filename: str,join: bool=False) -> list[str]|str:
+def read_ipynb(filename: str,accepted_types: str|list[str]="code",join: bool=False) -> list[str]|str:
     """readlines a jupyter notebook"""
     if filename[-6:] != ".ipynb":
         filename+=".ipynb"
@@ -2776,10 +2776,11 @@ def read_ipynb(filename: str,join: bool=False) -> list[str]|str:
     ls=[]
     for cell in lines["cells"]:
         lines=cell["source"]
-        if len(lines) == 0:
-            ls+=[""]
-        else:
-            ls+=[line[:-1] for line in lines[:-1]]+[lines[-1]]
+        if cell["cell_type"] in accepted_types:
+            if len(lines) == 0:
+                ls+=[""]
+            else:
+                ls+=[line[:-1] for line in lines[:-1]]+[lines[-1]]
     if join == True:
         return "\n".join(ls)
     return ls
