@@ -61,8 +61,8 @@ class Named:
     """
     def __init__(self,depth: int=1) -> None: self.depth=depth
     def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=self.depth)["args"][:-1]) > 0
-    def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self,type]
-    def __ror__(self,type: type|tuple[type]) -> Union[type]: return Union[self,type]
+    def __or__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
+    def __ror__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
 
 def load_notebook_url() -> None:
     """
