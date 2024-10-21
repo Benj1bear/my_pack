@@ -56,9 +56,9 @@ import urllib
 class Named:
     """
     Named instance. Any object that has a name assigned to it is of this instance
-    isinstance()
-    True:  a
-    False: [1,2,3]
+    a=[1,2,3]
+    isinstance(a,Named) # True
+    isinstance([1,2,3],Named) # False
     """
     def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=1)["args"][:-1]) > 0
     def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self,type]
