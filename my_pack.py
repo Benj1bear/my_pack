@@ -52,6 +52,23 @@ import ctypes
 from copy import deepcopy
 import urllib
 
+def bracket_removal(code: str) -> str:
+    """
+    Removes brackets and their enclosing code from a string 
+    (assumes strings have been removed i.e. by using extracte(code))
+    """
+    ## get bracket locations for the uppermost encapsulation level
+    brackets=bracket_up(code)
+    brackets=brackets[brackets["encapsulation_number"]==0]
+    starts,ends=iter(brackets["start"].tolist()),iter(brackets["end"].tolist())
+    ## remove the brackets
+    new_string,start,end,removing="",next(starts),next(ends),False
+    for index,char in enumerate(code):
+        if index==start: start,removing=next(starts),True
+        elif index==end: end,removing=next(ends),False
+        if not removing: new_string+=char
+    return new_string
+
 class Named:
     """
     Named instance. Any object that has a name assigned to it is of this instance
