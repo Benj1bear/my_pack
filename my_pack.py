@@ -56,8 +56,8 @@ class Named:
     """
     Named instance. Any object that has a name assigned to it is of this instance
     a=[1,2,3]
-    isinstance(a,Named) # True
-    isinstance([1,2,3],Named) # False
+    isinstance(a,Named()) # True
+    isinstance([1,2,3],Named()) # False
     """
     def __init__(self,depth: int=1) -> None: self.depth=depth
     def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=self.depth)["args"][:-1]) > 0
@@ -155,7 +155,12 @@ def module_copy(module: ModuleType) -> ModuleType:
 
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
-    initial_obj=new_module(obj.__name__) if isinstance(obj,ModuleType) else getattr(new_module(obj.__module__),obj.__name__)
+    if isinstance(obj,ModuleType):
+        initial_obj=new_module(obj.__name__)
+    else:
+        try: initial_obj=getattr(new_module(obj.__module__),obj.__name__)
+        except: return True
+        if obj!=initial_obj: return True
     return getattr(initial_obj,attr)!=getattr(obj,attr) if hasattr(initial_obj,attr) else hasattr(obj,attr)
 
 def new_module(module: str,name: str="") -> ModuleType:
