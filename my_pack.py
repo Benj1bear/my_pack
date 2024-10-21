@@ -689,6 +689,7 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
         if (op_code.opname=="LOAD_NAME" or 
             op_code.opname=="LOAD_FAST" or 
             op_code.opname=="LOAD_GLOBAL"): call+=[op_code.argval]
+        elif op_code.opname=="LOAD_ATTR": call[-1]+="."+op_code.argval
         elif op_code.opname=="CALL": break
     
     return {"func":call[0],"args":call[1:]}
