@@ -52,7 +52,6 @@ import ctypes
 from copy import deepcopy
 import urllib
 
-@lambda x: x() # you could also use staticproperty (both are the same)
 class Named:
     """
     Named instance. Any object that has a name assigned to it is of this instance
@@ -60,7 +59,8 @@ class Named:
     isinstance(a,Named) # True
     isinstance([1,2,3],Named) # False
     """
-    def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=1)["args"][:-1]) > 0
+    def __init__(self,depth: int=1) -> None: self.depth=depth
+    def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=self.depth)["args"][:-1]) > 0
     def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self,type]
     def __ror__(self,type: type|tuple[type]) -> Union[type]: return Union[self,type]
 
