@@ -95,7 +95,7 @@ class BuiltinInstance:
             .                            .
     
     """
-    def __init__(self,type: type|tuple[type]) -> None:
+    def __init__(self,type: type|tuple[type]=object) -> None:
         isinstance(None,type) ## it shouldn't raise an error if it's a valid arguement for isinstance
         self.type,self.builtins=type,__builtins__.__dict__.values()
     
