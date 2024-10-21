@@ -64,9 +64,11 @@ def load_notebook_url() -> None:
 
 load_notebook_url()
 
-def IPython_getcwd() -> str:
-    """Gets the full file path if using jupyter notebook"""
-    return os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
+def IPython__file__() -> str:
+    """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
+    file_name=os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
+    scope()["__file__"]=file_name
+    return file_name
 
 class BuiltinInstance:
     """
