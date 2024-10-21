@@ -2599,10 +2599,7 @@ def remove_html_el(id: str="") -> None:
 
 def has_IPython() -> bool:
     """Checks for IPython"""
-    if get_ipython() == None:
-        return False
-    else:
-        return True
+    return get_ipython() != None
 
 def list_loop(ls: Any,FUNC: Callable=lambda x:x) -> list[Any]|Any:
     """
