@@ -153,6 +153,7 @@ def module_copy(module: ModuleType) -> ModuleType:
     module_copied.__dict__.update(module.__dict__)
     return module_copied
 
+## needs testing ##
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
     if isinstance(obj,ModuleType):
@@ -160,6 +161,7 @@ def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     else:
         try: initial_obj=getattr(new_module(obj.__module__),obj.__name__)
         except: return True
+        ## not robust for functions
         if obj!=initial_obj: return True
     return getattr(initial_obj,attr)!=getattr(obj,attr) if hasattr(initial_obj,attr) else hasattr(obj,attr)
 
