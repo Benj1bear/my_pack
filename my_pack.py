@@ -509,10 +509,9 @@ class nonlocals:
         names=self.frame.f_code.co_freevars
         return dct_ext(self.locals)[names] if len(names) else {}
 
-    def check(self,key: Any) -> None: if key not in self.nonlocals: raise KeyError(key)
+    def check(self,key: Any) -> None: raise KeyError(key) if key not in self.nonlocals else None
     def __getitem__(self,key: Any) -> Any: return self.nonlocals[key]
-    def update(self,**dct) -> None: for key,value in dct.items(): self[key]=value
-
+    def update(self,**dct) -> None: map_set(self,dct)
     def __setitem__(self,key: Any,value: Any) -> None:
         self.check(key)
         self.locals[key]=value
@@ -878,8 +877,7 @@ class scope:
         return current_scope
     
     def __getitem__(self,key: Any) -> Any: return self.locals[key] if key in self.locals else self.globals[key]
-    def update(self,**dct) -> None: for key,value in dct.items(): self[key]=value
-
+    def update(self,**dct) -> None: map_set(self,dct)
     def __setitem__(self,key: Any,value: Any) -> None:
         if key in self.locals:
             self.locals[key]=value
@@ -1264,7 +1262,7 @@ class tup_ext:
     def __setitem__(self,indexes: int|tuple|list|slice,values: tuple[Any]) -> None:
         temp=list(self.tup)
         if not isinstance(indexes,list|tuple): temp[indexes]=values
-        else: for index,value in zip(indexes,values): temp[index]=value
+        else: map_set(temp,dict(zip(indexes,values)))
         self.tup=tuple(temp)
         return self
 
@@ -2877,7 +2875,7 @@ def uninstall(library_name: str,keep_setup: bool=True) -> None:
         df=pd.Series(process.stdout.decode("utf-8").split("\r\n")).str.split(":")
         df.index=df.str[0]
         df=df.str[1:]
-        def joinup(x): return ":".join(x) if type(x)==list x
+        def joinup(x): return ":".join(x) if isinstance(x,list) else x
         # directory
         directory=df.apply(joinup)["Location"].strip()+"\\"
     print("uninstalling "+library_name) if keep_setup else print("uninstalling "+library_name+" and removing setup files")
@@ -2951,7 +2949,7 @@ def prep(line: str,FUNC: Callable,operator: str) -> str:
         if operator in assignment:
             # split on operator and wrap with function
             assignments[index] = FUNC.__name__+"("+line_sep(assignment,operator,sep=",")+")"
-    return "=".join(assignments) if len(assignments) > 1 assignments[0]
+    return "=".join(assignments) if len(assignments) > 1 else assignments[0]
 
 def indx_split(indx: list[int]=[],string: str="") -> list[str]:
     """Allows splitting of strings via indices"""
@@ -3287,7 +3285,7 @@ def partition(number_of_subsets: int,interval: int) -> list:
     the interval (0,interval]
     """
     partitions = [0]+[int(np.floor(i*interval/number_of_subsets)) for i in range(1,number_of_subsets+1)]
-    return [[partitions[i],partitions[i+1]] for i in range(len(partitions)-1)
+    return [[partitions[i],partitions[i+1]] for i in range(len(partitions)-1)]
 
 def thread_runs() -> bool:
     """checks if thread is still running"""
