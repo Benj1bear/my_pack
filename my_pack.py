@@ -52,6 +52,21 @@ import dill
 import ctypes
 from copy import deepcopy
 import urllib
+import readline
+from collections.abc import Iterable
+
+def history() -> Iterable[str]:
+    """
+    Gets the entire code execution history for the main program
+
+    Note: if on a CLI you might want to clear the history before use
+    otherwise it will include history from other sessions.
+    
+    e.g.
+    import readline
+    readline.clear_history()
+    """
+    return (readline.get_history_item(i+1) for i in range(readline.get_current_history_length()))
 
 def bracket_removal(code: str) -> str:
     """
