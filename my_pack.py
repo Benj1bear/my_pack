@@ -868,7 +868,7 @@ class scope:
         if depth > (temp:=(len(name)-1)):
             raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
         name=["__main__"]+name[::-1][:-(1+depth)]
-        self.depth=len(name)
+        self.depth=len(name)-1
         self.name=".".join(name)
         self.local_frame,self.global_frame=local_frame[0],global_frame
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
