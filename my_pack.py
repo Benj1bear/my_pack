@@ -142,14 +142,10 @@ def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in args:    
-        if isinstance(arg,FunctionType):
-            new_args+=(func_copy(arg),)
-        elif isinstance(arg,type):
-            new_args+=(class_copy(arg),)
-        elif isinstance(arg,ModuleType):
-            new_args+=(module_copy(arg),)
-        elif hasattr(arg,"copy"):
-            new_args+=(arg.copy(),)
+        if isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
+        elif isinstance(arg,type): new_args+=(class_copy(arg),)
+        elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
+        elif hasattr(arg,"copy"): new_args+=(arg.copy(),)
         else:
             try:
                 new_args+=(deepcopy(arg),)
@@ -3970,8 +3966,7 @@ def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_
                         print(base,temp)
                         count+=1
                         if count == limit:
-                            print("limit reached: "+str(limit)+" line/s")
-                            return
+                            return print("limit reached: "+str(limit)+" line/s")
                 # overall similarity
                 elif jaccard_similarity(set(base), set(temp)) > j_thr:
                     # enhanced similarity for parts of strings
@@ -3980,8 +3975,7 @@ def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_
                         print(base,temp)
                         count+=1
                         if count == limit:
-                            print("limit reached: "+str(limit)+" line/s")
-                            return
+                            return print("limit reached: "+str(limit)+" line/s")
         data = data[data.isin([base]) == False] # to reduce the uneccessary combinations / only get unique ones
 
 ## eventually will move to str_df
