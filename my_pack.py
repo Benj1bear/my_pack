@@ -68,7 +68,7 @@ def history() -> Iterable[str]:
     """
     if has_IPython(): return scope()["In"]
     if "__file__" in scope().scope:
-        line_number = stack()[scope().depth].lineno
+        line_number = scope().global_frame.f_lineno
         return open(__file__).readlines()[:line_number]
     return (readline.get_history_item(i+1) for i in range(readline.get_current_history_length()))
 
