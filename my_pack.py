@@ -68,7 +68,7 @@ def history() -> Iterable[str]:
     """
     if has_IPython(): return scope()["In"]
     if "__file__" in scope().scope:
-        line_number = stack()[0].lineno
+        line_number = stack()[scope().depth].lineno
         return open(__file__).readlines()[:line_number]
     return (readline.get_history_item(i+1) for i in range(readline.get_current_history_length()))
 
@@ -867,7 +867,9 @@ class scope:
         ## instantiate
         if depth > (temp:=(len(name)-1)):
             raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
-        self.name=".".join(["__main__"]+name[::-1][:-(1+depth)])
+        name=["__main__"]+name[::-1][:-(1+depth)]
+        self.depth=len(name)
+        self.name=".".join(name)
         self.local_frame,self.global_frame=local_frame[0],global_frame
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
 
