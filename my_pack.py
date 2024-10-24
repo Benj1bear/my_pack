@@ -91,8 +91,6 @@ def load_notebook_url() -> None:
     """
     display(Javascript("""IPython.notebook.kernel.execute("NOTEBOOK_URL='"+window.location.href+"'")"""))
 
-load_notebook_url()
-
 def IPython__file__() -> str:
     """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
     scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
@@ -4270,6 +4268,9 @@ def str_strip(x: str) -> str:
     if isinstance(x,str) == True:
         return x.strip() 
     else: return x
+
+if has_IPython():
+    load_notebook_url()
 
 ## how to create methods to existing classes in python:
 
