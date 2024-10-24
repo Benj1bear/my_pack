@@ -66,6 +66,10 @@ def history() -> Iterable[str]:
     import readline
     readline.clear_history()
     """
+    if has_IPython(): return scope()["In"]
+    if "__file__" in scope().scope:
+        line_number = stack()[0].lineno
+        return open(__file__).readlines()[:line_number]
     return (readline.get_history_item(i+1) for i in range(readline.get_current_history_length()))
 
 def bracket_removal(code: str) -> str:
