@@ -3977,7 +3977,7 @@ def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_
         data = data[data.isin([base]) == False] # to reduce the uneccessary combinations / only get unique ones
 
 ## eventually will move to str_df
-def str_strip(x: str) -> str: return x.strip() if isinstance(x,str) x
+def str_strip(x: str) -> str: return x.strip() if isinstance(x,str) else x
 
 if has_IPython():
     load_notebook_url()
