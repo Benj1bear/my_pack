@@ -571,6 +571,19 @@ class staticproperty:
     you cannot pass in arguements to the function or access 
     it's attributes which makes the use cases limited to the 
     use of global or nonlocal variables generally.
+
+    Also, if wanting a fixed staticproperty e.g. one that is
+    going to return the same output every call then you can
+    use a lambda decorator like so:
+
+    @lambda x: x()
+    def t():
+        return 3
+    
+    t # should return '3'
+
+    if wanting to use a staticproperty it will still work if
+    not wanting to use a lambda expression for fixed returns.
     
     How to use:
     
