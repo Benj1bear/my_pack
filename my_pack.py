@@ -1,6 +1,7 @@
 """
 This module holds all the libraries and functions I use
 """
+## TODO: Need to write some unit tests especially to check against different python versions
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,7 +56,7 @@ import urllib
 def bracket_removal(code: str) -> str:
     """
     Removes brackets and their enclosing code from a string 
-    (assumes strings have been removed i.e. by using extracte(code))
+    (assumes strings have been removed i.e. by using extract(code))
     """
     ## get bracket locations for the uppermost encapsulation level
     brackets=bracket_up(code)
