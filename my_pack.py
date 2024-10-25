@@ -84,8 +84,9 @@ def ast_annotate(node: ast) -> str:
     elif isinstance(node, ast.Constant): return repr(node.value)
     else: return ""
 
-def extract_callables(True_name: str,source: str) -> str:
+def extract_callables(True_name: str,True_module: str) -> str:
     """Gets all callables from a string"""
+    source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__).read()
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
     return [({True_name:(obj.lineno-1,obj.end_lineno)}|{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},ast_signature(obj)) 
             for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
@@ -99,8 +100,7 @@ def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     and will mess with the results.
     """
     ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
-    source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__).read()
-    source_code=extract_callables(True_name,source)
+    source_code=extract_callables(True_name,True_module)
     if source_code:
         source_code=source_code[-1] ## get the last defined version
         lines=slice(*source_code[0][True_name])
