@@ -53,9 +53,9 @@ import ctypes
 from copy import deepcopy
 import urllib
 import readline
-from collections.abc import Iterable
+#from collections.abc import Iterable
 
-def history() -> Iterable[str]:
+def history() -> list[str]:
     """
     Gets the entire code execution history for the main program
 
@@ -70,7 +70,7 @@ def history() -> Iterable[str]:
     if "__file__" in scope().scope:
         line_number = scope().global_frame.f_lineno
         return open(__file__).readlines()[:line_number]
-    return (readline.get_history_item(i+1) for i in range(readline.get_current_history_length()))
+    return [readline.get_history_item(i+1) for i in range(readline.get_current_history_length())]
 
 def bracket_removal(code: str) -> str:
     """
