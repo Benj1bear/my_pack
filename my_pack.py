@@ -2334,7 +2334,7 @@ def slice_occ(string: str,occurance: str,times: int=1) -> str|tuple[str,str]:
             count+=1
     return string
 
-def source_code(FUNC: Callable,join: bool=True,key: str="original") -> tuple[str,str,str,str]|str:
+def source_code(FUNC: Callable,join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
     """
     my function for breaking up source code
     (will further develop later once I've
@@ -2350,18 +2350,15 @@ def source_code(FUNC: Callable,join: bool=True,key: str="original") -> tuple[str
            
     key="original","new", or other custom specified key available
     """
-    try:
-        source=getsource(FUNC)
-    except:
+    if check_cache:
         try:
             global SOURCE_CODES
             source=SOURCE_CODES[FUNC.__name__]
-        except:
-            raise Exception("source code not found")
-        try:
-            source=source[key]
-        except:
-            raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
+        except: raise Exception("source code not found")
+        try: source=source[key]
+        except: raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
+    try: source=getsource(FUNC)
+    except: source=wrangle_source(FUNC.__name__,FUNC.__module__)
     if join == True: return source
     head_body=source
     if source[:4]!="def ": head_body=re.sub(r"@(.+?)\n","",source)
