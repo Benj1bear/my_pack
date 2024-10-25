@@ -64,7 +64,7 @@ def ast_signature(func_node: ast.arguments) -> str:
     args=[as_list(getattr(args,attr)) for attr in ["args","vararg","posonlyargs","kwonlyargs"]]
     # args annotations
     for index,arg_types in enumerate(args):
-        if arg_types and index == [2,3]: func_signature+=kind[0]+", "
+        if arg_types and index in [2,3]: func_signature+=kind[0]+", "
         kind.pop(0)
         for arg in arg_types:
             if arg is None: continue
@@ -101,7 +101,7 @@ def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     """
     ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
     source=history(True) if True_module=="__main__" else open(__import__(source).__file__).read()
-    return extract_callable(True_name,source)[-1] ## get the last defined version
+    return extract_callables(True_name,source)[-1] ## get the last defined version
 
 def history(join: bool=False) -> list[str]:
     """
