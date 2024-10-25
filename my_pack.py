@@ -87,7 +87,7 @@ def ast_annotate(node: ast) -> str:
 def extract_callables(True_name: str,source: str) -> str:
     """Gets all callables from a string"""
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
-    return [({True_name:(obj.lineno-1,obj.end_lineno)}|{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list},ast_signature(obj)) 
+    return [({True_name:(obj.lineno-1,obj.end_lineno)}|{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},ast_signature(obj)) 
             for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
     
 def wrangle_source(True_name: str,True_module: str="__main__") -> str:
