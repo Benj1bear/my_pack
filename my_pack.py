@@ -3996,35 +3996,23 @@ def jaccard_similarity(A: set, B: set) -> float:
     """Jaccards similarity for two sets"""
     return len(A.intersection(B)) / len(A.union(B))
 
-# my function to go through each cell of a column comparing to each other cell
 def shift_check(str1: str,str2: str) -> list:
     """
     Takes two strings and compares the amount shift that one string has to take to become the other whilst
     removing characters from the string being compared to ensuring no duplicates
     """
-    # which is the smaller and bigger string
-    if len(str1) <= len(str2):
-        str_smaller = str1 
-        str_bigger = str2
-    else:
-        str_smaller = str2 
-        str_bigger = str1
+    str_smaller,str_bigger=(str1,str2) if len(str1) <= len(str2) else (str2,str1)
     new_ls = []
     for i in range(len(str_smaller)):
         new_ls+=[0]
         j = 0
         # calculates the shift
-        while j < len(str_bigger) and str_smaller[i] != str_bigger[j]:
-            new_ls[i]+= 1
-            j+=1
+        while j < len(str_bigger) and str_smaller[i] != str_bigger[j]: new_ls[i]+=1;j+=1
         # reduce the bigger string
-        if j == len(str_bigger):
-            new_ls[i] = np.nan
+        if j == len(str_bigger): new_ls[i] = np.nan
         elif str_smaller[i] == str_bigger[j]:
-            try:
-                str_bigger = str_bigger[:j]+str_bigger[j+1:]
-            except:
-                str_bigger = str_bigger[:j-1]+str_bigger[j:]
+            try: str_bigger = str_bigger[:j]+str_bigger[j+1:]
+            except: str_bigger = str_bigger[:j-1]+str_bigger[j:]
     return new_ls
 
 def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_thr: int=3,limit: int=200,dis: bool=False) -> None:# make sure all a,b,c are before d=1,e=2,f=3
