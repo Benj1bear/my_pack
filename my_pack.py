@@ -2231,6 +2231,7 @@ def str_ascii(obj: str | list[int]) -> list[int] | str:
     """
     return list(obj.encode("ascii")) if isinstance(obj,str) else bytes(obj).decode()
 
+## need to update this function eventually given the source codes can be found else where
 SOURCE_CODES={}
 def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=False,key: str|None="") -> None|Callable:
     """
