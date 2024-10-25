@@ -44,7 +44,7 @@ from itertools import combinations,chain as iter_chain # since I have a class ca
 import IPython
 from warnings import simplefilter,warn
 #import traceback
-#import ast
+import ast
 import dis
 import importlib
 import psutil
@@ -54,6 +54,54 @@ from copy import deepcopy
 import urllib
 import readline
 #from collections.abc import Iterable
+
+def as_list(obj: Any) -> list: return obj if isinstance(obj,list) else [obj]
+
+def ast_signature(func_node: ast.arguments) -> str:
+    """Creates a function signature from an ast.arguments type"""
+    ## TODO: make use of defaults and kw_defaults
+    func_signature,args,kind=func_node.name+"(",func_node.args,["","*","*","/","**"]
+    args=[as_list(getattr(args,attr)) for attr in ["args","vararg","posonlyargs","kwonlyargs"]]
+    # args annotations
+    for index,arg_types in enumerate(args):
+        if arg_types and index == [2,3]: func_signature+=kind[0]+", "
+        kind.pop(0)
+        for arg in arg_types:
+            if arg is None: continue
+            func_signature+=arg.arg
+            annotation=ast_annotate(arg.annotation)
+            if annotation: func_signature+=": "+annotation
+            func_signature+=", "
+    func_signature=func_signature[:-2]+")"
+    # return annotations
+    annotation=ast_annotate(func_node.returns)
+    if annotation: func_signature+=" -> "+annotation
+    return func_signature
+
+def ast_annotate(node: ast) -> str:
+    """Gets the type annotations for an ast object"""
+    if isinstance(node, ast.Name): return node.id
+    elif isinstance(node, ast.Subscript): return f"{node.value.id}[{node.slice.id}]"
+    elif isinstance(node, ast.Constant): return repr(node.value)
+    else: return ""
+
+def extract_callables(True_name: str,source: str) -> str:
+    """Gets all callables from a string"""
+    ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
+    return [({True_name:(obj.lineno,obj.end_lineno)}|{decorator.id:(decorator.lineno,decorator.end_lineno) for decorator in obj.decorator_list},ast_signature(obj)) 
+            for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
+    
+def wrangle_source(True_name: str,True_module: str="__main__") -> str:
+    """
+    Gets the source code of a function manually, including for decorated functions/classes.
+
+    Note: only works if the True_name is the actual name of the function/class and 
+    True_module is the actual module name otherwise these presumably have been changed
+    and will mess with the results.
+    """
+    ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
+    source=history(True) if True_module=="__main__" else open(__import__(source).__file__).read()
+    return extract_callable(True_name,source)[-1] ## get the last defined version
 
 def history(join: bool=False) -> list[str]:
     """
@@ -67,8 +115,7 @@ def history(join: bool=False) -> list[str]:
     readline.clear_history()
     """
     join_up=lambda string,code: string.join(code) if join else code
-    if has_IPython():
-        return join_up("\n",scope()["In"])
+    if has_IPython(): return join_up("\n",scope()["In"])
     file_name=scope().scope.get("__file__",None)
     if file_name:
         line_number=scope().global_frame.f_lineno
