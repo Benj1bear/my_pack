@@ -55,7 +55,7 @@ import urllib
 import readline
 #from collections.abc import Iterable
 
-def history() -> list[str]:
+def history(join: bool=False) -> list[str]:
     """
     Gets the entire code execution history for the main program
 
@@ -66,11 +66,14 @@ def history() -> list[str]:
     import readline
     readline.clear_history()
     """
-    if has_IPython(): return scope()["In"]
-    if "__file__" in scope().scope:
-        line_number = scope().global_frame.f_lineno
-        return open(__file__).readlines()[:line_number]
-    return [readline.get_history_item(i+1) for i in range(readline.get_current_history_length())]
+    join_up=lambda string,code: string.join(code) if join else code
+    if has_IPython():
+        return join_up("\n",scope()["In"])
+    file_name=scope().scope.get("__file__",None)
+    if file_name:
+        line_number=scope().global_frame.f_lineno
+        return join_up("",open(file_name).readlines()[:line_number])
+    return join_up("\n",[readline.get_history_item(i+1) for i in range(readline.get_current_history_length())])
 
 def bracket_removal(code: str) -> str:
     """
