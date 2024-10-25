@@ -64,8 +64,7 @@ def ast_signature(func_node: ast.arguments) -> str:
     args=[as_list(getattr(args,attr)) for attr in ["args","vararg","posonlyargs","kwonlyargs"]]
     # args annotations
     for index,arg_types in enumerate(args):
-        if arg_types and index in [2,3]: func_signature+=kind[0]+", "
-        kind.pop(0)
+        if arg_types and index in [2,3]: func_signature+=kind[index]+", "
         for arg in arg_types:
             if arg is None: continue
             func_signature+=arg.arg
