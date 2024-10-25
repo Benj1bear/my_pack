@@ -89,7 +89,7 @@ def ast_annotate(node: ast) -> str:
     if isinstance(node, ast.Name): return node.id
     elif isinstance(node, ast.Subscript): return f"{node.value.id}[{node.slice.id}]"
     elif isinstance(node, ast.Constant): return repr(node.value)
-    else: return ""
+    return ""
 
 def extract_callables(True_name: str,True_module: str) -> str:
     """Gets all callables from a string"""
@@ -3913,12 +3913,12 @@ def data_sets(data: pd.DataFrame) -> pd.DataFrame:
     data_cats = pd.DataFrame(data_cats).T
     return data_cats.apply(pd.Series.explode, ignore_index=True)
 
-def try_except(trying: Any,exception: Any) -> Any:
+def try_except(trying: Callable,exception: Callable) -> Any|NoReturn:
     """
-    Functional form of try-except useful for lambda expressions (but may not always work)
+    Functional form of try-except; useful for lambda expressions
     """
-    try:return trying
-    except:return exception
+    try:return trying()
+    except:return exception()
 
 def digit_slice(num: float,places: int) -> float:
     """rounds down to the nearest n decimal places"""
