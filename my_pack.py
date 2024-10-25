@@ -57,8 +57,15 @@ import readline
 
 def as_list(obj: Any) -> list: return obj if isinstance(obj,list) else [obj]
 
-def ast_signature(func_node: ast.arguments) -> str:
+def ast_signature(func_node: ast.FunctionDef|ast.ClassDef) -> str:
     """Creates a function signature from an ast.arguments type"""
+    if isinstance(func_node,ast.ClassDef):
+        func_signature=func_node.name
+        if func_node.bases or func_node.keywords:
+            func_signature+="("
+            for base in func_node.bases: func_signature+=base.id+", "
+            return f"{func_signature}metaclass={func_node.keywords[0].value.id})" if func_node.keywords else func_signature[:-2]+")"
+        return func_signature
     ## TODO: make use of defaults and kw_defaults
     func_signature,args,kind=func_node.name+"(",func_node.args,["","*","*","/","**"]
     args=[as_list(getattr(args,attr)) for attr in ["args","vararg","posonlyargs","kwonlyargs"]]
