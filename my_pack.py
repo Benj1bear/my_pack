@@ -1413,14 +1413,14 @@ def all_combinations(ls: list,start: int=1,stop: int=0) -> iter:
     stop=len(ls)+1-stop
     return (combo for i in range(start,stop) for combo in combinations(ls,i))
 
-SKLEARN_IMPORTED=False
+SKLEARN_IMPORTED=dict.fromkeys(["classifier","regressor"],False)
 def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tuple[Callable,str]|Callable:
     """Convenience function for obtaining common sklearn and other classifier models"""
     global SKLEARN_IMPORTED
     if show: return print("Available models: tree, knn, forest, nb, dummy, nnet, svm, gb, log")
-    if SKLEARN_IMPORTED==False:
-        import_sklearn_models()
-        SKLEARN_IMPORTED=True
+    if SKLEARN_IMPORTED["classifier"]==False:
+        import_sklearn_models("classifier")
+        SKLEARN_IMPORTED["classifier"]=True
     get=lambda _mod: _mod if len(kwargs)==0 else _mod(**kwargs)
     match mod:
         case "tree": FUNC,depth = get(DecisionTreeClassifier),"Depth"
@@ -1433,8 +1433,20 @@ def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tu
         case "gb": FUNC,depth = get(GradientBoostingClassifier),"iteration"
         case "log": FUNC,depth = get(LogisticRegression),"iteration"
         case _: return print(f"model '{mod}' doesn't exist")
-
     return (FUNC,depth) if plot else FUNC
+## needs regressors added
+def get_regressor(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> Callable:
+    """Convenience function for obtaining common sklearn and other regressor models"""
+    raise NotImplementedError("No regressors added yet")
+    global SKLEARN_IMPORTED
+    if show: return print("Available models: ")
+    if SKLEARN_IMPORTED["regressor"]==False:
+        import_sklearn_models("regressor")
+        SKLEARN_IMPORTED["regressor"]=True
+    get=lambda _mod: _mod if len(kwargs)==0 else _mod(**kwargs)
+    match mod:
+        case _: return print(f"model '{mod}' doesn't exist")
+    return FUNC
 
 def dct_join(*dcts: tuple[dict]) -> dict:
     """For concatenating multiple dicts together where all have the same keys"""
@@ -2704,22 +2716,6 @@ def all_packs() -> pd.DataFrame:
     ls = [ls[0]]+ls[2:]
     ls = [re.split(r"\s{2,}",i) for i in ls]
     return pd.DataFrame(ls[1:],columns=ls[0])
-
-def get_functions(code: str) -> tuple[list[int],list[int]]:
-    """finds function definitions in strings"""
-    # get starting indexes for all 'def ' statements made
-    indexes=line_sep(code,"def ",exact_index=True)
-    # get ending indexes for the end of the function
-    end=[]
-    for start in indexes:
-        temp=code[start:]
-        for indx in range(len(temp)):
-            if temp[indx] == "\n":
-                temp2=temp[indx:indx+6]
-                if len(temp2[:5].strip()) != 0 and len(temp2[-1:].strip()) != 0 or len(temp2) < 6:
-                    end+=[start+indx] # since it's relative
-                    break
-    return indexes,end
 
 def to_module(code: str) -> Callable[..., Any]:
     """
