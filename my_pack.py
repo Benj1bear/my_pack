@@ -1376,12 +1376,13 @@ class Print:
 
 def import_sklearn_models(kind: str) -> None:
     """Convenience function for importing lots of sklearn models"""
-    if kind!="classifiers" and kind!="regressors": raise ValueError("'kind' must be in [\"classifiers\",\"regressors\"]")
     if kind=="classifiers":
         models=zip(["tree","neighbors","ensemble","linear_model","naive_bayes","dummy","neural_network","svm"],
                 ["DecisionTreeClassifier","KNeighborsClassifier","RandomForestClassifier,GradientBoostingClassifier",
                     "LogisticRegression","GaussianNB","DummyClassifier","MLPClassifier","SVC"])
-    if kind=="regressors": pass ### to add
+    elif kind=="regressors":
+        models=zip([],[])
+    else: raise ValueError("'kind' must be in [\"classifiers\",\"regressors\"]")
     for directory,model in models: exec("from sklearn."+directory+" import "+model,globals())
 
 def all_multi_combos_dict(arr: dict) -> list:
