@@ -99,7 +99,7 @@ def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     and will mess with the results.
     """
     ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
-    source=history(True) if True_module=="__main__" else open(__import__(source).__file__).read()
+    source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__).read()
     source_code=extract_callables(True_name,source)[-1] ## get the last defined version
     lines=slice(*source_code[0][True_name])
     return "\n".join(source.split("\n")[lines])
