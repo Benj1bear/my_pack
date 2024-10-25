@@ -127,7 +127,11 @@ def history(join: bool=False) -> list[str]:
     readline.clear_history()
     """
     join_up=lambda string,code: string.join(code) if join else code
-    if has_IPython(): return join_up("\n",scope()["In"])
+    if has_IPython():
+        section=copy(scope()["In"])
+        line_number=scope().global_frame.f_lineno
+        section[-1]="\n".join(section[-1].split("\n")[:line_number])
+        return join_up("\n",section)
     file_name=scope().scope.get("__file__",None)
     if file_name:
         line_number=scope().global_frame.f_lineno
