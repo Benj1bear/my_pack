@@ -748,7 +748,11 @@ class staticproperty:
     def __irshift__(self, y): self.func().__irshift__(y); return self
     def __ilshift__(self, y): self.func().__ilshift__(y); return self
 #    def __getattribute__(self, y): return object.__getattribute__(self, y) if object.hasattr(self,y) else getattr(self.func(),y)
-    def __getattr__(self, y): return getattr(self, y) if y in getattr(self, "__dict__") else getattr(self.func(),y)
+    def __getattr__(self, y):
+        if y in object.__getattribute__(self, "__dict__"):
+            return object.__getattribute__(self, y)
+        elif y not in ["_ipython_canary_method_should_not_exist_","_ipython_display_","_repr_mimebundle_","_repr_html_","_repr_markdown_","_repr_svg_","_repr_png_","_repr_pdf_","_repr_jpeg_","_repr_latex_","_repr_json_","_repr_javascript_"]:
+            return object.__getattribute__(self.func(),y)
 #    def __setattr__(self, y, z): object.__setattr__(self, y, z)
 #    def __delattr__(self, y): object.__delattr__(self, y)
     def __dir__(self): return dir(self.func())
