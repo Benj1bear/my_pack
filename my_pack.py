@@ -79,7 +79,7 @@ def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> None:
     if record["decorators"]: record["full"][0]=list(record["decorators"].values())[-1][0]
     return record
     
-def wrangle_source(True_name: Callable|str,True_module: str="__main__",join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
+def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
     """
     Gets the source code of a function manually, including for decorated functions/classes.
 
