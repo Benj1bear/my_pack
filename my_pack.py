@@ -63,7 +63,7 @@ def extract_callables(True_name: str,True_module: str) -> tuple[str,list[dict]]:
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
     return source,[section_ast(obj) for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
 
-def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> None:
+def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> dict:
     """Allows source code to be broken into parts according with the ast object"""
     #decorators="\n".join(lines[slice(*line)] for line in FUNC_records["decorators"].values())
     record={"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
@@ -747,9 +747,6 @@ class staticproperty:
     def __ixor__(self, y): self.func().__ixor__(y); return self
     def __irshift__(self, y): self.func().__irshift__(y); return self
     def __ilshift__(self, y): self.func().__ilshift__(y); return self
-    def __getattribute__(self, y): return object.__getattribute__(self, y)
-    def __getattr__(self, y): return getattr(self.func(), y)
-    def __setattr__(self, y, z): object.__setattr__(self, y, z)
     def __delattr__(self, y): object.__delattr__(self, y)
     def __dir__(self): return dir(self.func())
 #     def __set_name__(self, T, x): pass
