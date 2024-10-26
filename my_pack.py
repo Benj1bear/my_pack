@@ -91,7 +91,7 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
 
     key="original","new", or other custom specified key available for the undecorate function
     """
-    if not isinstance(FUNC,str): True_name,True_module=FUNC.__name__,FUNC.__module__
+    if not isinstance(True_name,str): True_name,True_module=True_name.__name__,True_name.__module__
     if check_cache:
         try:
             global SOURCE_CODES
