@@ -78,7 +78,8 @@ def ast_signature(func_node: ast.FunctionDef|ast.ClassDef) -> str:
             annotation=ast_annotate(arg.annotation)
             if annotation: func_signature+=": "+annotation
             func_signature+=", "
-    func_signature=func_signature[:-2]+")"
+    ## if no changes made
+    func_signature=func_signature+")" if func_signature==func_node.name+"(" else func_signature[:-2]+")"
     # return annotations
     annotation=ast_annotate(func_node.returns)
     if annotation: func_signature+=" -> "+annotation
@@ -95,8 +96,8 @@ def extract_callables(True_name: str,True_module: str) -> str:
     """Gets all callables from a string"""
     source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__,encoding="utf-8").read()
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
-    return source,[({True_name:(obj.lineno-1,obj.end_lineno)}|{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},ast_signature(obj)) 
-            for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
+    return source,[{"FUNC":{True_name:(obj.lineno-1,obj.end_lineno)},"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
+                    "signature":ast_signature(obj)} for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
     
 def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     """
@@ -107,11 +108,10 @@ def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     and will mess with the results.
     """
     ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
-    source,source_code=extract_callables(True_name,True_module)
-    if source_code:
-        source_code=source_code[-1] ## get the last defined version
-        lines=list(dct_ext(source_code[0])[[0,-1]].values())
-        lines=slice(lines[1][0],lines[0][1]) if len(lines) > 1 else slice(*lines[0])
+    source,FUNC_records=extract_callables(True_name,True_module)
+    if FUNC_records:
+        FUNC_records=FUNC_records[-1] ## get the last defined version
+        lines=slice(tuple(*dct_ext(FUNC_records["decorators"])[-1].values())[0],FUNC_records["FUNC"][True_name][1]) if FUNC_records["decorators"] else slice(*FUNC_records["FUNC"][True_name])
         return "\n".join(source.split("\n")[lines])
     raise Exception(f"Source code for callable '{True_name}' not found in module '{True_module}'")
 
