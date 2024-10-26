@@ -68,10 +68,10 @@ def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> None:
     #decorators="\n".join(lines[slice(*line)] for line in FUNC_records["decorators"].values())
     record={"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
             "docstring":ast.get_docstring(obj),"full":[obj.lineno-1,obj.end_lineno,obj.col_offset,obj.end_col_offset]}
-    body=obj.body[bool(record["docstring"] and len(obj.body) > 1)]
-    record["body"]=(body.lineno-1,body.end_lineno,body.col_offset,body.end_col_offset)
+    code_start=obj.body[bool(record["docstring"] and len(obj.body) > 1)]
+    record["body"]=(code_start.lineno-1,obj.body[-1].end_lineno,code_start.col_offset,None)
     start=obj.body[0]
-    if body.lineno==start.lineno:
+    if code_start.lineno==start.lineno:
         record["signature"]=(start.lineno-1,start.end_lineno,0,start.col_offset)
     else:
         record["signature"]=[obj.lineno-1,None,obj.col_offset,None]
@@ -111,13 +111,13 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
             lines=[line[pos[2]:] for line in lines[:-1]]+[lines[-1]]
             return "\n".join(lines)
         pos=record["body"]
-        body=lines[slice(*pos[:2])][0][slice(*pos[2:])]
+        body="\n".join(lines[slice(*pos[:2])])[slice(*pos[3:])]
         pos=record["signature"]
         signature=lines[slice(*pos[:2])]
         signature[0]=signature[0][pos[2]:]
         signature[-1]=signature[-1][:pos[3]]
         pos=list(record["decorators"].values())
-        decorators="\n".join(lines[slice(pos[-1][0]-1,pos[0][-1])]) if pos else ""
+        decorators="\n".join(lines[slice(pos[-1][0],pos[0][-1])]) if pos else ""
         docstring=record["docstring"]
         if docstring==None: docstring=""
         return decorators,signature[0],docstring,body
