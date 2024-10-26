@@ -2375,7 +2375,8 @@ def source_code(FUNC: Callable,join: bool=True,check_cache: bool=False,key: str=
         except: raise Exception("source code not found")
         try: source=source[key]
         except: raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
-    if type(FUNC)==type: FUNC=type(FUNC) ## classes have source code but their instances don't
+    ## needs testing
+    #if (temp:=type(FUNC))==type or issubclass(temp,type): FUNC=temp ## classes have source code but their instances don't
     try: source=getsource(FUNC)
     except: source=wrangle_source(FUNC.__name__,FUNC.__module__)
     if join == True: return source
