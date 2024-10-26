@@ -92,7 +92,7 @@ def ast_annotate(node: ast) -> str:
     elif isinstance(node, ast.Constant): return repr(node.value)
     return ""
 
-def extract_callables(True_name: str,True_module: str) -> str:
+def extract_callables(True_name: str,True_module: str) -> tuple[str,list[dict]]:
     """Gets all callables from a string"""
     source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__,encoding="utf-8").read()
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
