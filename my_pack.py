@@ -57,62 +57,69 @@ import readline
 
 def as_list(obj: Any) -> list: return obj if isinstance(obj,list) else [obj]
 
-def ast_signature(func_node: ast.FunctionDef|ast.ClassDef) -> str:
-    """Creates a function signature from an ast.arguments type"""
-    if isinstance(func_node,ast.ClassDef):
-        func_signature=func_node.name
-        if func_node.bases or func_node.keywords:
-            func_signature+="("
-            for base in func_node.bases: func_signature+=base.id+", "
-            return f"{func_signature}metaclass={func_node.keywords[0].value.id})" if func_node.keywords else func_signature[:-2]+")"
-        return func_signature
-    ## TODO: make use of defaults and kw_defaults
-    func_signature,args,kind=func_node.name+"(",func_node.args,["","*","*","/","**"]
-    args=[as_list(getattr(args,attr)) for attr in ["args","vararg","posonlyargs","kwonlyargs"]]
-    # args annotations
-    for index,arg_types in enumerate(args):
-        if arg_types and index in [2,3]: func_signature+=kind[index]+", "
-        for arg in arg_types:
-            if arg is None: continue
-            func_signature+=arg.arg
-            annotation=ast_annotate(arg.annotation)
-            if annotation: func_signature+=": "+annotation
-            func_signature+=", "
-    ## if no changes made
-    func_signature=func_signature+")" if func_signature==func_node.name+"(" else func_signature[:-2]+")"
-    # return annotations
-    annotation=ast_annotate(func_node.returns)
-    if annotation: func_signature+=" -> "+annotation
-    return func_signature
-
-def ast_annotate(node: ast) -> str:
-    """Gets the type annotations for an ast object"""
-    if isinstance(node, ast.Name): return node.id
-    elif isinstance(node, ast.Subscript): return f"{node.value.id}[{node.slice.id}]"
-    elif isinstance(node, ast.Constant): return repr(node.value)
-    return ""
-
 def extract_callables(True_name: str,True_module: str) -> tuple[str,list[dict]]:
     """Gets all callables from a string"""
     source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__,encoding="utf-8").read()
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
-    return source,[{"FUNC":{True_name:(obj.lineno-1,obj.end_lineno)},"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
-                    "signature":ast_signature(obj)} for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
+    return source,[section_ast(obj) for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
+
+def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> None:
+    """Allows source code to be broken into parts according with the ast object"""
+    #decorators="\n".join(lines[slice(*line)] for line in FUNC_records["decorators"].values())
+    record={"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
+            "docstring":ast.get_docstring(obj),"full":[obj.lineno-1,obj.end_lineno,obj.col_offset,obj.end_col_offset]}
+    body=obj.body[bool(record["docstring"] and len(obj.body) > 1)]
+    record["body"]=(body.lineno-1,body.end_lineno,body.col_offset,body.end_col_offset)
+    start=obj.body[0]
+    if body.lineno==start.lineno:
+        record["signature"]=(start.lineno-1,start.end_lineno,0,start.col_offset)
+    else:
+        record["signature"]=[obj.lineno-1,None,obj.col_offset,None]
+        if record["docstring"]: record["signature"][1]=-len(record["docstring"])
+    if record["decorators"]: record["full"][0]=list(record["decorators"].values())[-1][0]
+    return record
     
-def wrangle_source(True_name: str,True_module: str="__main__") -> str:
+def wrangle_source(True_name: Callable|str,True_module: str="__main__",join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
     """
     Gets the source code of a function manually, including for decorated functions/classes.
 
     Note: only works if the True_name is the actual name of the function/class and 
     True_module is the actual module name otherwise these presumably have been changed
     and will mess with the results.
+
+    set join=False to break up the source code
+
+    key="original","new", or other custom specified key available for the undecorate function
     """
+    if check_cache:
+        try:
+            global SOURCE_CODES
+            source=SOURCE_CODES[FUNC.__name__]
+        except: raise Exception("source code not found")
+        try: source=source[key]
+        except: raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
     ## need to do something about the history function in case of exceptions because they get recorded otherwise it should work fine
-    source,FUNC_records=extract_callables(True_name,True_module)
-    if FUNC_records:
-        FUNC_records=FUNC_records[-1] ## get the last defined version
-        lines=slice(tuple(FUNC_records["decorators"].values())[-1][0],FUNC_records["FUNC"][True_name][1]) if FUNC_records["decorators"] else slice(*FUNC_records["FUNC"][True_name])
-        return "\n".join(source.split("\n")[lines])
+    source,record=extract_callables(True_name,True_module)
+    if record:
+        record=record[-1]
+        lines=source.split("\n")
+        if join:
+            pos=record["full"]
+            lines=lines[slice(*pos[:2])]
+            lines[-1]=lines[-1][slice(*pos[2:])]
+            lines=[line[pos[2]:] for line in lines[:-1]]+[lines[-1]]
+            return "\n".join(lines)
+        pos=record["body"]
+        body=lines[slice(*pos[:2])][0][slice(*pos[2:])]
+        pos=record["signature"]
+        signature=lines[slice(*pos[:2])]
+        signature[0]=signature[0][pos[2]:]
+        signature[-1]=signature[-1][:pos[3]]
+        pos=list(record["decorators"].values())
+        decorators="\n".join(lines[slice(pos[-1][0]-1,pos[0][-1])]) if pos else ""
+        docstring=record["docstring"]
+        if docstring==None: docstring=""
+        return decorators,signature[0],docstring,body
     raise Exception(f"Source code for callable '{True_name}' not found in module '{True_module}'")
 
 def history(join: bool=False) -> list[str]:
@@ -2351,45 +2358,6 @@ def slice_occ(string: str,occurance: str,times: int=1) -> str|tuple[str,str]:
                 return string[:index],string[index:]
             count+=1
     return string
-
-def source_code(FUNC: Callable,join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
-    """
-    my function for breaking up source code
-    (will further develop later once I've
-    figured out how to resolve some issues)
-    
-    If def do():pass then you have to modify
-    the string first else it doesn't work
-    
-    Also true for 
-    def do(a,
-           b,
-           c):
-           
-    key="original","new", or other custom specified key available
-    """
-    if check_cache:
-        try:
-            global SOURCE_CODES
-            source=SOURCE_CODES[FUNC.__name__]
-        except: raise Exception("source code not found")
-        try: source=source[key]
-        except: raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
-    ## needs testing
-    #if (temp:=type(FUNC))==type or issubclass(temp,type): FUNC=temp ## classes have source code but their instances don't
-    try: source=getsource(FUNC)
-    except: source=wrangle_source(FUNC.__name__,FUNC.__module__)
-    if join == True: return source
-    head_body=source
-    if source[:4]!="def ": head_body=re.sub(r"@(.+?)\n","",source)
-    diff=len(source)-len(head_body)
-    decorators,head,body=source[:diff],*slice_occ(head_body,"\n")
-    doc_string=""
-    # temporarily remove docstring if it exists
-    if FUNC.__doc__ != None:
-        doc_string=f'\n    """{FUNC.__doc__}"""'
-        body=re.sub(r'"""(.+?)"""|\'\'\'(.+?)\'\'\'',"",body, count=1,flags=re.DOTALL) # re.DOTALL incase of new-lines
-    return decorators,head,doc_string,body
 
 # seems to be a problem when running i.e. test(undecorate,do,keep=override_do) #
 @user_yield_wrapper
