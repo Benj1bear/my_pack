@@ -2355,9 +2355,8 @@ def slice_occ(string: str,occurance: str,times: int=1) -> str|tuple[str,str]:
     count=0
     for index,char in enumerate(string):
         if char == occurance:
-            if count == times:
-                return string[:index],string[index:]
             count+=1
+            if count == times: return string[:index],string[index:]
     return string
 
 # seems to be a problem when running i.e. test(undecorate,do,keep=override_do) #
