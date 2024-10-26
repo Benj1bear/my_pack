@@ -91,10 +91,11 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
 
     key="original","new", or other custom specified key available for the undecorate function
     """
+    if not isinstance(FUNC,str): True_name,True_module=FUNC.__name__,FUNC.__module__
     if check_cache:
         try:
             global SOURCE_CODES
-            source=SOURCE_CODES[FUNC.__name__]
+            source=SOURCE_CODES[True_name]
         except: raise Exception("source code not found")
         try: source=source[key]
         except: raise Exception(f"source code not found at key '{key}' but the original source code may exist i.e. try 'original' as key value")
