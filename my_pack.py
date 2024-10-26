@@ -111,7 +111,7 @@ def wrangle_source(True_name: str,True_module: str="__main__") -> str:
     source,FUNC_records=extract_callables(True_name,True_module)
     if FUNC_records:
         FUNC_records=FUNC_records[-1] ## get the last defined version
-        lines=slice(tuple(*dct_ext(FUNC_records["decorators"])[-1].values())[0],FUNC_records["FUNC"][True_name][1]) if FUNC_records["decorators"] else slice(*FUNC_records["FUNC"][True_name])
+        lines=slice(tuple(FUNC_records["decorators"].values())[-1][0],FUNC_records["FUNC"][True_name][1]) if FUNC_records["decorators"] else slice(*FUNC_records["FUNC"][True_name])
         return "\n".join(source.split("\n")[lines])
     raise Exception(f"Source code for callable '{True_name}' not found in module '{True_module}'")
 
