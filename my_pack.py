@@ -747,7 +747,10 @@ class staticproperty:
     def __ixor__(self, y): self.func().__ixor__(y); return self
     def __irshift__(self, y): self.func().__irshift__(y); return self
     def __ilshift__(self, y): self.func().__ilshift__(y); return self
-    def __delattr__(self, y): object.__delattr__(self, y)
+#    def __getattribute__(self, y): return object.__getattribute__(self, y) if object.hasattr(self,y) else getattr(self.func(),y)
+    def __getattr__(self, y): return getattr(self, y) if y in getattr(self, "__dict__") else getattr(self.func(),y)
+#    def __setattr__(self, y, z): object.__setattr__(self, y, z)
+#    def __delattr__(self, y): object.__delattr__(self, y)
     def __dir__(self): return dir(self.func())
 #     def __set_name__(self, T, x): pass
 #     def __get__(self, t, T): return self
