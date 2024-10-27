@@ -54,6 +54,19 @@ from copy import deepcopy
 import urllib
 import readline
 #from collections.abc import Iterable
+from contextlib import contextmanager
+
+@contextmanager
+def Path(path: str) -> iter:
+    """Context manager to temporarily move into different directories and then go back to the original directory"""
+    try:
+        current=os.getcwd()
+        os.chdir(path)
+        yield    
+        os.chdir(current)
+    except Exception as e:
+        os.chdir(current)
+        raise e
 
 def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[str]=[".py",".pyc",".so",".pyd"]) -> str:
     """
