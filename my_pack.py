@@ -22,7 +22,7 @@ from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
 from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType
-from typing import Any,Callable,NoReturn,Union
+from typing import Any,Callable,NoReturn,Union,Iterable
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
@@ -54,6 +54,23 @@ from copy import deepcopy
 import urllib
 import readline
 #from collections.abc import Iterable
+
+def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[str]=[".py",".pyc",".so",".pyd"]) -> str:
+    """
+    Gets the full file path to a module without executing it
+    
+    if wanting relative imports you must supply relative with a directory to be relative to
+    """
+    paths=as_list(relative) if relative else sys.path # sys.path contains the directories python uses to look for modules
+    module="\\"+module
+    for path in paths:
+        if path=="": path=os.getcwd()
+        if os.path.isdir((location:=path+module)):
+            location+="\\__init__.py" # if it's a package it will always have an __init__.py file
+            if os.path.isfile(location): return location
+            raise FileNotFoundError(location+" doesn't exist but it's parent path does")
+        for ext in extensions:
+            if os.path.isfile((location:=path+module+ext)): return location
 
 def dir_back(depth: int=0,location: str="") -> str:
     """Gets the specified parent directory path"""
