@@ -2773,11 +2773,10 @@ def check_and_get(packages: list[str]=[],full_consent: bool=False) -> None:
 
 def all_packs() -> pd.DataFrame:
     """Retrieves all packages and returns as a pd.DataFrame"""
-    ls=subprocess.run("pip list",capture_output=True).stdout.decode("utf-8")
-    ls = ls.split("\r\n")
-    ls = [ls[0]]+ls[2:]
-    ls = [re.split(r"\s{2,}",i) for i in ls]
-    return pd.DataFrame(ls[1:],columns=ls[0])
+    ls=subprocess.run("pip list -v",capture_output=True).stdout.decode("utf-8")
+    ls=ls.split("\r\n")[2:-1] ## -1 because of the split
+    ls=[new_pack if len((new_pack:=pack.split())) > 5 else new_pack[:2]+["None"]+new_pack[2:] for pack in ls]
+    return pd.DataFrame(ls, columns=['Package', 'Version', 'Editable project location', 'Location', 'Installer'])
 
 def to_module(code: str) -> Callable[..., Any]:
     """
