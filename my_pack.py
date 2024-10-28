@@ -106,7 +106,7 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
     returns code,skip,location,relative
     """
     # is it a relative import or a site-package
-    file,relative=module_file(module,[location]+[sys.path],show_type=True)
+    with Path(location): file,relative=module_file(module,[location]+[sys.path],[".py"],True)
     return open(file,encoding="utf-8").read(),file,relative=="relative"
 
 ## needs fixing ##
@@ -118,41 +118,33 @@ def foundations(code: str) -> dict:
     form a foundation of what code your program used to execute on
     """
     locations_searched,current_imports,relative_imports=set(),{},{}
-    def import_names(imports: list[ast],location: str="",relative: bool=False) -> None:
+    def import_names(imports: list[ast.Import],location: str="") -> None:
         """used when node is: import ..."""
         nonlocal current_imports,relative_imports
         for new_module in imports:
-            if relative:
-                relative_imports[new_module.name]={location:{""}}
-                current_imports=get_imports(*source((temp:=new_module.name),location),current_imports,new_module.name)
-            elif new_module.name not in current_imports:
-                current_imports[new_module.name]={""} ## shows that it's imported itself
-                current_imports=get_imports(*source((temp:=new_module.name),location),current_imports,new_module.name)
+            module_source,temp_location,relative=source(new_module.name,location)
+            if relative: # add to the relative imports
+                if new_module.name not in relative_imports: relative_imports[new_module.name]={temp_location:{""}}
+                elif temp_location not in relative_imports[new_module.name]: relative_imports[new_module.name][temp_location]={""}
+            else:
+                current_imports=get_imports(module_source,temp_location,new_module.name)
     
-    def import_from(node: ast,location: str="",relative: bool=False) -> None:
-        """used when node is from x import y"""
+    def import_from(node: ast.ImportFrom,location: str="") -> None:
+        """used when node is: from x import y"""
         nonlocal current_imports,relative_imports
-        if relative:
-            if node.module in sys.stdlib_module_names: return current_imports|{node.module:None}
-            if node.module not in current_imports: current_imports[node.module]=set()
-            current_imports[node.module]|={attr.name for attr in node.names}
-            current_imports=get_imports(*source((temp:=node.module),location,node),node.module)
+        module_source,temp_location,relative=source(node.module,location,node)
+        if relative: # add to the relative imports
+            if node.module not in relative_imports: relative_imports[node.module]={temp_location:{""}}
+            elif temp_location not in relative_imports[node.module]: relative_imports[node.module][temp_location]={""}
+            relative_imports[node.module][temp_location]|={attr.name for attr in node.names}
         else:
-            if node.module in sys.stdlib_module_names: return current_imports|{node.module:None}
-            if node.module not in current_imports: current_imports[node.module]=set()
-            current_imports[node.module]|={attr.name for attr in node.names}
-            current_imports=get_imports(*source((temp:=node.module),location,node),node.module)
+            current_imports=get_imports(module_source,temp_location,node.module)
     
-    def get_imports(code: str,location: str="",relative: bool=False,module: str="") -> dict:
+    def get_imports(code: str,location: str="",module: str="") -> dict:
         nonlocal locations_searched,current_imports
         ## prevents duplicate recursions
-        if relative:
-            if module not in relative_imports: relative_imports[module]={location:{""}}
-            if location not in relative_imports[module]: relative_imports[module][location]={""}
-        else:
-            if location in locations_searched: return current_imports
-            else: locations_searched|={location}
-        if code==None: return current_imports|{location:None}
+        if location in locations_searched: return current_imports
+        else: locations_searched|={location}
         try: ## use ast.walk to get full coverage of the source
             for node in ast.walk(ast.parse(code)):
                 if isinstance(node,ast.Import):
