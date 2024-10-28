@@ -77,7 +77,7 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
     
     if wanting relative imports you must supply relative with a directory to be relative to
     """
-    paths=as_list(relative) if relative else sys.path # sys.path contains the directories python uses to look for modules
+    paths=as_list(relative) if relative else as_list(sys.path) # sys.path contains the directories python uses to look for modules
     modules=module.split(".")
     submodules=len(modules)
     for module in modules:
@@ -117,7 +117,7 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
     """
     # is it a relative import or a site-package
     try:
-        with Path(location): file,relative=module_file(module,as_list(as_dir(location))+as_list(sys.path),[".py"],True)
+        with Path(location): file,relative=module_file(module,extensions=[".py"],show_type=True)
         return open(file,encoding="utf-8").read(),file,relative=="relative"
     except FileNotFoundError:
 #         print(":"*20)
