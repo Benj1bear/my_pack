@@ -71,6 +71,7 @@ def Path(path: str) -> iter:
             raise e
     else: yield
 
+## need to add support for submodules i.e. a.b.c. ##
 def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[str]=[".py",".pyc",".so",".pyd"],show_type: bool=False) -> str|tuple[str,bool]:
     """
     Gets the full file path to a module without executing it
@@ -100,7 +101,8 @@ def dir_back(depth: int=0,location: str="") -> str:
     return current
         
 def as_dir(location: str) -> str: return location if os.path.isdir(location) else os.path.dirname(location)
-        
+
+## need to fix module_file for submodules then it should be done ##
 def source(module: str,location: str="") -> tuple[str,str,bool]:
     """
     Gets the source code for a module
@@ -123,7 +125,6 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
 #         print(":"*20)
         return (None,)*3
 
-## needs testing ##
 def foundations(code: str) -> tuple[dict,dict]:
     """
     records all imported objects and their modules from the given code
@@ -132,7 +133,7 @@ def foundations(code: str) -> tuple[dict,dict]:
     form a foundation of what code your program used to execute on
     """
     locations_searched,current_imports,relative_imports=set(),{},{}
-    def import_name(node: ast.ImportFrom,location: str="",import_from: str=None) -> None:
+    def import_name(node: ast.ImportFrom|str,location: str="",import_from: str=None) -> None:
         """
         used when node is: from x import y or import z
         
@@ -157,7 +158,7 @@ def foundations(code: str) -> tuple[dict,dict]:
         """import ..."""
         for module in as_list(node): import_name(module.names[0].name,location)
     
-    def get_imports(code: str,location: str="",module: str="") -> dict:
+    def get_imports(code: str,location: str="") -> dict:
         nonlocal locations_searched,current_imports
         ## prevents duplicate recursions
         if location in locations_searched: return current_imports
