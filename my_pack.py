@@ -118,41 +118,34 @@ def foundations(code: str) -> dict:
     form a foundation of what code your program used to execute on
     """
     locations_searched,current_imports,relative_imports=set(),{},{}
-    def import_names(imports: list[ast.Import],location: str="") -> None:
-        """used when node is: import ..."""
-        nonlocal current_imports,relative_imports
-        for new_module in imports:
-            module_source,temp_location,relative=source(new_module.name,location)
-            if relative: # add to the relative imports
-                if new_module.name not in relative_imports: relative_imports[new_module.name]={temp_location:{""}}
-                elif temp_location not in relative_imports[new_module.name]: relative_imports[new_module.name][temp_location]={""}
-            else:
-                current_imports=get_imports(module_source,temp_location,new_module.name)
-    
-    def import_from(node: ast.ImportFrom,location: str="") -> None:
+    def import_name(node: ast.ImportFrom,location: str="",import_from: bool=False) -> None:
         """used when node is: from x import y"""
         nonlocal current_imports,relative_imports
-        module_source,temp_location,relative=source(node.module,location,node)
+        module=import_from if import_from else node.name
+        module_source,temp_location,relative=source(module,location,node)
         if relative: # add to the relative imports
-            if node.module not in relative_imports: relative_imports[node.module]={temp_location:{""}}
-            elif temp_location not in relative_imports[node.module]: relative_imports[node.module][temp_location]={""}
-            relative_imports[node.module][temp_location]|={attr.name for attr in node.names}
+            if module not in relative_imports: relative_imports[module]={temp_location:set()}
+            elif temp_location not in relative_imports[module]: relative_imports[module][temp_location]=set()
+            if import_from: relative_imports[module][temp_location]|={attr.name for attr in node.names}
         else:
-            current_imports=get_imports(module_source,temp_location,node.module)
+            if module not in current_imports: current_imports[module]=set()
+            if import_from: current_imports[module]|={attr.name for attr in node.names}
+            current_imports=get_imports(module_source,temp_location,module)
     
     def get_imports(code: str,location: str="",module: str="") -> dict:
-        nonlocal locations_searched,current_imports
+        nonlocal locations_searched,current_imports,relative_imports
         ## prevents duplicate recursions
         if location in locations_searched: return current_imports
         else: locations_searched|={location}
         try: ## use ast.walk to get full coverage of the source
             for node in ast.walk(ast.parse(code)):
                 if isinstance(node,ast.Import):
-                    import_names(node.names,location)
+                    for module in node:
+                        import_name(module,location)
                 elif isinstance(node,ast.ImportFrom):
                     # adjust the location if necessary for singular use
                     temp_location=dir_back(node.level,location) if node.level else location
-                    import_from(node,temp_location) if node.module else import_names(node.names,temp_location)
+                    import_name(node,temp_location,node.module) if node.module else import_name(node.names,temp_location)
 
         except Exception as e:
             raise e
