@@ -93,7 +93,6 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
                         break
                     if show_type: return location,"relative" if path not in sys.path else "absolute"
                     return location
-                raise FileNotFoundError(location+" doesn't exist but it's parent path does")
             for ext in extensions:
                 if os.path.isfile((location:=path+module+ext)):
                     if show_type: return location,"relative" if path not in sys.path else "absolute"
@@ -114,8 +113,6 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
     
     Designed to integrate with the get_imports function but can be used to get the source code
     of a module e.g. source(*module*,*its location (if doing relative imports)*)[0]
-
-    returns code,skip,location,relative
     """
     # is it a relative import or a site-package
     try:
