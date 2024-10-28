@@ -153,6 +153,10 @@ def foundations(code: str) -> tuple[dict,dict]:
                 if import_from: current_imports[module]|={attr.name for attr in node.names}
                 current_imports=get_imports(module_source,new_location,module)
     
+    def import_names(node: ast.alias,location: str) -> None:
+        """import ..."""
+        for module in as_list(node): import_name(module.names[0].name,location)
+    
     def get_imports(code: str,location: str="",module: str="") -> dict:
         nonlocal locations_searched,current_imports
         ## prevents duplicate recursions
@@ -161,12 +165,11 @@ def foundations(code: str) -> tuple[dict,dict]:
         try: ## use ast.walk to get full coverage of the source
             for node in ast.walk(ast.parse(code)):
                 if isinstance(node,ast.Import):
-                    for module in as_list(node):
-                        import_name(module.names[0].name,location)
+                    import_names(node,location)
                 elif isinstance(node,ast.ImportFrom):
                     # adjust the location if necessary for singular use
-                    temp_location=dir_back(node.level,location) if node.level else location
-                    import_name(node,temp_location,node.module)
+                    temp_location=dir_back(node.level,location)
+                    import_name(node,temp_location,node.module) if node.module else import_names(node,temp_location)
 
         except Exception as e:
             raise e
