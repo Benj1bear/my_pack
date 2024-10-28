@@ -86,7 +86,7 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
             if path=="": path=os.getcwd()
             ## modules take preceedence over packages
             for ext in extensions:
-                if os.path.isfile((location:=path+module+ext)):
+                if os.path.isfile((location:=path+module+ext)) and submodules==1:
                     if show_type: return location,"relative" if path not in sys.path else "absolute"
                     return location
             if os.path.isdir((location:=path+module)):
