@@ -162,17 +162,14 @@ def foundations(code: str) -> tuple[dict,dict]:
         ## prevents duplicate recursions
         if location in locations_searched: return current_imports
         else: locations_searched|={location}
-        try: ## use ast.walk to get full coverage of the source
-            for node in ast.walk(ast.parse(code)):
-                if isinstance(node,ast.Import):
-                    import_names(node,location)
-                elif isinstance(node,ast.ImportFrom):
-                    # adjust the location if necessary for singular use
-                    temp_location=dir_back(node.level,location)
-                    import_name(node,temp_location,node.module) if node.module else import_names(node,temp_location)
-
-        except Exception as e:
-            raise e
+        ## use ast.walk to get full coverage of the source
+        for node in ast.walk(ast.parse(code)):
+            if isinstance(node,ast.Import):
+                import_names(node,location)
+            elif isinstance(node,ast.ImportFrom):
+                # adjust the location if necessary for singular use
+                temp_location=dir_back(node.level,location)
+                import_name(node,temp_location,node.module) if node.module else import_names(node,temp_location)
         return current_imports
     
     return get_imports(code),relative_imports
