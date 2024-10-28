@@ -748,7 +748,9 @@ class nonlocals:
         names=self.frame.f_code.co_freevars
         return dct_ext(self.locals)[names] if len(names) else {}
 
-    def check(self,key: Any) -> None: raise KeyError(key) if key not in self.nonlocals else None
+    def check(self,key: Any) -> None:
+        if key not in self.nonlocals: raise KeyError(key)
+
     def __getitem__(self,key: Any) -> Any: return self.nonlocals[key]
     def update(self,**dct) -> None: map_set(self,dct)
     def __setitem__(self,key: Any,value: Any) -> None:
