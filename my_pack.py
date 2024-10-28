@@ -96,50 +96,20 @@ def dir_back(depth: int=0,location: str="") -> str:
     for i in range(depth): current=os.path.dirname(current)
     return current
 
-## needs fixing for some of the relative imports file locations
-def source(module: str,location: str="",node: ast.ImportFrom=None) -> str:
+def source(module: str,location: str="") -> tuple[str,str,bool]:
     """
     Gets the source code for a module
     
     Designed to integrate with the get_imports function but can be used to get the source code
     of a module e.g. source(*module*,*its location (if doing relative imports)*)[0]
-    """
-    relative=None
-    if module==None: ## from . import ...
-        ## modules take preceedence over packages
-        code=ast.unparse(node).split("import")
-        directory_level=len(code[0].replace("from","").replace(" ",""))-1
-        ## so long as the cwd is in __main__ this will work for relative imports in __main__ as welll
-        location=dir_back(directory_level,"\\".join(location.split("\\")[:-1]))
-        #print(location)
-        return "import"+"import".join(code[1:]),False,location,relative
-    else:
-        if module in sys.stdlib_module_names: return module,True,None,None
-        try:location=file=__import__(module).__file__
-        except: ## if you can't import it then it should be a relative import
-            if location:
-                file="\\".join(location.split("\\")[:-1]+[module])
-                if os.path.isfile(file+".py"): file+=".py"  ## why is not saving it???
-                else:
-                    try:
-                        current=os.getcwd()
-                        os.chdir(location)
-                        file=__import__(module).__file__
-                        os.chdir(current)
-                    except Exception as e:
-                        os.chdir(current)
-                        print(":"*20)
-                        print(module)
-                        print(location)
-                        print(":"*20)########################################################
-                        raise e
-                print("SUCCESS - FILE NAME IS:",file)
-                relative=module
-            else:
-                raise ImportError("module not found as absolute or relative import")
-    return open(file,encoding="utf-8").read(),False,location,relative
 
-## needs testing ##
+    returns code,skip,location,relative
+    """
+    # is it a relative import or a site-package
+    file,relative=module_file(module,[location]+[sys.path],show_type=True)
+    return open(file,encoding="utf-8").read(),file,relative=="relative"
+
+## needs fixing ##
 def foundations(code: str) -> dict:
     """
     records all imported objects and their modules from the given code
@@ -147,28 +117,52 @@ def foundations(code: str) -> dict:
     For every module it will go recursively however many modules deep to
     form a foundation of what code your program used to execute on
     """
-    searched,relative_imports=set(),{}
-    def get_imports(code: str,skip: bool=False,location="",relative: str="",current_imports: dict={},module: str="") -> dict:
-        nonlocal searched,relative_imports
-        if skip: return current_imports|{code:None}
+    locations_searched,current_imports,relative_imports=set(),{},{}
+    def import_names(imports: list[ast],location: str="",relative: bool=False) -> None:
+        """used when node is: import ..."""
+        nonlocal current_imports,relative_imports
+        for new_module in imports:
+            if relative:
+                relative_imports[new_module.name]={location:{""}}
+                current_imports=get_imports(*source((temp:=new_module.name),location),current_imports,new_module.name)
+            elif new_module.name not in current_imports:
+                current_imports[new_module.name]={""} ## shows that it's imported itself
+                current_imports=get_imports(*source((temp:=new_module.name),location),current_imports,new_module.name)
+    
+    def import_from(node: ast,location: str="",relative: bool=False) -> None:
+        """used when node is from x import y"""
+        nonlocal current_imports,relative_imports
         if relative:
-            print("RELATIVE IMPORT____________________")
-            print(relative)
-            relative_imports[relative]=location
-        if module and module in searched:
-            if module in relative_imports:
-                if relative_imports[module]==location: return current_imports
-                else: relative|={module:location}
-            else: return current_imports
-        else: searched|={module}
-        try:
-            for node in ast.parse(code).body:
+            if node.module in sys.stdlib_module_names: return current_imports|{node.module:None}
+            if node.module not in current_imports: current_imports[node.module]=set()
+            current_imports[node.module]|={attr.name for attr in node.names}
+            current_imports=get_imports(*source((temp:=node.module),location,node),node.module)
+        else:
+            if node.module in sys.stdlib_module_names: return current_imports|{node.module:None}
+            if node.module not in current_imports: current_imports[node.module]=set()
+            current_imports[node.module]|={attr.name for attr in node.names}
+            current_imports=get_imports(*source((temp:=node.module),location,node),node.module)
+    
+    def get_imports(code: str,location: str="",relative: bool=False,module: str="") -> dict:
+        nonlocal locations_searched,current_imports
+        ## prevents duplicate recursions
+        if relative:
+            if module not in relative_imports: relative_imports[module]={location:{""}}
+            if location not in relative_imports[module]: relative_imports[module][location]={""}
+        else:
+            if location in locations_searched: return current_imports
+            else: locations_searched|={location}
+        if code==None: return current_imports|{location:None}
+        try: ## use ast.walk to get full coverage of the source
+            for node in ast.walk(ast.parse(code)):
                 if isinstance(node,ast.Import):
-                    current_imports|=biop(iter(get_imports(*source((temp:=new_module.name),location,new_module),current_imports,new_module.name) for new_module in node.names),"|")|{new_module.name:"" for new_module in node.names}
+                    import_names(node.names,location)
                 elif isinstance(node,ast.ImportFrom):
-                    current_imports|=get_imports(*source((temp:=node.module),location,node),current_imports,node.module)|{node.module:{attr.name for attr in node.names}}
+                    # adjust the location if necessary for singular use
+                    temp_location=dir_back(node.level,location) if node.level else location
+                    import_from(node,temp_location) if node.module else import_names(node.names,temp_location)
+
         except Exception as e:
-            print("-----------------",temp,":          ",location)
             raise e
         return current_imports
     
