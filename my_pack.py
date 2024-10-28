@@ -71,7 +71,6 @@ def Path(path: str) -> iter:
             raise e
     else: yield
 
-## need to add support for submodules i.e. a.b.c. ##
 def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[str]=[".py",".pyc",".so",".pyd"],show_type: bool=False) -> str|tuple[str,bool]:
     """
     Gets the full file path to a module without executing it
@@ -79,19 +78,26 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
     if wanting relative imports you must supply relative with a directory to be relative to
     """
     paths=as_list(relative) if relative else sys.path # sys.path contains the directories python uses to look for modules
-    module="\\"+module
-    for path in paths:
-        if path=="": path=os.getcwd()
-        if os.path.isdir((location:=path+module)):
-            location+="\\__init__.py" # if it's a package it will always have an __init__.py file
-            if os.path.isfile(location):
-                if show_type: return location,"relative" if path not in sys.path else "absolute"
-                return location
-            raise FileNotFoundError(location+" doesn't exist but it's parent path does")
-        for ext in extensions:
-            if os.path.isfile((location:=path+module+ext)):
-                if show_type: return location,"relative" if path not in sys.path else "absolute"
-                return location
+    modules=module.split(".")
+    submodules=len(modules)
+    for module in modules:
+        module="\\"+module
+        for path in paths:
+            if path=="": path=os.getcwd()
+            if os.path.isdir((location:=path+module)):
+                location+="\\__init__.py" # if it's a package it will always have an __init__.py file
+                if os.path.isfile(location):
+                    if submodules > 1:
+                        submodules-=1
+                        paths=[os.path.dirname(location)]
+                        break
+                    if show_type: return location,"relative" if path not in sys.path else "absolute"
+                    return location
+                raise FileNotFoundError(location+" doesn't exist but it's parent path does")
+            for ext in extensions:
+                if os.path.isfile((location:=path+module+ext)):
+                    if show_type: return location,"relative" if path not in sys.path else "absolute"
+                    return location
     raise FileNotFoundError("module is not on path or does not exist. If module is a relative import try giving a directory to reference from")
 
 def dir_back(depth: int=0,location: str="") -> str:
