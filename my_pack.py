@@ -158,7 +158,7 @@ def foundations(code: str) -> tuple[dict,dict]:
             else:
                 if module not in current_imports: current_imports[module]=set()
                 if import_from: current_imports[module]|={attr.name for attr in node.names}
-                current_imports=get_imports(module_source,new_location,module)
+                current_imports=get_imports(module_source,new_location)
     
     def import_names(node: ast.alias,location: str) -> None:
         """import ..."""
