@@ -108,7 +108,6 @@ def dir_back(depth: int=0,location: str="") -> str:
         
 def as_dir(location: str) -> str: return location if os.path.isdir(location) else os.path.dirname(location)
 
-## need to fix module_file for submodules then it should be done ##
 def source(module: str,location: str="") -> tuple[str,str,bool]:
     """
     Gets the source code for a module
@@ -119,9 +118,6 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
     returns code,skip,location,relative
     """
     # is it a relative import or a site-package
-#     print("~"*20)
-#     print([as_dir(location)]+[sys.path])
-#     print("~"*20)
     try:
         with Path(location): file,relative=module_file(module,as_list(as_dir(location))+as_list(sys.path),[".py"],True)
         return open(file,encoding="utf-8").read(),file,relative=="relative"
@@ -137,6 +133,25 @@ def foundations(code: str) -> tuple[dict,dict]:
     
     For every module it will go recursively however many modules deep to
     form a foundation of what code your program used to execute on
+
+    absolute imports are recorded as:
+
+    {module1:{attr1,attr2,...},
+     module2:{attr1,attr2,...},
+     ...}
+    
+    whereas relative imports have their locations noted then the attributes imported
+    
+    {module1:{location1:{attr1,attr2,...},location2:{attr1,attr2,...},...},
+     module2:{location1:{attr1,attr2,...},location2:{attr1,attr2,...},...},
+     ...}
+     
+    relative imports are of the form from . import y or from .. import y, from ... import y,... etc. or are in the
+    same directory or below as part of a package/project directory
+    
+    relative imports with the dot notation basically shifts its current directory back one and then does the imports 
+    so it's essentially running: import ... but from the parent directory above. The number of dots in the from statement 
+    is how many levels (directories) to shift up relative to the current path
     """
     locations_searched,current_imports,relative_imports=set(),{},{}
     def import_name(node: ast.ImportFrom|str,location: str="",import_from: str=None) -> None:
@@ -161,10 +176,14 @@ def foundations(code: str) -> tuple[dict,dict]:
                 current_imports=get_imports(module_source,new_location)
     
     def import_names(node: ast.alias,location: str) -> None:
-        """import ..."""
+        """handles nodes of the form: import ..."""
         for module in as_list(node): import_name(module.names[0].name,location)
     
     def get_imports(code: str,location: str="") -> dict:
+        """
+        Parses the code into an ast (abstract syntax tree) that is traversed 
+        to uncover what attributes are being imported and where from
+        """
         nonlocal locations_searched,current_imports
         ## prevents duplicate recursions
         if location in locations_searched: return current_imports
