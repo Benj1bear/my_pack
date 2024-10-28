@@ -84,6 +84,11 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
         module="\\"+module
         for path in paths:
             if path=="": path=os.getcwd()
+            ## modules take preceedence over packages
+            for ext in extensions:
+                if os.path.isfile((location:=path+module+ext)):
+                    if show_type: return location,"relative" if path not in sys.path else "absolute"
+                    return location
             if os.path.isdir((location:=path+module)):
                 location+="\\__init__.py" # if it's a package it will always have an __init__.py file
                 if os.path.isfile(location):
@@ -93,10 +98,7 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
                         break
                     if show_type: return location,"relative" if path not in sys.path else "absolute"
                     return location
-            for ext in extensions:
-                if os.path.isfile((location:=path+module+ext)):
-                    if show_type: return location,"relative" if path not in sys.path else "absolute"
-                    return location
+                raise FileNotFoundError(location+" doesn't exist but it's parent path does")
     raise FileNotFoundError("module is not on path or does not exist. If module is a relative import try giving a directory to reference from")
 
 def dir_back(depth: int=0,location: str="") -> str:
