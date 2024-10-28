@@ -63,7 +63,6 @@ def Path(path: str) -> iter:
         try:
             current=os.getcwd()
             if not os.path.isdir(path): path=os.path.dirname(path)
-            print(path)
             os.chdir(path)
             yield    
             os.chdir(current)
