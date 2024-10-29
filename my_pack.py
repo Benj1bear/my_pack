@@ -3039,13 +3039,13 @@ def uninstall(library_name: str,keep_setup: bool=True) -> None:
     the __init__.py,setup.py, files and .egg-info 
     directory will be removed
     """
-    # get the libraries directory
+    # get the libraries directory (likely needs to be done first since uninstall may remove the path) - needs testing
+    directory = module_file(library_name)
+    directory=os.path.dirname(directory)+"\\"
     print("uninstalling "+library_name) if keep_setup else print("uninstalling "+library_name+" and removing setup files")
     # you have to add yes due to no request coming back; else nothing happens
     subprocess.run("pip uninstall "+library_name+" --yes")
     if keep_setup == False:
-        directory = module_file(library_name)
-        directory=os.path.dirname(directory)+"\\"
         # remove the __init__ and setup files
         os.remove(directory+"__init__.py")
         print("removed __init__.py")
