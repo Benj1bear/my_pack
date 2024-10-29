@@ -82,6 +82,8 @@ def patch_exception(FUNC: Callable) -> None:
         print(traceback.format_exception(exception_type,exception,traceback))
         
     patch_exception(my_exception) # can be patched again if desired
+
+    1/0 # won't raise an error but will instead utilize your function
     
     """
     if has_IPython():
