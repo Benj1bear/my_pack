@@ -56,6 +56,39 @@ import readline
 #from collections.abc import Iterable
 from contextlib import contextmanager
 
+def patch_exception(FUNC: Callable) -> None:
+    """
+    Monkey patches the exception handler in python to allow
+    your own custom exception trace back functionality
+    
+    Note: your function typically should be formatted the following way:
+    
+    from typing import NoReturn
+    from types import TracebackType
+    
+    def my_exception(exception_type: type,exception: BaseException, traceback: TracebackType) -> NoReturn:
+        ...
+    
+    This is assuming you want to override the traceback display and not just 
+    arbitarily monkey patch the method to a value; though you can utilize the
+    arguements to do other things globally by using the global key word to i.e. 
+    log to a file or pass into another process.
+    
+    Example of How to use:
+    
+    import traceback
+
+    def my_exception(exception_type: type,exception: BaseException, traceback: TracebackType) -> NoReturn:
+        print(traceback.format_exception(exception_type,exception,traceback))
+        
+    patch_exception(my_exception) # can be patched again if desired
+    
+    """
+    if has_IPython():
+        def showtraceback(*args,**kwargs) -> None: FUNC(*sys.exc_info())
+        IPython.core.interactiveshell.InteractiveShell.showtraceback=showtraceback
+    else: sys.excepthook=FUNC
+
 @contextmanager
 def Path(path: str) -> iter:
     """Context manager to temporarily move into different directories and then go back to the original directory"""
