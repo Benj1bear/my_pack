@@ -83,8 +83,11 @@ def patch_exception(FUNC: Callable) -> None:
         
     patch_exception(my_exception) # can be patched again if desired
 
-    1/0 # won't raise an error but will instead utilize your function
-    
+    1/0 # won't raise the usual error but will instead utilize your function
+
+    Try not to use this function unless you have a preference for traceback formatting
+    or other logging behavior as the the program will still raise an error but what it
+    displays will be modified
     """
     if has_IPython():
         def showtraceback(*args,**kwargs) -> None: FUNC(*sys.exc_info())
