@@ -157,11 +157,7 @@ def source(module: str,location: str="") -> tuple[str,str,bool]:
     try:
         with Path(location): file,relative=module_file(module,extensions=[".py"],show_type=True)
         return open(file,encoding="utf-8").read(),file,relative=="relative"
-    except FileNotFoundError:
-#         print(":"*20)
-#         print(module)
-#         print(":"*20)
-        return (None,)*3
+    except FileNotFoundError: return (None,)*3
 
 def foundations(code: str) -> tuple[dict,dict]:
     """
@@ -226,8 +222,7 @@ def foundations(code: str) -> tuple[dict,dict]:
         else: locations_searched|={location}
         ## use ast.walk to get full coverage of the source
         for node in ast.walk(ast.parse(code)):
-            if isinstance(node,ast.Import):
-                import_names(node,location)
+            if isinstance(node,ast.Import): import_names(node,location)
             elif isinstance(node,ast.ImportFrom):
                 # adjust the location if necessary for singular use
                 temp_location=dir_back(node.level,location)
@@ -252,8 +247,7 @@ def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> dict:
     code_start=obj.body[bool(record["docstring"] and len(obj.body) > 1)]
     record["body"]=(code_start.lineno-1,obj.body[-1].end_lineno,code_start.col_offset,None)
     start=obj.body[0]
-    if code_start.lineno==start.lineno:
-        record["signature"]=(start.lineno-1,start.end_lineno,0,start.col_offset)
+    if code_start.lineno==start.lineno: record["signature"]=(start.lineno-1,start.end_lineno,0,start.col_offset)
     else:
         record["signature"]=[obj.lineno-1,None,obj.col_offset,None]
         if record["docstring"]: record["signature"][1]=-len(record["docstring"])
@@ -404,8 +398,7 @@ def unwrap(FUNC: Callable) -> tuple[Callable,...]:
         try:
             FUNC=FUNC.__closure__[0].cell_contents
             functions+=(FUNC,)
-        except:
-            break
+        except: break
     return functions
 
 class readonly:
@@ -424,8 +417,7 @@ def copy(*args) -> Any|tuple[Any]:
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
         elif hasattr(arg,"copy"): new_args+=(arg.copy(),)
         else:
-            try:
-                new_args+=(deepcopy(arg),)
+            try: new_args+=(deepcopy(arg),)
             except:
                 extend="" if mutable(arg) else " but is likely an immutable type"
                 warn(f"\n\nwarning: arguement '{arg}' was not copied{extend}\n",stacklevel=2)
@@ -445,8 +437,7 @@ def module_copy(module: ModuleType) -> ModuleType:
 ## needs testing ##
 def ispatched(obj: Callable|ModuleType,attr: str) -> bool:
     """Checks if an object is monkey patched or if the value has changed since initialization"""
-    if isinstance(obj,ModuleType):
-        initial_obj=new_module(obj.__name__)
+    if isinstance(obj,ModuleType): initial_obj=new_module(obj.__name__)
     else:
         try: initial_obj=getattr(new_module(obj.__module__),obj.__name__)
         except: return True
@@ -501,15 +492,13 @@ def mutable(obj: Any) -> bool:
                 setattr(obj,slot,3)
                 setattr(obj,slot,temp)
                 if previous_id==id(obj): return True
-            except:
-                pass
+            except: pass
             return False
         try:
             obj.__test=3
             del obj.__test
             if previous_id==id(obj): return True
-        except:
-            pass
+        except: pass
         return False
     return cls.__new__(cls) is not cls.__new__(cls)
 
@@ -595,15 +584,12 @@ class mute:
     
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute on the wrapped object or the mute object itself."""
-        if self._mute__immute_flag:
-            raise TypeError(f"cannot set attribute '{key}' to an immutable type. To create a mutable object use mute(obj)")
+        if self._mute__immute_flag: raise TypeError(f"cannot set attribute '{key}' to an immutable type. To create a mutable object use mute(obj)")
         super().__setattr__(key, value)
 
     def __getattr__(self, key: str) -> Any:
-        try:
-            return super().__getattr__(key)
-        except AttributeError:
-            return getattr(self.__obj, key)
+        try: return super().__getattr__(key)
+        except AttributeError: return getattr(self.__obj, key)
     
     def __repr__(self) -> str: return repr(self.__obj)
     def __call__(self, *args: Any, **kwargs: Any) -> Any: return self.__obj(*args, **kwargs)
@@ -668,8 +654,7 @@ with open('{remove_backslash(store_name)}','wb') as file:
         results={}
         for count,(process,file_name) in enumerate(zip(processes,store_names)):
             while process.poll()==None: pass
-            if process.poll()!=0:
-                print(process.communicate())
+            if process.poll()!=0: print(process.communicate())
             else:
                 results[f"result_{count}"]=read_pickle(file_name)
                 os.remove(file_name)
@@ -733,8 +718,7 @@ def process_info(process: subprocess.Popen) -> None:
               "\nCPU usage:", process.cpu_percent(),
               "\nMemory usage:", process.memory_info(), # might format this better
               "\nCreated:",process.create_time())
-    except psutil.NoSuchProcess:
-        print("Process terminated")
+    except psutil.NoSuchProcess: print("Process terminated")
 
 if hasattr(subprocess.Popen,"info")==False: subprocess.Popen.info=process_info
 else: warn("An attempt to monkey patch 'info' to subprocess.Popen failed")
@@ -794,13 +778,13 @@ class nonlocals:
     def __setitem__(self,key: Any,value: Any) -> None:
         self.check(key)
         self.locals[key]=value
-        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+        # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals,CC BY-SA 4.0
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(0))
 
     def __delitem__(self,key: Any) -> None:
         self.check(key)
         del self.locals[key]
-        # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error
+        # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error,CC BY-SA 4.0
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
 
 ## may add a feature to show the correct names when using stackframes if possible
@@ -1014,8 +998,7 @@ def get_builtins(form: dict|list|str=list) -> dict|list|ModuleType:
     elif builtins_type==dict:
         if form==list: return list(__builtins__.keys())
         if form=="module": return module_from_dict("__builtins__",__builtins__)
-    else:
-        raise TypeError(f"__builtins__ is of an unexpected type: {builtins_type}")
+    else: raise TypeError(f"__builtins__ is of an unexpected type: {builtins_type}")
     return __builtins__
 
 ## make sure the __builtins__ are a module type ##
@@ -1070,8 +1053,8 @@ def name(*args,depth: int=0,show_codes: bool=False) -> dict:
         print("\n\n")
         raise ValueError("PUSH_NULL_position was not found in the stack")
     
-    if op_code.opname!="PUSH_NULL": # in case PUSH_NULL is not present i.e. when used inside functions
-        op_codes=iter_chain((op_code,),op_codes)
+    # in case PUSH_NULL is not present i.e. when used inside functions
+    if op_code.opname!="PUSH_NULL": op_codes=iter_chain((op_code,),op_codes)
     # get the function and args loaded
     call=[]
     for op_code in op_codes:
@@ -1126,11 +1109,9 @@ class scope:
         while global_frame.f_code.co_name!="<module>":
             name+=[global_frame.f_code.co_name]
             global_frame=global_frame.f_back
-            if len(name)==depth+1:
-                local_frame=(global_frame,) # to create a copy otherwise it's a pointer
+            if len(name)==depth+1: local_frame=(global_frame,) # to create a copy otherwise it's a pointer
         ## instantiate
-        if depth > (temp:=(len(name)-1)):
-            raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
+        if depth > (temp:=(len(name)-1)): raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
         name=["__main__"]+name[::-1][:-(1+depth)]
         self.depth=len(name)-1
         self.name=".".join(name)
@@ -1149,13 +1130,11 @@ class scope:
             local_keys,global_keys=list(self.locals),list(self.globals)
             for key in set(local_keys+global_keys):
                 if (re.match(r"^_i+$",key) or re.match(r"^_(\d+|i\d+)$",key))==None:
-                    if key in not_allowed:
-                        not_allowed.remove(key)
+                    if key in not_allowed: not_allowed.remove(key)
                     elif key in local_keys:
                         current_scope[key]=self.locals[key]
                         local_keys.remove(key)
-                    else:
-                        current_scope[key]=self.globals[key]
+                    else: current_scope[key]=self.globals[key]
             return current_scope
         current_scope=self.globals.copy()
         current_scope.update(self.locals)
@@ -1166,18 +1145,16 @@ class scope:
     def __setitem__(self,key: Any,value: Any) -> None:
         if key in self.locals:
             self.locals[key]=value
-            # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals
+            # code reference: MariusSiuram (2020). https://stackoverflow.com/questions/34650744/modify-existing-variable-in-locals-or-frame-f-locals,CC BY-SA 4.0
             ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(0))
-        else:
-            self.globals[key]=value
+        else: self.globals[key]=value
 
     def __delitem__(self,key: Any) -> None:
         if key in self.locals:
             del self.locals[key]
-            # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error
+            # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error,CC BY-SA 4.0
             ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
-        else:
-            del self.globals[key]
+        else: del self.globals[key]
 
 def id_dct(*args) -> dict:
     """Creates a dictionary of values with the values names as keys (ideally)"""
@@ -1284,8 +1261,7 @@ def get_arg_count(attr: Any,values: tuple[Any]=(
     ## this next section of code shouldn't be used since builtins like 'type' use __init__ rather than __call__ for the signature which was a previous oversight ##
     ## but if for whatever reason it has no __init__ signature then it defaults to a brute force like approach ##
     length=len(values[0])
-    if attr==print or attr==display:
-        return [length]
+    if attr==print or attr==display: return [length]
     original_message=""
     ## Intentionally runs tests for errors to infer the number of args allowed
     for value in values:
@@ -1350,22 +1326,18 @@ class classproperty:
     
     def class_method(self,FUNC: Callable) -> Callable:
         """Creates a classmethod wrapper"""
-        if hasattr(self,"wrapper"):
-            return self.wrapper
+        if hasattr(self,"wrapper"): return self.wrapper
         if hasattr(self,"cls")==False:
             name=FUNC.__qualname__.split(".")[0] # get the classes name
             self.cls=scope()[name] # it should be in the global scope
         number_of_args=get_arg_count(FUNC)[0]
-        if number_of_args==0:
-            raise TypeError(f"method '{FUNC.__name__}' must have at least one arguement as the class for it to be a classproperty")
+        if number_of_args==0: raise TypeError(f"method '{FUNC.__name__}' must have at least one arguement as the class for it to be a classproperty")
         if number_of_args==1:
             @wraps(FUNC)
-            def wrapper(*args,**kwargs):
-                return FUNC(self.cls)
+            def wrapper(*args,**kwargs): return FUNC(self.cls)
         else:
             @wraps(FUNC)
-            def wrapper(*args,**kwargs):
-                return FUNC(self.cls,*args,**kwargs)
+            def wrapper(*args,**kwargs): return FUNC(self.cls,*args,**kwargs)
         self.wrapper=wrapper
         return wrapper
 
@@ -1450,8 +1422,7 @@ class chain:
                    "__name__","__qualname__","__module__","__abstractmethods__","__repr__"]
         for key,value in class_dict(self.__obj).items():
             if re.match("__.*__",key)!=None:
-                if key in not_allowed:
-                    not_allowed.remove(key)
+                if key in not_allowed: not_allowed.remove(key)
                 elif isinstance(value,Callable): ## we're only wanting instance based methods for operations such as +,-,*,... etc.
                     self.__class_support(key,self.__wrap(value)) ## class methods # we need to link it to a new class
         return self
@@ -1466,8 +1437,7 @@ class chain:
         defined in program
         """
         @wraps(method) ## retains the docstring
-        def wrapper(*args):
-            return method(*args[1:])
+        def wrapper(*args): return method(*args[1:])
         return wrapper
     @classmethod
     def __class_support(cls,key: str,value: Any) -> None: setattr(cls,key,value)
@@ -1487,10 +1457,8 @@ class chain:
         # attribute does not exist in either class or object, therefore, it must be either a builtin or in the current scope
         if hasattr(__builtins__,key) and self.__use_builtin: return getattr(__builtins__,key)
         else:
-            try:
-                return scope(2)[key]
-            except KeyError:
-                raise AttributeError(f"Attribute '{key}' does not exist in the current scope or in the current objects configuration")
+            try: return scope(2)[key]
+            except KeyError: raise AttributeError(f"Attribute '{key}' does not exist in the current scope or in the current objects configuration")
 
     def __check(self,attribute: Any) -> Any:
         if isinstance(attribute,Callable):
@@ -1633,6 +1601,7 @@ def get_classifier(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> tu
         case "log": FUNC,depth = get(LogisticRegression),"iteration"
         case _: return print(f"model '{mod}' doesn't exist")
     return (FUNC,depth) if plot else FUNC
+
 ## needs regressors added
 def get_regressor(mod: str="",show: bool=False,plot: bool=False,**kwargs) -> Callable:
     """Convenience function for obtaining common sklearn and other regressor models"""
@@ -1688,7 +1657,7 @@ def unique(ls: list,order: bool|str="retain") -> list:
 def create_password(length: int=12,selection: None|str=None,char_range: int=range(127)) -> str:
     """
     creates a password using cryptographic pseudo-random numbers
-    ## code reference: https://stackoverflow.com/questions/3854692/generate-password-in-python
+    ## code reference: https://stackoverflow.com/questions/3854692/generate-password-in-python,CC BY-SA 4.0
     # changes made: allowed for a wider range of characters
     """
     if selection==None:
@@ -1722,13 +1691,12 @@ def save_tabs(filename: str,*args,**kwargs) -> None:
 
 def browse_from_file(filename: str) -> None:
     """Browses urls from .txt file"""
-    with open(filename, 'r') as file:
-        urls=[url for line in file if (url:=line.strip())]
+    with open(filename, 'r') as file: urls=[url for line in file if (url:=line.strip())]
     browse(urls) if urls else print("No links found in the file.")
 
-def browse(urls: list[str]) -> list[None]:
+def browse(urls: list[str]) -> None:
     """Uses Google Chrome to browse a selection of links"""
-    return [webbrowser.open(url, new=2, autoraise=True) for url in urls]
+    for url in urls: webbrowser.open(url, new=2, autoraise=True)
 
 def get_url() -> str:
     """get url from google chrome tab"""
@@ -1782,23 +1750,16 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
         """For handling the checking of each arguements type"""
         def checker(annotation: type,arg: Any) -> None:
             nonlocal message
-            if isinstance(arg,annotation)==False:
-                raise TypeError(message)
+            if isinstance(arg,annotation)==False: raise TypeError(message)
         if type(annotation) in (tuple,list,set):
-            if type(arg) not in (tuple,list,set):
-                raise TypeError(f"arguement '{key}' must be of type {annotation}. Instead recieved: {arg}")
-            if len(arg)!=len(annotation):
-                raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
-            for type_annotation,arguement in zip(annotation,arg):
-                checker(type_annotation,arguement)
-        else:
-            checker(annotation,arg)
+            if type(arg) not in (tuple,list,set): raise TypeError(f"arguement '{key}' must be of type {annotation}. Instead recieved: {arg}")
+            if len(arg)!=len(annotation): raise Exception(f"length mismatch between arguement '{key}' and annotation {annotation}")
+            for type_annotation,arguement in zip(annotation,arg): checker(type_annotation,arguement)
+        else: checker(annotation,arg)
 
     args,kwargs,annotations=kwargs["args"],kwargs["kwargs"],FUNC.__annotations__
-    try:
-        annotations["return"]
-    except:
-        raise KeyError("Key 'return' does not exist in .__annotations__. You must annotate a return type")
+    try: annotations["return"]
+    except: raise KeyError("Key 'return' does not exist in .__annotations__. You must annotate a return type")
     ## assuming it has a return type
     params=signature(FUNC).parameters ## will use this later to fix the *args **kwargs problem ##
     if len(params)!=len(annotations)-1:
@@ -1811,21 +1772,16 @@ def type_check(FUNC: Callable,inputs: bool=True,**kwargs) -> None:
             try:
                 try_check(*(value,annotations[key],key,f"arguement '{key}' must be of type {annotations[key]}"))
                 del annotations[key]
-            except:
-                None
+            except: pass
         ## then the args
         args=iter(args)
         for key,annotation in annotations.items():
-            if key=="return":
-                continue
-            try:
-                arg=next(args)
-            except StopIteration:
-                break
+            if key=="return": continue
+            try: arg=next(args)
+            except StopIteration: break
             try_check(*(arg,annotation,key,f"arguement '{key}' must be of type {annotation}"))
         ## check for kwargs, args specific types
-    else:
-        try_check(*(arg,annotations["return"],"return",f"return arguement must be of type {annotations['return']}"))
+    else: try_check(*(arg,annotations["return"],"return",f"return arguement must be of type {annotations['return']}"))
 
 class sanitize:
     """
@@ -1857,10 +1813,7 @@ class sanitize:
     def __init__(self,FUNC: Callable,args: tuple[Callable,...]=tuple(),defaults: bool=True) -> None:
         """retains the function and common metadata or attributes"""
         self.FUNC,self.__doc__,self.__annotations__=FUNC,FUNC.__doc__,FUNC.__annotations__
-        if defaults:
-            self.checks=(*self.checks,*args)
-        else:
-            self.checks=args
+        self.checks=(*self.checks,*args) if defaults else args
 
     def __repr__(self) -> str: return str(self.FUNC)
     def __call__(self,*args,**kwargs) -> Callable:
@@ -1908,7 +1861,7 @@ def extract_code(code: str,repl: str=" str ") -> Sub:
     sub.code+="\n"
     return sub(r"#(.+?)\n","\n")
 
-## needs testing ##
+## needs testing ## - might use an ast instead
 ## TODO: 1. fix for when source == None
 ## TODO: 2. fix for when definitions are overrided
 ## TODO: 3. fix for functools.wraps, functools.partial, and other class wrappers
@@ -2172,9 +2125,8 @@ def all_callables(module: str,return_module: bool=False) -> list[str] | tuple[li
         except Exception as e:
             os.chdir(current)
             raise e
-    callables=[temp for attr in dir(source)
-                if isinstance((temp:=getattr(source,attr)),Callable) or (return_module and isinstance(temp,ModuleType))]
-    return callables,module if return_module else callables
+    callables=[temp for attr in dir(source) if isinstance((temp:=getattr(source,attr)),Callable) or (return_module and isinstance(temp,ModuleType))]
+    return (callables,module) if return_module else callables
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame], captions: str | list=[], spacing: int=0) -> None:
     """
@@ -2187,13 +2139,10 @@ def side_display(dfs:pd.DataFrame | list[pd.DataFrame], captions: str | list=[],
     spacing: int number of spaces
     """
     # for flexibility and exception handling
-    if not isinstance(dfs,list): dfs=[dfs]
-    if not isinstance(captions,list): captions=[captions]
+    dfs,captions=as_list(dfs),as_list(captions)
     length_captions,length_dfs=len(captions),len(dfs)
-    if length_captions > length_dfs:
-        raise Exception(f"The number of catpions '{length_captions}' exceeds the number of data frames '{length_dfs}'")
-    elif length_captions < length_dfs:
-        captions+=[""]*(length_dfs-length_captions)
+    if length_captions > length_dfs: raise Exception(f"The number of catpions '{length_captions}' exceeds the number of data frames '{length_dfs}'")
+    elif length_captions < length_dfs: captions+=[""]*(length_dfs-length_captions)
     # create tables
     tables=""
     for caption,df in zip(captions, dfs):
@@ -2258,8 +2207,7 @@ class dct_ext:
         if isinstance(index,int):
             temp_dct=list(self.dct.items())[index]
             return dict.fromkeys([temp_dct[0]],temp_dct[1])
-        if isinstance(index,str):
-            return {index:self.dct[index]}
+        if isinstance(index,str): return {index:self.dct[index]}
         if type(index) == slice:
             # get keys as ints if not already
             if type(index.start) == str or type(index.stop) == str:
@@ -2301,15 +2249,9 @@ def digit_format(number: str | int | float) -> str:
     """Formats numbers using commas"""
     number=str(number)
     parts=number.split(".")
-    try:number="."+parts[1]
-    except:number=""
-    count=-1
-    for i in parts[0][::-1]:
-        count+=1
-        if abs(count) % 3 == 0:
-            number=i+","+number
-        else:
-            number=i+number
+    number="."+parts[1] if len(parts) > 1 else ""
+    for count,i in enumerate(parts[0][::-1]):
+        number=i+","+number if abs(count) % 3 == 0 else i+number
     return number[:-1]
 
 def file_size(filename: str,decimals: int=2) -> str:
@@ -2462,7 +2404,7 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     the SOURCE_CODES global variable
     """
     global SOURCE_CODES
-    if isinstance(keep,list)==False: keep=[keep]
+    keep=as_list(keep)
     # get source code split into parts
     decorators,head,doc_string,body=source_code(FUNC,False)
     head_body=head+doc_string+body
@@ -2814,7 +2756,7 @@ def list_loop(ls: Any,FUNC: Callable=lambda x:x) -> list[Any]|Any:
     """
     loops through a list of elements applying some function to each element
     """
-    if type(ls) != list: ls=[ls]
+    ls=as_list(ls)
     return FUNC(ls[0]) if len(ls) == 1 else [FUNC(item) for item in ls]
 
 def in_valid(prompt: str,check: Callable,clear: bool=False) -> str:
@@ -2867,8 +2809,7 @@ def check_and_get(packages: list[str]=[],full_consent: bool=False) -> None:
             print("Error with package: "+package+"\n\n")
             print(process.stdout.decode("utf-8"))
             print("-"*20)
-        else:
-            print(package+" successfully installed\n")
+        else: print(package+" successfully installed\n")
 
 def all_packs() -> pd.DataFrame:
     """Retrieves all packages and returns as a pd.DataFrame"""
@@ -2943,14 +2884,8 @@ def read_ipynb(filename: str,accepted_types: str|list[str]="code",join: bool=Fal
     """readlines a jupyter notebook"""
     if filename[-6:] != ".ipynb": filename+=".ipynb"
     with open(filename, "rb") as file: lines = json.load(file)
-    ls=[]
-    for cell in lines["cells"]:
-        lines=cell["source"]
-        if cell["cell_type"] in accepted_types:
-            if len(lines) == 0:
-                ls+=[""]
-            else:
-                ls+=[line[:-1] for line in lines[:-1]]+[lines[-1]]
+    ls=[[line[:-1] for line in lines[:-1]]+[lines[-1]] if len((lines:=cell["source"])) else [""] 
+    for cell in lines["cells"] if cell["cell_type"] in accepted_types]
     return "\n".join(ls) if join else ls
 
 def get_requirements(filename: str,unique: bool=True) -> list[str]:
@@ -3105,51 +3040,29 @@ def uninstall(library_name: str,keep_setup: bool=True) -> None:
     directory will be removed
     """
     # get the libraries directory
-    print("getting package directory...",end="\r")
-    try:
-        directory = __import__(library_name).__file__
-        directory = "\\".join(directory.split("\\")[:-1])+"\\"
-    except:
-        # if the name of the package is different to the name of the module
-        process=subprocess.run("pip show "+library_name,capture_output=True)
-        if process.returncode != 0: return print(process.stdout.decode("utf-8"))
-        df=pd.Series(process.stdout.decode("utf-8").split("\r\n")).str.split(":")
-        df.index=df.str[0]
-        df=df.str[1:]
-        def joinup(x): return ":".join(x) if isinstance(x,list) else x
-        # directory
-        directory=df.apply(joinup)["Location"].strip()+"\\"
     print("uninstalling "+library_name) if keep_setup else print("uninstalling "+library_name+" and removing setup files")
     # you have to add yes due to no request coming back; else nothing happens
-    try:
-        subprocess.run("pip uninstall "+library_name+" --yes")
-        if keep_setup == False:
-            # remove the __init__ and setup files
-            os.remove(directory+"__init__.py")
-            print("removed __init__.py")
-            os.remove(directory+"setup.py")
-            print("removed setup.py")
-            shutil.rmtree(directory+library_name+".egg-info")
-            print("removed "+library_name+".egg-info")
-    except Exception as e:
-        print(e)
-        print("if the module name and directory is correct you may need to restart the kernel if the import doesn't work")
+    subprocess.run("pip uninstall "+library_name+" --yes")
+    if keep_setup == False:
+        directory = module_file(library_name)
+        directory=os.path.dirname(directory)+"\\"
+        # remove the __init__ and setup files
+        os.remove(directory+"__init__.py")
+        print("removed __init__.py")
+        os.remove(directory+"setup.py")
+        print("removed setup.py")
+        shutil.rmtree(directory+library_name+".egg-info")
+        print("removed "+library_name+".egg-info")
+    print("\ndone")
 
 def git_clone(url: list[str]|str=[],directory: list[str]|str=[],repo: bool=True) -> None:
     """For cloning multiple github repos or files into choosen directories"""
-    if type(directory) == str:
-        directory=[directory]
-    if type(url) == str:
-        url=[url]
-    dir_length=len(directory)
-    url_length=len(url)
-    if dir_length == 1:
-        directory=directory*url_length
-    elif url_length == 1:
-        url=url*dir_length
-    elif url_length != dir_length:
-        raise Exception("Length mismatch between the number of supplied urls: "+str(url_length)+", and directories: "+str(dir_length))
-    if repo == True:
+    directory,url=as_list(directory),as_list(url)
+    dir_length,url_length=len(directory),len(url)
+    if dir_length == 1: directory=directory*url_length
+    elif url_length == 1: url=url*dir_length
+    elif url_length != dir_length: raise Exception("Length mismatch between the number of supplied urls: "+str(url_length)+", and directories: "+str(dir_length))
+    if repo:
         for file,path in zip(url,directory):
             if path == "":
                 process=subprocess.run("git clone "+file,capture_output=True)
@@ -3243,40 +3156,28 @@ def get_indents(line: str) -> str:
     """Gets the number of python valid indentations for a line and then scales indentation accordingly"""
     n_white_space=0
     for char in line:
-        if char == " ":
-            n_white_space+=1
-        else:
-            break
-    if n_white_space % 4 != 0:
-        raise Exception("indentations must be 4 spaces to be valid:"+line)
+        if char == " ": n_white_space+=1
+        else: break
+    if n_white_space % 4 != 0: raise Exception("indentations must be 4 spaces to be valid:"+line)
     return " "*n_white_space
 
 def bracket_up(string: str,start :str="(",end: str=")",avoid: str="\"'") -> pd.DataFrame:
     """ For pairing bracket indexes """
-    indx=0
-    left=[]
-    ls=[]
-    in_string=0
-    current_str=""
-    for i in string:
-        if i in start:
-            left+=[indx]
-        elif i in end:
-            ls+=[[left[-1],indx,in_string,len(left)-1]]
+    current_str,left,in_string,ls="",[],0,[]
+    for index,char in enumerate(string):
+        if char in start: left+=[index]
+        elif char in end:
+            ls+=[[left[-1],index,in_string,len(left)-1]]
             left=left[:-1]
-        if i in avoid:
-            if i == current_str or current_str == "":
+        if char in avoid:
+            if char == current_str or current_str == "":
                 in_string=(in_string+1) % 2
-                if current_str !="" and in_string == 0:
-                    current_str=""
-                else:
-                    current_str=i
-        indx+=1
+                current_str="" if current_str !="" and in_string == 0 else char
     return pd.DataFrame(ls,columns=["start","end","in_string","encapsulation_number"])
 
 ### needs testing but seems okay ###
 def func_dict(string: str) -> str:
-    """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """
+    """Turns a i.e. (a=3,b=2) into {"a":3,"b":2} """ ## why not just eval("dict"+string) ?? seems overly complex for no reason; unless the values are python invalid
 
     def dict_format(temp: int,commas: pd.Series|pd.DataFrame,section: list,old_section_length: int,adjust: int) -> tuple[list,int]:
         """For formatting (a=3) into {"a":3}"""
@@ -3397,35 +3298,23 @@ def interpret(code: str,checks: list[Callable]=[],operators: str=[]) -> str:
     df=df[(df["encapsulation_number"] == 0) & (df["in_string"] == 0)]
     # remove newline characters in multiline open brackets
     lines=list(code)
-    old_length = len(lines)
-    adjust=0
+    old_length,adjust=len(lines),0
     for start,end in zip(df["start"],df["end"]):
         lines[start-adjust:end-adjust] = line_sep("".join(lines[start-adjust:end-adjust]),"\n",split=False)
         adjust = old_length-len(lines)
     code="".join(lines)
     # make sure they're lists
-    if type(checks) != list:
-        checks=[checks]
-    if type(operators) != list:
-        operators=[operators]
+    checks,operators=as_list(checks),as_list(operators)
     # \n in strings becomes \\n, so you can split this way
     # line_sep takes care of the ';' occurances and comments
-    lines=[]
-    # get lines
-    for line in line_sep(code,";","\n").split("\n"):
-        # remove comments
-        temp=line_sep(line,"#")[0]
-        # remove spaces
-        if len(temp) > 0:
-            lines+=[temp]
+    # get lines and remove comments + spaces
+    lines=[temp for line in line_sep(code,";","\n").split("\n") if len((temp:=line_sep(line,"#")[0])) > 0]
     # go through each line checking through the operators
-    for check,operator in zip(checks,operators):
-        indx=0
+    for index,(check,operator) in enumerate(zip(checks,operators)):
         for line in lines:
             if operator in line:
                 # get the number of indentations at the start of the line
-                lines[indx]=get_indents(line)+prep(line,check,operator)
-            indx+=1
+                lines[index]=get_indents(line)+prep(line,check,operator)
     # join lines back together
     try: return "\n".join(lines)
     except: return lines[0]
@@ -3434,19 +3323,11 @@ def str_anti_join(string1: str,string2: str) -> str:
     """anti_joins strings sequentially e.g. assuming appendment"""
     diff=len(string2) - len(string1)
     if diff != 0:
-        string1=list(string1)
-        string2=list(string2)
-        if diff > 0:    
-            string1=string1+["__"]*diff # since strings should list into single characters
-            temp=string2
-        else:
-            string2=string2+["__"]*diff
-            temp=string1
-    indx=0
-    for s1,s2 in zip(string1,string2):
-        if s1 == s2:
-            temp[indx]=""
-        indx+=1
+        string1,string2=list(string1),list(string2)
+        # '__' since strings should list into single characters
+        string1,string2,temp=(string1+["__"]*diff,(string2,)*2) if diff > 0 else (string1,string2+["__"]*diff,string1)
+    for index,(s1,s2) in enumerate(zip(string1,string2)):
+        if s1 == s2: temp[index]=""
     return "".join(temp)
 
 ## background processing
@@ -3606,14 +3487,12 @@ def multi_thread(number_of_threads: int,interval_length: int,FUNC: Callable,part
             for i in range(parts[0],parts[1]):
                 if threads_stopped == True:
                     break
-                try:
-                    FUNC(globals()[variable],i)
+                try: FUNC(globals()[variable],i)
                 except Exception as e:
                     print("error at i =",i,":",e)
                     errors+=[i]
         else:
-            try:
-                FUNC(i)
+            try: FUNC(i)
             except Exception as e:
                 print("error at i =",i,":",e)
                 errors+=[i]
@@ -3674,18 +3553,13 @@ def argmiss(returns: dict|tuple,temp: dict|tuple,func: Callable) -> Callable[...
     """
     # gather the next arguement/s
     if type(returns) == dict:
-        if type(temp) == dict:
-            return func(**returns|temp)
-    
-        elif type(temp) == tuple:
-            return func(*temp,**returns)
+        if type(temp) == dict: return func(**returns|temp)
+        elif type(temp) == tuple: return func(*temp,**returns)
         return func(temp,**returns)
     # it must be a tuple
     else:
-        if type(temp) == dict:
-            return func(*returns,**temp)
-        elif type(temp) == tuple:
-            return func(*(*returns,*temp))
+        if type(temp) == dict: return func(*returns,**temp)
+        elif type(temp) == tuple: return func(*(*returns,*temp))
         return func(*(*returns,temp))
 
 def pipe(*args,reverse: bool=False) -> Callable[...,Any]:
@@ -3749,13 +3623,11 @@ def pipe(*args,reverse: bool=False) -> Callable[...,Any]:
             # set whatevers left as tuple and handle or gather for tuples
             if type(returns) != tuple: # for consistency / less try/excepts
                 returns = (returns,)
-        try:
-            returns = func(*returns)
+        try: returns = func(*returns)
         except (TypeError, ValueError):
             returns = argmiss(returns,args[i+1*scalar],func)
             skip(iter_val,1)
-    if REVERSE_PIPE == "True":
-        os.environ["REVERSE_PIPE"] = "False"
+    if REVERSE_PIPE == "True": os.environ["REVERSE_PIPE"] = "False"
     return returns
 
 def standardize(x: pd.Series|pd.DataFrame) -> pd.DataFrame:
@@ -3867,8 +3739,7 @@ def indicator_encode(data: pd.DataFrame,to: list=[]) -> pd.DataFrame:
     """encodes data as positive integers by its set; takes a parameter 'to' for custom mapping"""
     encoding = pd.Series(pd.Series.unique(data)).reset_index().rename(columns={0:data.name})
     if len(to) > 0:
-        try:
-            encoding["index"] = to
+        try: encoding["index"] = to
         except:
             print("mapping length required: ",len(encoding)," (",len(encoding)-len(to),"more elements needed )")
             return encoding
@@ -3878,10 +3749,8 @@ def indicator_encode(data: pd.DataFrame,to: list=[]) -> pd.DataFrame:
 
 def pairs_matrix(ls1: list,ls2: list) -> pd.DataFrame:
     """Forms a matrix from two lists"""
-    df = pd.DataFrame()
-    ls2 = pd.Series(ls2,index=ls2)
-    for i in ls1:
-        df[i] = i+ls2
+    ls2,df=pd.Series(ls2,index=ls2),pd.DataFrame()
+    for i in ls1: df[i] = i+ls2
     return df
 
 def dupes(data: pd.DataFrame,ID: str,col: str) -> pd.DataFrame:
@@ -3925,11 +3794,8 @@ def j_sim(lst1: pd.Series) -> pd.Series|pd.DataFrame:
 
 def pairs(lst: list) -> pd.DataFrame:
     """Takes a list and returns a pd.Series of the unique pairs; works quickly on large data"""
-    length=len(lst)
-    new_lst_1=[]
-    new_lst_2=[]
-    new_lst_3=[]
-    temp_length=length
+    temp_length=length=len(lst)
+    new_lst_1,new_lst_2,new_lst_3=[],[],[]
     for i in range(int(length/2+1)):
         new_lst_1 += lst[i+1:-i-1]*2
         temp_length += -2
@@ -4019,11 +3885,8 @@ def scrape(url: str,form: str=None,header: str="") -> str | dict:
     """
     response=requests.get(url,headers=header)
     if response.status_code != 200: return print("Error: ",response.status_code," ",response)
-    # maybe export this out to a function that deals with form?
-    if form == 'html':
-        return BeautifulSoup(response.content, "lxml")
-    elif form == 'json':
-        return json.loads(response.content)
+    if form == 'html': return BeautifulSoup(response.content, "lxml")
+    elif form == 'json': return json.loads(response.content)
     return response.content
 
 def render(html: str,head: str=':None') -> None:
@@ -4034,14 +3897,11 @@ def render(html: str,head: str=':None') -> None:
     
     The function will use Beautiful soup to complete unclosed html tags to ensure the output won't affect the rest of the jupyter notebook
     """
-    # convert to string for slicing
-    if isinstance(html,str) == False:
-        html = str(html[0])
     ### allow for 'head' to be directly inserted for slicing, Markdown reuquires strings, 
     ### Beautiful soup will close tags to stop it affecting the rest of the note book (else i.e. successive divs are nested as children) 
-    exec(compile('display(Markdown(str(BeautifulSoup(html['+head+'], "lxml"))))', '', 'exec'))
+    eval('display(Markdown(str(BeautifulSoup(html['+head+'], "lxml"))))')
 
-def handle_file(name: str,form: str='utf8',FUNC: Callable=type,head: str='') -> str:
+def handle_file(name: str,form: str='utf8',FUNC: Callable="",head: str='') -> str:
     """
     returns the file as file.read()
     handle_file allows you to view a file and execute a function on it returning your operations output if you supply a function input. 
@@ -4055,13 +3915,8 @@ def handle_file(name: str,form: str='utf8',FUNC: Callable=type,head: str='') -> 
     with open(name, encoding=form) as file:
         print("Name of the file: ", file.name,"\n")
         print("Type: ", type(file),"\n")
-        if head == None or isinstance(head,int) == True:
-            print(file.read()[:head],"\n")
-        if FUNC != type:
-            returns = FUNC(file)
-        else:
-            returns = file.read()
-    return returns
+        if head == None or isinstance(head,int): print(file.read()[:head],"\n")
+        return FUNC(file) if FUNC else file.read()
 
 def my_info(data: pd.DataFrame) -> pd.DataFrame:
     """My version of .info()"""
