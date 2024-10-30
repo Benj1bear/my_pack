@@ -66,7 +66,7 @@ def section_source(pos: tuple[int,...],source: str) -> str:
     line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
     return line#[pos[2]:-pos[3]] ## need to check this
 
-def shallow_trace(obj: object,depth: int=1,source: str="") -> dict:
+def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
     """
     Does a general search for the last known import, assignment or 
     definition of an object from an ast of its source code.
