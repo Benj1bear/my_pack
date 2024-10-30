@@ -90,7 +90,12 @@ def shallow_trace(obj: object,trace_depth: int=1,depth: int=1,source: str="") ->
         elif isinstance(node,ast.FunctionDef|ast.ClassDef):
             if node.name==obj_name: trace+=[position(node)]
         elif isinstance(node,ast.Assign):
-            if node.targets[0].id==obj_name: trace+=[position(node)]
+            if isinstance((targets:=node.targets[0]),ast.Tuple):
+                for target in targets.elts:
+                    if target.id==obj_name:
+                        trace+=[position(node)]
+            elif target.id==obj_name:
+                trace+=[position(node)]
     return section_source(trace[-trace_depth],source)
 
 def analyze_pickle(filename: str) -> None:
