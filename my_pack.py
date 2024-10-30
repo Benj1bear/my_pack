@@ -64,7 +64,7 @@ def position(obj: Any) -> tuple[int,...]:
 def section_source(pos: tuple[int,...],source: str) -> str:
     """gets the section of source code from a string"""
     line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
-    return line[pos[2]:-pos[3]] ## need to check this
+    return line#[pos[2]:-pos[3]] ## need to check this
 
 def shallow_trace(obj: object,depth: int=1,source: str="") -> dict:
     """
