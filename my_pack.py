@@ -29,7 +29,7 @@ from importlib.util import module_from_spec,spec_from_loader
 import re
 import glob
 import shutil
-from inspect import getfile,getsource,signature,_empty,currentframe,stack
+from inspect import getfile,getsource,signature,_empty,currentframe,stack,isclass
 import sys
 from functools import partial,wraps,reduce
 from keyword import iskeyword
@@ -484,7 +484,7 @@ def IPython__file__() -> str:
 
 def unwrap(FUNC: Callable,depth: int=1) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
-    if isinstance(FUNC,type):
+    if isclass(FUNC):
         func_name=name(depth=depth)["args"]
         return tuple(source_code(FUNC,join=False,depth=depth+1)[0][1:].split("\n@")+func_name)
     functions=(FUNC,)
