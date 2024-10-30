@@ -66,14 +66,14 @@ def section_source(pos: tuple[int,...],source: str) -> str:
     line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
     return line[pos[2]:-pos[3]] ## need to check this
 
-def shallow_trace(obj: object,trace_depth: int=1,depth: int=1,source: str="") -> dict:
+def shallow_trace(obj: object,depth: int=1,source: str="") -> dict:
     """
     Does a general search for the last known import, assignment or 
     definition of an object from an ast of its source code.
     
     Generally, this should suffice for most use cases, however, 
     if objects are being created from isolated frames or other 
-    'hidden' objects (anything that needs to be directly check 
+    'hidden' objects (anything that needs to be directly checked
     for to see if it modifies variables at any frames from its
     scope) then these need to be checked as well to give a more
     in depth trace but will also take longer to process. - (will develop later)
@@ -92,11 +92,9 @@ def shallow_trace(obj: object,trace_depth: int=1,depth: int=1,source: str="") ->
         elif isinstance(node,ast.Assign):
             if isinstance((targets:=node.targets[0]),ast.Tuple):
                 for target in targets.elts:
-                    if target.id==obj_name:
-                        trace+=[position(node)]
-            elif target.id==obj_name:
-                trace+=[position(node)]
-    return section_source(trace[-trace_depth],source)
+                    if target.id==obj_name: trace+=[position(node)]
+            elif target.id==obj_name: trace+=[position(node)]
+    return [section_source(pos,source) for pos in trace]
 
 def analyze_pickle(filename: str) -> None:
     """
@@ -140,7 +138,7 @@ def patch_exception(FUNC: Callable) -> None:
     1/0 # won't raise the usual error but will instead utilize your function
 
     Try not to use this function unless you have a preference for traceback formatting
-    or other logging behavior as the the program will still raise an error but what it
+    or other logging behavior as the program will still raise an error but what it
     displays will be modified
     """
     if has_IPython():
