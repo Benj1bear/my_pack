@@ -108,6 +108,7 @@ def section_source(pos: tuple[int,...],source: str) -> str:
     line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
     return line#[pos[2]:-pos[3]] ## need to check this
 
+## needs testing ##
 def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
     """
     Does a general search for the last known import, assignment or 
@@ -135,7 +136,7 @@ def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
             if isinstance((targets:=node.targets[0]),ast.Tuple):
                 for target in targets.elts:
                     if target.id==obj_name: trace+=[position(node)]
-            elif target.id==obj_name: trace+=[position(node)]
+            elif (target:=node.targets[0]).id==obj_name: trace+=[position(node)]
     return [section_source(pos,source) for pos in trace]
 
 def analyze_pickle(filename: str) -> None:
