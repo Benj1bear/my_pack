@@ -482,8 +482,11 @@ def IPython__file__() -> str:
     scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
     return file_name
 
-def unwrap(FUNC: Callable) -> tuple[Callable,...]:
+def unwrap(FUNC: Callable,depth: int=1) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
+    if isinstance(FUNC,type):
+        func_name=name(depth=depth)["args"]
+        return tuple(source_code(FUNC,join=False,depth=depth+1)[0][1:].split("\n@")+func_name)
     functions=(FUNC,)
     while True:
         try:
