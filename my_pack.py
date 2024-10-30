@@ -362,6 +362,19 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
     True_module is the actual module name otherwise these presumably have been changed
     and will mess with the results.
 
+    The main advantage of using this function over the regular getsource from inspect 
+    is allowing you to break up the source code into its distinct parts and retrieval
+    of source code for functions that would have otherwise not been retrieved due to
+    how getsource works. 
+    
+    For example, getsource won't work on class decorated functions.
+    
+    This is likely because class decorated functions as opposed to function decorators 
+    don't have a __closure__ attribute and thus there is no way of unwraping the class
+    decorator to know what the original function was and where its source code is. My
+    function will trace back to the source manually by traversing an abstract syntax tree
+    of the source code allowing retrieval.
+    
     set join=False to break up the source code
 
     key="original","new", or other custom specified key available for the undecorate function
