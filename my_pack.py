@@ -352,7 +352,7 @@ def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> dict:
     if record["decorators"]: record["full"][0]=list(record["decorators"].values())[-1][0]
     return record
     
-def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=True,check_cache: bool=False,key: str="original") -> tuple[str,str,str,str]|str:
+def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=True,check_cache: bool=False,key: str="original",depth: int=1) -> tuple[str,str,str,str]|str:
     """
     Gets the source code of a function manually, including for decorated functions/classes.
 
@@ -371,12 +371,17 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
                 obj_name=obj_name.split(".")
                 True_module,True_name=".".join(obj_name[:-1]),obj_name[-1]
             else: ## trace back where the object originates from
-                ## needs testing ##
+                ## needs more testing but should work for typical workflows at the moment ##
                 trace=shallow_trace(obj_name)
                 for nodes in trace:
                     if isinstance(nodes,ast.ImportFrom):
                         for node in nodes.names:
-                            if hasattr(node,"asname") and node.asname==obj_name or node.name==obj_name: break
+                            if hasattr(node,"asname") and node.asname==obj_name:
+                                True_name,True_module=node.name,nodes.module
+                                break
+                            if node.name==obj_name:
+                                True_name,True_module=node.name,nodes.module
+                                break
                         else: continue
                         break
                 else: raise Exception("object couldn't be traced")
