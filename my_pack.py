@@ -109,7 +109,7 @@ def section_source(pos: tuple[int,...],source: str) -> str:
     return line#[pos[2]:-pos[3]] ## need to check this
 
 ## needs testing ##
-def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
+def shallow_trace(obj: Named,show_source: bool=False,depth: int=1,source: str="") -> list[str]:
     """
     Does a general search for the last known import, assignment or 
     definition of an object from an ast of its source code.
@@ -126,19 +126,20 @@ def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
     for node in ast.parse(source).body:
         if isinstance(node,ast.Import):
             for obj in node.names:
-                if obj.name==obj_name: trace+=[position(node)]
+                if obj.name==obj_name: trace+=[node]
         elif isinstance(node,ast.ImportFrom):
             for obj in node.names:
-                if obj.name==obj_name: trace+=[position(node)]
+                if obj.name==obj_name: trace+=[node]
         elif isinstance(node,ast.FunctionDef|ast.ClassDef):
-            if node.name==obj_name: trace+=[position(node)]
+            if node.name==obj_name: trace+=[node]
         elif isinstance(node,ast.Assign):
             if isinstance((targets:=node.targets[0]),ast.Tuple):
                 for target in targets.elts:
-                    if target.id==obj_name: trace+=[position(node)]
-            elif (target:=node.targets[0]).id==obj_name: trace+=[position(node)]
-        ## need handle expr
-    return [section_source(pos,source) for pos in trace]
+                    if target.id==obj_name: trace+=[node]
+            elif node.targets[0].id==obj_name: trace+=[node]
+        elif isinstance(node,ast.Expr):
+            pass
+    return [section_source(position(node),source) for node in trace] if show_source else trace
 
 def analyze_pickle(filename: str) -> None:
     """
