@@ -109,7 +109,7 @@ def section_source(pos: tuple[int,...],source: str) -> str:
     return line#[pos[2]:-pos[3]] ## need to check this
 
 ## needs testing ##
-def shallow_trace(obj: Named,show_source: bool=False,depth: int=1,source: str="") -> list[str]:
+def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: str="") -> list[str]:
     """
     Does a general search for the last known import, assignment or 
     definition of an object from an ast of its source code.
@@ -121,7 +121,8 @@ def shallow_trace(obj: Named,show_source: bool=False,depth: int=1,source: str=""
     scope) then these need to be checked as well to give a more
     in depth trace but will also take longer to process. - (will develop later)
     """
-    trace,obj_name,source=[],name(depth=depth)["args"][0],source if source else history(True)
+    obj_name=obj if isinstance(obj,str) else name(depth=depth)["args"][0]
+    trace,source=[],source if source else history(True)
     ## traverse the code recording imports, assignments, and definitions
     for node in ast.parse(source).body:
         if isinstance(node,ast.Import):
@@ -138,7 +139,7 @@ def shallow_trace(obj: Named,show_source: bool=False,depth: int=1,source: str=""
                     if target.id==obj_name: trace+=[node]
             elif node.targets[0].id==obj_name: trace+=[node]
         elif isinstance(node,ast.Expr):
-            pass
+            pass ## needs implementing
     return [section_source(position(node),source) for node in trace] if show_source else trace
 
 def analyze_pickle(filename: str) -> None:
@@ -365,9 +366,21 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
     """
     if not isinstance(True_name,str):
         if not hasattr(True_name,"__name__"):
-            raise NotImplementedError("No implementation for tracing objects yet")
-            #True_name=trace(name(depth=depth)["args"][0])
-        True_name,True_module=True_name.__name__,True_name.__module__
+            obj_name=name(depth=depth)["args"][0]
+            if "." in obj_name:
+                obj_name=obj_name.split(".")
+                True_module,True_name=".".join(obj_name[:-1]),obj_name[-1]
+            else: ## trace back where the object originates from
+                ## needs testing ##
+                trace=shallow_trace(obj_name)
+                for nodes in trace:
+                    if isinstance(nodes,ast.ImportFrom):
+                        for node in nodes.names:
+                            if hasattr(node,"asname") and node.asname==obj_name or node.name==obj_name: break
+                        else: continue
+                        break
+                else: raise Exception("object couldn't be traced")
+        else: True_name,True_module=True_name.__name__,True_name.__module__
     if check_cache:
         global SOURCE_CODES
         try: source=SOURCE_CODES[True_name]
