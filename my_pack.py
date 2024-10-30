@@ -128,9 +128,11 @@ def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: st
         if isinstance(node,ast.Import):
             for obj in node.names:
                 if obj.name==obj_name: trace+=[node]
+                elif hasattr(obj,"asname") and obj.asname==obj_name: trace+=[node]
         elif isinstance(node,ast.ImportFrom):
             for obj in node.names:
                 if obj.name==obj_name: trace+=[node]
+                elif hasattr(obj,"asname") and obj.asname==obj_name: trace+=[node]
         elif isinstance(node,ast.FunctionDef|ast.ClassDef):
             if node.name==obj_name: trace+=[node]
         elif isinstance(node,ast.Assign):
@@ -139,7 +141,7 @@ def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: st
                     if target.id==obj_name: trace+=[node]
             elif node.targets[0].id==obj_name: trace+=[node]
         elif isinstance(node,ast.Expr):
-            pass ## needs implementing
+            pass
     return [section_source(position(node),source) for node in trace] if show_source else trace
 
 def analyze_pickle(filename: str) -> None:
@@ -371,7 +373,6 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
                 obj_name=obj_name.split(".")
                 True_module,True_name=".".join(obj_name[:-1]),obj_name[-1]
             else: ## trace back where the object originates from
-                ## needs more testing but should work for typical workflows at the moment ##
                 trace=shallow_trace(obj_name)
                 for nodes in trace:
                     if isinstance(nodes,ast.ImportFrom):
