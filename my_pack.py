@@ -123,7 +123,7 @@ def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
     """
     trace,obj_name,source=[],name(depth=depth)["args"][0],source if source else history(True)
     ## traverse the code recording imports, assignments, and definitions
-    for node in ast.parse(source).body[::-1]:
+    for node in ast.parse(source).body:
         if isinstance(node,ast.Import):
             for obj in node.names:
                 if obj.name==obj_name: trace+=[position(node)]
@@ -137,6 +137,7 @@ def shallow_trace(obj: Named,depth: int=1,source: str="") -> list[str]:
                 for target in targets.elts:
                     if target.id==obj_name: trace+=[position(node)]
             elif (target:=node.targets[0]).id==obj_name: trace+=[position(node)]
+        ## need handle expr
     return [section_source(pos,source) for pos in trace]
 
 def analyze_pickle(filename: str) -> None:
