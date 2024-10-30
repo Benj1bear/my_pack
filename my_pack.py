@@ -376,10 +376,7 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
                 for nodes in trace:
                     if isinstance(nodes,ast.ImportFrom):
                         for node in nodes.names:
-                            if hasattr(node,"asname") and node.asname==obj_name:
-                                True_name,True_module=node.name,nodes.module
-                                break
-                            if node.name==obj_name:
+                            if node.name==obj_name or (hasattr(node,"asname") and node.asname==obj_name):
                                 True_name,True_module=node.name,nodes.module
                                 break
                         else: continue
