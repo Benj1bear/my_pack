@@ -57,6 +57,42 @@ import readline
 from contextlib import contextmanager
 import pickletools
 
+def position(obj: Any) -> tuple[int,...]:
+    """extracts the position of an object"""
+    return tuple(getattr(obj,attr) for attr in ('lineno', 'end_lineno','col_offset', 'end_col_offset'))
+
+def section_source(pos: tuple[int,...],source: str) -> str:
+    """gets the section of source code from a string"""
+    line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
+    return line[pos[2]:-pos[3]] ## need to check this
+
+def shallow_trace(obj: object,trace_depth: int=1,depth: int=1,source: str="") -> dict:
+    """
+    Does a general search for the last known import, assignment or 
+    definition of an object from an ast of its source code.
+    
+    Generally, this should suffice for most use cases, however, 
+    if objects are being created from isolated frames or other 
+    'hidden' objects (anything that needs to be directly check 
+    for to see if it modifies variables at any frames from its
+    scope) then these need to be checked as well to give a more
+    in depth trace but will also take longer to process. - (will develop later)
+    """
+    trace,obj_name,source=[],name(depth=depth)["args"][0],source if source else history(True)
+    ## traverse the code recording imports, assignments, and definitions
+    for node in ast.parse(source).body[::-1]:
+        if isinstance(node,ast.Import):
+            for obj in node.names:
+                if obj.name==obj_name: trace+=[position(node)]
+        elif isinstance(node,ast.ImportFrom):
+            for obj in node.names:
+                if obj.name==obj_name: trace+=[position(node)]
+        elif isinstance(node,ast.FunctionDef|ast.ClassDef):
+            if node.name==obj_name: trace+=[position(node)]
+        elif isinstance(node,ast.Assign):
+            if node.targets[0].id==obj_name: trace+=[position(node)]
+    return section_source(trace[-trace_depth],source)
+
 def analyze_pickle(filename: str) -> None:
     """
     Analyzes a .pkl file (Will try to further develop later)
