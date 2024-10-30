@@ -57,6 +57,48 @@ import readline
 from contextlib import contextmanager
 import pickletools
 
+class Named:
+    """
+    Named instance. Any object that has a name assigned to it is of this instance
+    a=[1,2,3]
+    isinstance(a,Named()) # True
+    isinstance([1,2,3],Named()) # False
+    """
+    def __init__(self,depth: int=1) -> None: self.depth=depth
+    def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=self.depth)["args"][:-1]) > 0
+    def __or__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
+    def __ror__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
+
+class BuiltinInstance:
+    """
+    Used for checking instances of types specific to builtin types
+    
+    How to use:
+    
+    i.e.
+    BuiltinClassType: isinstance(int,BuiltinInstance(type))
+    BuiltinCallableType: isinstance(int,BuiltinInstance(Callable))
+            .                            .
+            .                            .
+            .                            .
+    
+    """
+    def __init__(self,type: type|tuple[type]=object) -> None:
+        isinstance(None,type) ## it shouldn't raise an error if it's a valid arguement for isinstance
+        self.type,self.builtins=type,__builtins__.__dict__.values()
+    
+    def __instancecheck__(self,instance: Any) -> bool: return isinstance(instance,self.type) and instance in self.builtins
+    def __subclasscheck__(self,subclass: type) -> bool: return issubclass(subclass,self.type) and subclass in self.builtins
+    def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
+    def __ror__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
+
+class readonly:
+    """allows readonly attributes"""
+    def __init__(self, fget) -> None: self.fget,self.__doc__=fget,fget.__doc__
+    def __get__(self, obj, objtype) -> Any: return self.fget(obj)
+    def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
+    def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
+
 def position(obj: Any) -> tuple[int,...]:
     """extracts the position of an object"""
     return tuple(getattr(obj,attr) for attr in ('lineno', 'end_lineno','col_offset', 'end_col_offset'))
@@ -393,18 +435,6 @@ def bracket_removal(code: str) -> str:
         if not removing: new_string+=char
     return new_string
 
-class Named:
-    """
-    Named instance. Any object that has a name assigned to it is of this instance
-    a=[1,2,3]
-    isinstance(a,Named()) # True
-    isinstance([1,2,3],Named()) # False
-    """
-    def __init__(self,depth: int=1) -> None: self.depth=depth
-    def __instancecheck__(self,obj: Any) -> bool: return len(name(depth=self.depth)["args"][:-1]) > 0
-    def __or__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
-    def __ror__(self,type: type|tuple[type]) -> Union[type]: self.depth+=2; return Union[self,type]
-
 def load_notebook_url() -> None:
     """
     if you reload the library you may need to call this function
@@ -420,29 +450,6 @@ def IPython__file__() -> str:
     scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
     return file_name
 
-class BuiltinInstance:
-    """
-    Used for checking instances of types specific to builtin types
-    
-    How to use:
-    
-    i.e.
-    BuiltinClassType: isinstance(int,BuiltinInstance(type))
-    BuiltinCallableType: isinstance(int,BuiltinInstance(Callable))
-            .                            .
-            .                            .
-            .                            .
-    
-    """
-    def __init__(self,type: type|tuple[type]=object) -> None:
-        isinstance(None,type) ## it shouldn't raise an error if it's a valid arguement for isinstance
-        self.type,self.builtins=type,__builtins__.__dict__.values()
-    
-    def __instancecheck__(self,instance: Any) -> bool: return isinstance(instance,self.type) and instance in self.builtins
-    def __subclasscheck__(self,subclass: type) -> bool: return issubclass(subclass,self.type) and subclass in self.builtins
-    def __or__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
-    def __ror__(self,type: type|tuple[type]) -> Union[type]: return Union[self.type,type]
-
 def unwrap(FUNC: Callable) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
     functions=(FUNC,)
@@ -452,13 +459,6 @@ def unwrap(FUNC: Callable) -> tuple[Callable,...]:
             functions+=(FUNC,)
         except: break
     return functions
-
-class readonly:
-    """allows readonly attributes"""
-    def __init__(self, fget) -> None: self.fget,self.__doc__=fget,fget.__doc__
-    def __get__(self, obj, objtype) -> Any: return self.fget(obj)
-    def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
-    def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
 def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
