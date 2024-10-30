@@ -55,6 +55,19 @@ import urllib
 import readline
 #from collections.abc import Iterable
 from contextlib import contextmanager
+import pickletools
+
+def analyze_pickle(filename: str) -> None:
+    """
+    Analyzes a .pkl file (Will try to further develop later)
+    
+    reading in a pickle file will directly execute code and it's 
+    possible if the code is from an untrusted source that it may
+    be malicious code. This function analyzes the pickle code without
+    executing it via disassembly
+    """
+    if filename[-4:]==".pkl": filename=filename[:-4]
+    with open(filename+".pkl", 'rb') as f: pickletools.dis(f)
 
 def patch_exception(FUNC: Callable) -> None:
     """
@@ -78,8 +91,8 @@ def patch_exception(FUNC: Callable) -> None:
     
     import traceback
 
-    def my_exception(exception_type: type,exception: BaseException, traceback: TracebackType) -> NoReturn:
-        print(traceback.format_exception(exception_type,exception,traceback))
+    def my_exception(exception_type: type,exception: BaseException, trace_back: TracebackType) -> NoReturn:
+        print(traceback.format_exception(exception_type,exception,trace_back))
         
     patch_exception(my_exception) # can be patched again if desired
 
