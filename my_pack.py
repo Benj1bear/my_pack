@@ -99,6 +99,23 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+class section_path:
+    """For breaking up parts of a file path"""
+    def __init__(self,path: str) -> None: self.path=path
+    def __repr__(self) -> str: return repr(self.path)
+    @property
+    def name(self) -> str: return os.path.basename(self.path) if os.path.isdir(self.path) else os.path.basename(self.path).split(".")[0]
+    @property
+    def dir(self) -> str: return self.path if os.path.isdir(self.path) else os.path.dirname(self.path)
+    @property
+    def ext(self) -> str:
+        if not os.path.isfile(self.path): raise FileNotFoundError("The path given is not a file")
+        return ".".join(self.path.split(".")[1:])
+    @property
+    def file(self) -> str:
+        if not os.path.isfile(self.path): raise FileNotFoundError("The path given is not a file")
+        return os.path.basename(self.path)
+
 def position(obj: Any) -> tuple[int,...]:
     """extracts the position of an object"""
     return tuple(getattr(obj,attr) for attr in ('lineno', 'end_lineno','col_offset', 'end_col_offset'))
