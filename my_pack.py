@@ -115,6 +115,9 @@ class section_path:
     def file(self) -> str:
         if not os.path.isfile(self.path): raise FileNotFoundError("The path given is not a file")
         return os.path.basename(self.path)
+    @property
+    def back(self) -> object: self.path=os.path.dirname(self.path);return self
+    def __add__(self,name) -> object: self.path+="\\"+name;return self
 
 def position(obj: Any) -> tuple[int,...]:
     """extracts the position of an object"""
