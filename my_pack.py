@@ -99,18 +99,17 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
-def comp(*objs):
+def comp(*objs) -> Callable:
     """wraps multiple functions together around one object"""
     return reduce(lambda outer, inner: lambda obj: outer(inner(obj)), objs)
 
 @contextmanager
-def decorate(*FUNC: Callable):
+def decorate(*FUNC: Callable) -> Iterable:
     current=scope(2).locals.copy()
     yield
     new=scope(2).locals.copy()
     for key,value in new.items():
-        if key not in current:
-            scope(2)[key]=comp(FUNC+(value,))
+        if key not in current: scope(2)[key]=comp(*FUNC)(value)
 
 def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> ModuleType|Iterable:
     """Allows dynamic importing of a module or its attributes from a file"""
