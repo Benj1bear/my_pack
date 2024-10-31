@@ -99,6 +99,19 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> ModuleType:
+    """Allows dynamic importing of a module from a file or its attributes"""
+    path=section_path(path)
+    with Path(path.dir): ## context manager needed in case of imports in the paths directory
+        module_name=asname if asname else path.name
+        spec=importlib.util.spec_from_file_location(module_name, path.path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if attrs:
+            attrs=as_list(attrs)
+            return getattr(module,attrs[0]) if len(attrs)==1 else (getattr(module,attr) for attr in as_list(attrs))
+        return module
+
 class section_path:
     """
     For breaking up parts of a file path
