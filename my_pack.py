@@ -102,10 +102,8 @@ class readonly:
 @contextmanager
 def decorate(FUNC: Callable):
     current=scope(2).locals.copy()
-    print(current)
     yield
     new=scope(2).locals.copy()
-    print(new)
     for key,value in new.items():
         if key not in current:
             scope(2)[key]=FUNC(value)
