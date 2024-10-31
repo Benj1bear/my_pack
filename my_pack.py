@@ -122,13 +122,13 @@ class section_path:
     @property
     def make(self) -> None: os.makedirs(self.dir)
     @property
-    def remove(self,directory: bool=False) -> None:
+    def remove(self) -> None:
         if os.path.isdir(self.path): shutil.rmtree(self.path)
         else: os.remove(self.path)
     @property
-    def isdir(self): return True if self.ext=="" else False
+    def isdir(self) -> bool: return True if self.ext=="" else False
     @property
-    def isfile(self): return not self.isdir
+    def isfile(self) -> bool: return not self.isdir
     def __add__(self,name: str) -> object: self.path=os.path.join(self.path,name);return self
 
 def position(obj: Any) -> tuple[int,...]:
