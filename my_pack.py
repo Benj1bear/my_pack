@@ -117,7 +117,7 @@ class section_path:
         return os.path.basename(self.path)
     @property
     def back(self) -> object: self.path=os.path.dirname(self.path);return self
-    def __add__(self,name) -> object: self.path+="\\"+name;return self
+    def __add__(self,name: str) -> object: self.path=os.path.join(self.path,name);return self
 
 def position(obj: Any) -> tuple[int,...]:
     """extracts the position of an object"""
