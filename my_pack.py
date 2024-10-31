@@ -100,23 +100,35 @@ class readonly:
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
 class section_path:
-    """For breaking up parts of a file path"""
+    """
+    For breaking up parts of a file path
+
+    Note: Designed so that you can create/manipulate your own file paths 
+    with ease and doesn't have to necessarily exist yet (unless removing 
+    and to an extent adding e.g. at least have the parent paths present)
+    """
     def __init__(self,path: str) -> None: self.path=path
     def __repr__(self) -> str: return repr(self.path)
     @property
-    def name(self) -> str: return os.path.basename(self.path) if os.path.isdir(self.path) else os.path.basename(self.path).split(".")[0]
+    def name(self) -> str: return os.path.basename(self.path) if self.isdir else os.path.basename(self.path).split(".")[0]
     @property
-    def dir(self) -> str: return self.path if os.path.isdir(self.path) else os.path.dirname(self.path)
+    def dir(self) -> str: return self.path if self.isdir else os.path.dirname(self.path)
     @property
-    def ext(self) -> str:
-        if not os.path.isfile(self.path): raise FileNotFoundError("The path given is not a file")
-        return ".".join(self.path.split(".")[1:])
+    def ext(self) -> str: return ".".join(self.path.split(".")[1:])
     @property
-    def file(self) -> str:
-        if not os.path.isfile(self.path): raise FileNotFoundError("The path given is not a file")
-        return os.path.basename(self.path)
+    def file(self) -> str: return os.path.basename(self.path)
     @property
     def back(self) -> object: self.path=os.path.dirname(self.path);return self
+    @property
+    def make(self) -> None: os.makedirs(self.dir)
+    @property
+    def remove(self,directory: bool=False) -> None:
+        if os.path.isdir(self.path): shutil.rmtree(self.path)
+        else: os.remove(self.path)
+    @property
+    def isdir(self): return True if self.ext=="" else False
+    @property
+    def isfile(self): return not self.isdir
     def __add__(self,name: str) -> object: self.path=os.path.join(self.path,name);return self
 
 def position(obj: Any) -> tuple[int,...]:
