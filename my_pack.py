@@ -524,7 +524,7 @@ def load_notebook_url() -> None:
 
 def IPython__file__() -> str:
     """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
-    scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(scope()["NOTEBOOK_URL"].split("/")[-1])
+    scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(scope()["NOTEBOOK_URL"]).path.split("/")[-1])
     return file_name
 
 def unwrap(FUNC: Callable,depth: int=1) -> tuple[Callable,...]:
