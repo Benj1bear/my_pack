@@ -104,7 +104,7 @@ def comp(*objs) -> Callable:
     return reduce(lambda outer, inner: lambda obj: outer(inner(obj)), objs)
 
 @contextmanager
-def decorate(*FUNC: Callable) -> Iterable:
+def decorate(*FUNC: Callable) -> None:
     current=scope(2).locals.copy()
     yield
     new=scope(2).locals.copy()
@@ -220,7 +220,7 @@ def patch_exception(FUNC: Callable) -> None:
     else: sys.excepthook=FUNC
 
 @contextmanager
-def Path(path: str) -> iter:
+def Path(path: str) -> None:
     """Context manager to temporarily move into different directories and then go back to the original directory"""
     if path:
         try:
