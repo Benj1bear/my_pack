@@ -99,6 +99,17 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+@contextmanager
+def decorate(FUNC: Callable):
+    current=scope(2).locals.copy()
+    print(current)
+    yield
+    new=scope(2).locals.copy()
+    print(new)
+    for key,value in new.items():
+        if key not in current:
+            scope(2)[key]=FUNC(value)
+
 def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> ModuleType|Iterable:
     """Allows dynamic importing of a module or its attributes from a file"""
     path=section_path(path)
@@ -111,38 +122,6 @@ def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> M
             attrs=as_list(attrs)
             return getattr(module,attrs[0]) if len(attrs)==1 else (getattr(module,attr) for attr in as_list(attrs))
         return module
-
-class section_path:
-    """
-    For breaking up parts of a file path
-
-    Note: Designed so that you can create/manipulate your own file paths 
-    with ease and doesn't have to necessarily exist yet (unless removing 
-    and to an extent adding e.g. at least have the parent paths present)
-    """
-    def __init__(self,path: str) -> None: self.path=path
-    def __repr__(self) -> str: return repr(self.path)
-    @property
-    def name(self) -> str: return os.path.basename(self.path) if self.isdir else os.path.basename(self.path).split(".")[0]
-    @property
-    def dir(self) -> str: return self.path if self.isdir else os.path.dirname(self.path)
-    @property
-    def ext(self) -> str: return ".".join(self.path.split(".")[1:])
-    @property
-    def file(self) -> str: return os.path.basename(self.path)
-    @property
-    def back(self) -> object: self.path=os.path.dirname(self.path);return self
-    @property
-    def make(self) -> None: os.makedirs(self.dir)
-    @property
-    def remove(self) -> None:
-        if os.path.isdir(self.path): shutil.rmtree(self.path)
-        else: os.remove(self.path)
-    @property
-    def isdir(self) -> bool: return True if self.ext=="" else False
-    @property
-    def isfile(self) -> bool: return not self.isdir
-    def __add__(self,name: str) -> object: self.path=os.path.join(self.path,name);return self
 
 def position(obj: Any) -> tuple[int,...]:
     """extracts the position of an object"""
@@ -4194,6 +4173,30 @@ def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_
 
 ## eventually will move to str_df
 def str_strip(x: str) -> str: return x.strip() if isinstance(x,str) else x
+
+class section_path:
+    """
+    For breaking up parts of a file path
+
+    Note: Designed so that you can create/manipulate your own file paths 
+    with ease and doesn't have to necessarily exist yet (unless removing 
+    and to an extent adding e.g. at least have the parent paths present)
+    """
+    def __init__(self,path: str) -> None: self.path=path
+    def __repr__(self) -> str: return repr(self.path)
+    def __add__(self,name: str) -> object: self.path=os.path.join(self.path,name);return self
+    with decorate(property):
+        def name(self) -> str: return os.path.basename(self.path) if self.isdir else os.path.basename(self.path).split(".")[0]
+        def dir(self) -> str: return self.path if self.isdir else os.path.dirname(self.path)
+        def ext(self) -> str: return ".".join(self.path.split(".")[1:])
+        def file(self) -> str: return os.path.basename(self.path)
+        def back(self) -> object: self.path=os.path.dirname(self.path);return self
+        def make(self) -> None: os.makedirs(self.dir)
+        def remove(self) -> None:
+            if os.path.isdir(self.path): shutil.rmtree(self.path)
+            else: os.remove(self.path)
+        def isdir(self) -> bool: return True if self.ext=="" else False
+        def isfile(self) -> bool: return not self.isdir
 
 if has_IPython():
     load_notebook_url()
