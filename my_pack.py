@@ -99,14 +99,18 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+def comp(*objs):
+    """wraps multiple functions together around one object"""
+    return reduce(lambda outer, inner: lambda obj: outer(inner(obj)), objs)
+
 @contextmanager
-def decorate(FUNC: Callable):
+def decorate(*FUNC: Callable):
     current=scope(2).locals.copy()
     yield
     new=scope(2).locals.copy()
     for key,value in new.items():
         if key not in current:
-            scope(2)[key]=FUNC(value)
+            scope(2)[key]=comp(FUNC+(value,))
 
 def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> ModuleType|Iterable:
     """Allows dynamic importing of a module or its attributes from a file"""
@@ -1732,8 +1736,7 @@ def dct_join(*dcts: tuple[dict]) -> dict:
 
 def biop(data: Any,op: str) -> Any:
     """applies a reduce using a binary operator"""
-    def bi_op(x: Any,y: Any) -> Any: return eval("x"+op+"y")
-    return reduce(bi_op,data)
+    return reduce(lambda x,y: eval("x"+op+"y"),data)
 
 FILE_SAVE_INDEX={}
 def unidir(path_name: str="",ext: str="") -> None:
