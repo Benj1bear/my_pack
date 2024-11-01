@@ -57,6 +57,7 @@ import readline
 from contextlib import contextmanager
 import pickletools
 
+## might remove __init__. seems unecessary but needs testing ##
 class Named:
     """
     Named instance. Any object that has a name assigned to it is of this instance
@@ -99,12 +100,36 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
-def comp(*objs) -> Callable:
-    """wraps multiple functions together around one object"""
-    return reduce(lambda outer, inner: lambda obj: outer(inner(obj)), objs)
+def comp(*FUNCS: tuple[Callable,...]) -> Callable:
+    """
+    wraps multiple functions together around one object
+    
+    How to use:
+
+    comp(classmethod,property)(*some value or object*)
+    
+    You should be able to use it as a decorator as well
+    
+    @comp(classmethod,property)
+    def test():
+        return 3
+    """
+    return reduce(lambda outer, inner: lambda obj: outer(inner(obj)), FUNCS)
 
 @contextmanager
 def decorate(*FUNC: Callable) -> None:
+    """
+    Used to decorate multiple function definitions at once
+    
+    How to use:
+
+    with decorate(property):
+        def f1(): pass
+        def f2(): pass
+        def f3(): pass
+        ...
+    # should make all functions have property decorators
+    """
     current=scope(2).locals.copy()
     yield
     new=scope(2).locals.copy()
@@ -112,7 +137,15 @@ def decorate(*FUNC: Callable) -> None:
         if key not in current: scope(2)[key]=comp(*FUNC)(value)
 
 def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> ModuleType|Iterable:
-    """Allows dynamic importing of a module or its attributes from a file"""
+    """
+    Allows dynamic importing of a module or its attributes from a file
+    
+    How to use:
+    i.e.
+    import_module(c:\\Users\\Me\\A\\B\\C\\test.py) ## will import module test as name (reference/pointer) 'test'
+    import_module(c:\\Users\\Me\\A\\B\\C\\test.py,asname="module") ## will import module test as name 'module'
+    import_module(c:\\Users\\Me\\A\\B\\C\\test.py,attrs=["a","b","c"]) ## will import 'a','b','c' from module 'test'
+    """
     path=section_path(path)
     with Path(path.dir): ## context manager needed in case of imports in the paths directory
         module_name=asname if asname else path.name
@@ -125,11 +158,33 @@ def import_module(path: str,asname: str=None,attrs: str|Iterable[str]=None) -> M
         return module
 
 def position(obj: Any) -> tuple[int,...]:
-    """extracts the position of an object"""
+    """
+    extracts the position of an object
+
+    Assuming your object (typically) represents i.e. a location in the source code
+    and has attrs 'lineno', 'end_lineno','col_offset', 'end_col_offset' then this
+    function is used for the purpose of extracting the positions in this order
+    
+    How to use:
+
+    i.e. if got an ast node or instruction object
+    position(node) # will return its position in the source code
+    """
     return tuple(getattr(obj,attr) for attr in ('lineno', 'end_lineno','col_offset', 'end_col_offset'))
 
+## needs testing ##
 def section_source(pos: tuple[int,...],source: str) -> str:
-    """gets the section of source code from a string"""
+    """
+    gets the section of source code from a string assuming you have a position of the form:
+    ('lineno', 'end_lineno','col_offset', 'end_col_offset') # where each entry is an int type
+
+    This will allow you to extract the particular source code of interest in accordance with its 
+    line/col position
+
+    How to use:
+
+    section_source((0,0,5,5),"True;1+1;not 3") # should return 1+1;
+    """
     line="\n".join(source.split("\n")[pos[0]-1:pos[1]])
     return line#[pos[2]:-pos[3]] ## need to check this
 
@@ -145,6 +200,17 @@ def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: st
     for to see if it modifies variables at any frames from its
     scope) then these need to be checked as well to give a more
     in depth trace but will also take longer to process. - (will develop later)
+
+    How to use:
+    s='''
+    from test import t
+
+    t=1
+    t=2
+    t=3
+    '''
+    shallow_trace(t,True,source=s) # should return ['from test import t','t=1','t=2','t=3']
+    shallow_trace(t,source=s) # should return a list of ast nodes i.e. [<ast.ImportFrom>,<ast.Assign>,...]
     """
     obj_name=obj if isinstance(obj,str) else name(depth=depth)["args"][0]
     trace,source=[],source if source else history(True)
@@ -166,7 +232,7 @@ def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: st
                     if target.id==obj_name: trace+=[node]
             elif node.targets[0].id==obj_name: trace+=[node]
         elif isinstance(node,ast.Expr):
-            pass
+            pass ## needs implementing
     return [section_source(position(node),source) for node in trace] if show_source else trace
 
 def analyze_pickle(filename: str) -> None:
@@ -177,6 +243,12 @@ def analyze_pickle(filename: str) -> None:
     possible if the code is from an untrusted source that it may
     be malicious code. This function analyzes the pickle code without
     executing it via disassembly
+
+    How to use:
+
+    analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
+    # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
+    # (pickle also has different opcode formats depending on the task)
     """
     if filename[-4:]==".pkl": filename=filename[:-4]
     with open(filename+".pkl", 'rb') as f: pickletools.dis(f)
@@ -221,7 +293,16 @@ def patch_exception(FUNC: Callable) -> None:
 
 @contextmanager
 def Path(path: str) -> None:
-    """Context manager to temporarily move into different directories and then go back to the original directory"""
+    """
+    Context manager to temporarily move into different directories and then go back to the original directory
+
+    How to use:
+
+    with Path(*some directory*):
+        *do something*
+        os.getcwd() # should be equal to the *some directory* provided to Path as an arguement
+    os.getcwd() # should be equal to the previous directory that you were in prior to the context manager being used
+    """
     if path:
         try:
             current=os.getcwd()
@@ -239,6 +320,13 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
     Gets the full file path to a module without executing it
     
     if wanting relative imports you must supply relative with a directory to be relative to
+
+    How to use:
+
+    module_file('unittest') # should return something like: 'C:\\Users\\Me\\...\\Lib\\unittest\\__init__.py'
+    module_file('unittest',show_type=True) # should return something like: ('C:\\Users\\Me\\...\\Lib\\unittest\\__init__.py','absolute')
+    module_file('builtins') # should throw a FileNotFound exception/error (even if you have a library called the builtins (unless you intend to do a relative or dynamic import))
+    module_file('builtins','C:\\Users\\Me\\a\\b\\c') # assuming C:\\Users\\Me\\a\\b\\c\\builtins.py exists it should return it else it will throw an exception
     """
     paths=as_list(relative) if relative else as_list(sys.path) # sys.path contains the directories python uses to look for modules
     modules=module.split(".")
@@ -264,11 +352,22 @@ def module_file(module: str,relative: str|Iterable[str]="",extensions: Iterable[
     raise FileNotFoundError("module is not on path or does not exist. If module is a relative import try giving a directory to reference from")
 
 def dir_back(depth: int=0,location: str="") -> str:
-    """Gets the specified parent directory path"""
+    """
+    Gets the specified parent directory path
+
+    How to use:
+
+    if os.getcwd() is: C:\\Users\\Me\\a\\b\\c
+    dir_back() will return: C:\\Users\\Me\\a\\b\\c
+    dir_back(1) will return: C:\\Users\\Me\\a\\b
+    dir_back(2) will return: C:\\Users\\Me\\a
+    ...
+    """
     current=location if location else os.getcwd()
     for i in range(depth): current=os.path.dirname(current)
     return current
-        
+
+## might remove ##
 def as_dir(location: str) -> str: return location if os.path.isdir(location) else os.path.dirname(location)
 
 def source(module: str,location: str="") -> tuple[str,str,bool]:
@@ -290,6 +389,13 @@ def foundations(code: str) -> tuple[dict,dict]:
     
     For every module it will go recursively however many modules deep to
     form a foundation of what code your program used to execute on
+
+    How to use:
+
+    foundations("from test import t")
+
+    # should return a tuple of two dictionaries representing absolute 
+    # and relative imports respectively with the following formatting
 
     absolute imports are recorded as:
 
@@ -356,17 +462,62 @@ def foundations(code: str) -> tuple[dict,dict]:
     
     return get_imports(code),relative_imports
 
-def as_list(obj: Any) -> list: return obj if isinstance(obj,list) else [obj]
+def as_list(obj: Any) -> list:
+    """
+    Makes sure an object is contained in a list
+
+    How to use:
+
+    as_list([1,2,3]) # should return [1,2,3]
+    as_list(1) # should return [1]
+    """
+    return obj if isinstance(obj,list) else [obj]
 
 def extract_callables(True_name: str,True_module: str) -> tuple[str,list[dict]]:
-    """Gets all callables from a string"""
-    source=history(True) if True_module=="__main__" else open(__import__(True_module).__file__,encoding="utf-8").read()
+    """
+    Gets all callables from a string
+
+    Typically you should use this to extract all callables from a source file but
+    you can also use this to extract any python valid function/class definitions
+    from a string
+    
+    How to use:
+    # assuming this is the module 'test'
+    s='''
+    a=1
+    def hi():pass
+    b=2
+    class test: pass
+    c=3
+    def hi_there():pass
+    d=4
+    hi="hello"
+    e=5
+    class hi:pass
+    '''
+    extract_callables("hi","test") # should return 3 sectioned ast nodes representing the function definition,assignment, and class definition
+    """
+    source=history(True) if True_module=="__main__" else open(module_file(True_module),encoding="utf-8").read()
     ## TODO: will need to also add in the parameters e.g. to allow knowledge on how many there are etc.
     return source,[section_ast(obj) for obj in ast.parse(source).body if isinstance(obj,ast.FunctionDef|ast.ClassDef) and obj.name==True_name]
 
 def section_ast(obj: ast.FunctionDef|ast.ClassDef) -> dict:
-    """Allows source code to be broken into parts according with the ast object"""
-    #decorators="\n".join(lines[slice(*line)] for line in FUNC_records["decorators"].values())
+    """
+    Allows source code to be broken into parts according with the ast object
+    
+    How to use:
+
+    Assuming an ast.FunctionDef|ast.ClassDef is passed in:
+
+    it will return a dictionary of:
+    |   key    |       value       |
+    ---------- - -------------------
+    decorators | a dictionary of decorator names mapping to their source code position
+    docstring  | source code position of the docstring
+    full       | source code position of the full function
+    signature  | source code position of the function signature
+    body       | source code position of the body
+    """
     record={"decorators":{decorator.id:(decorator.lineno-1,decorator.end_lineno) for decorator in obj.decorator_list[::-1]},
             "docstring":ast.get_docstring(obj),"full":[obj.lineno-1,obj.end_lineno,obj.col_offset,obj.end_col_offset]}
     code_start=obj.body[bool(record["docstring"] and len(obj.body) > 1)]
@@ -403,24 +554,56 @@ def source_code(True_name: Callable|str,True_module: str="__main__",join: bool=T
     set join=False to break up the source code
 
     key="original","new", or other custom specified key available for the undecorate function
+
+    How to use:
+
+    i.e. a class decorated function
+    # test2.py
+    class a:pass
+    class b(a):pass
+    class c(a):pass
+    # test.py
+    from test2 import a,b,c
+    @a
+    @b
+    @c
+    def t():
+        '''hi'''
+        return 3
+    # __main__
+    from test import t
+
+    source_code(t) # or source_code('t','test')
+    # should return:
+    @a
+    @b
+    @c
+    def t():
+        '''hi'''
+        return 3
+    source_code(t,join=False) # or source_code('t','test',join=False)
+    # should return:
+    ['@a\n@b\n@c',def t():,'hi','    return 3']
     """
     if not isinstance(True_name,str):
-        if not hasattr(True_name,"__name__"):
+        if not (hasattr(True_name,"__name__") and hasattr(True_name,"__module__")):
             obj_name=name(depth=depth)["args"][0]
-            if "." in obj_name:
-                obj_name=obj_name.split(".")
-                True_module,True_name=".".join(obj_name[:-1]),obj_name[-1]
-            else: ## trace back where the object originates from
-                trace=shallow_trace(obj_name)
-                for nodes in trace:
-                    if isinstance(nodes,ast.ImportFrom):
-                        for node in nodes.names:
-                            if node.name==obj_name or (hasattr(node,"asname") and node.asname==obj_name):
-                                True_name,True_module=node.name,nodes.module
-                                break
-                        else: continue
-                        break
-                else: raise Exception("object couldn't be traced")
+            if not hasattr(True_name,"__module__"):
+                if "." in obj_name:
+                    obj_name=obj_name.split(".")
+                    True_module,True_name=".".join(obj_name[:-1]),obj_name[-1]
+                else: ## trace back where the object originates from
+                    trace=shallow_trace(obj_name)
+                    for nodes in trace:
+                        if isinstance(nodes,ast.ImportFrom):
+                            for node in nodes.names:
+                                if node.name==obj_name or (hasattr(node,"asname") and node.asname==obj_name):
+                                    True_name,True_module=node.name,nodes.module
+                                    break
+                            else: continue
+                            break
+                    else: raise Exception("object couldn't be traced")
+            else: True_name,True_module=obj_name,True_name.__module__
         else: True_name,True_module=True_name.__name__,True_name.__module__
     if check_cache:
         global SOURCE_CODES
@@ -462,6 +645,17 @@ def history(join: bool=False) -> list[str]:
     e.g.
     import readline
     readline.clear_history()
+
+    How to use:
+
+    # __main__
+    1+1
+    2
+    range(5)
+    class a: pass
+    a()
+    history(True) # will return '1+1\n2\nrange(5)\nclass a: pass\na()'
+    history() # will return the results in a list e.g. in their execution order
     """
     join_up=lambda string,code: string.join(code) if join else code
     if has_IPython():
@@ -524,10 +718,10 @@ def copy(*args) -> Any|tuple[Any]:
     """general purpose function for copying python objects"""
     new_args=tuple()
     for arg in args:    
-        if isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
-        elif isinstance(arg,type): new_args+=(class_copy(arg),)
+        if hasattr(arg,"copy"): new_args+=(arg.copy(),)
+        elif isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
+        elif isclass(arg): new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
-        elif hasattr(arg,"copy"): new_args+=(arg.copy(),)
         else:
             try: new_args+=(deepcopy(arg),)
             except:
