@@ -116,6 +116,7 @@ class cut:
         if key=="_cut__temp": return super().__setattr__(key,value)
         current=scope(1).locals
         for key in self.__temp|{key}: current[key]=copy(value)
+        self.__temp=set()
     
     def __getattr__(self,key) -> object:
         self.__temp|={key}
