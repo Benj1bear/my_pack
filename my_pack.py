@@ -100,6 +100,28 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+@lambda x: x()
+class cut:
+    """
+    Allows setting multiple values as copies rather than pointers 
+    effectively cutting each reference from the original id if the
+    value being set to is mutable
+
+    How to use:
+
+    cut.a.b.c=[] # will set a,b,c each a copy of []
+    """
+    __temp=set()
+    def __setattr__(self,key,value) -> None:
+        if key=="_Cut__temp": return super().__setattr__(key,value)
+        temp=dict.fromkeys(self.__temp|{key},value)
+        current=scope(1)
+        for key in temp: current[key]=copy(value)
+    
+    def __getattr__(self,key) -> object:
+        self.__temp|={key}
+        return self
+
 def comp(*FUNCS: tuple[Callable,...]) -> Callable:
     """
     wraps multiple functions together around one object
