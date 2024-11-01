@@ -1447,7 +1447,9 @@ class scope:
         return current_scope
     
     def __getitem__(self,key: Any) -> Any: return self.locals[key] if key in self.locals else self.globals[key]
-    def update(self,**dct) -> None: map_set(self,dct)
+    def update(self,dct) -> None:
+        for key,value in dct.items(): self[key]=value
+    def get(self,key,default=None) -> Any: return self.scope.get(key,default=default)
     def __setitem__(self,key: Any,value: Any) -> None:
         if key in self.locals:
             self.locals[key]=value
