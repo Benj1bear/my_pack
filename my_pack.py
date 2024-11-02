@@ -126,6 +126,9 @@ class cut:
     cut.a=[] # only gives a copy to 'a'
     or 
     (-cut).a=[]
+
+    if you need to see what variables are recorded you can use
+    cut._cut__temp or ~cut to display them
     """
     __temp=set()
     def __setattr__(self,key,value) -> None:
@@ -138,6 +141,8 @@ class cut:
         self.__temp|={key}
         return self
 
+    def __invert__(self) -> set: return self.__temp
+    
     def __neg__(self) -> object:
         self.__temp=set()
         return self
