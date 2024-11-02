@@ -110,6 +110,22 @@ class cut:
     How to use:
 
     cut.a.b.c=[] # will set a,b,c each a copy of []
+
+    if you go:
+    
+    cut.a.b.c
+
+    it will record the variables and therefore you can set 
+    cut by choosing one of the variables:
+    cut.a=[] # will also set b,c since getattr has been used on them
+
+    to prevent this if desired you can reset the variables
+    recorded by using a negation on cut before using it:
+
+    -cut
+    cut.a=[] # only gives a copy to 'a'
+    or 
+    (-cut).a=[]
     """
     __temp=set()
     def __setattr__(self,key,value) -> None:
@@ -120,6 +136,10 @@ class cut:
     
     def __getattr__(self,key) -> object:
         self.__temp|={key}
+        return self
+
+    def __neg__(self) -> object:
+        self.__temp=set()
         return self
 
 def comp(*FUNCS: tuple[Callable,...]) -> Callable:
