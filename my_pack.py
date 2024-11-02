@@ -129,12 +129,23 @@ class cut:
 
     if you need to see what variables are recorded you can use
     cut._cut__temp or ~cut to display them
+
+    Also, if you want, you can use lambda expressions to set
+    the name of the input variable as the result of the expression:
+    i.e.
+    cut(lambda x: x+1)(lambda y: y+2).c=3 # x: 4,y: 5, c: 3 
     """
     __temp=set()
+    def __call__(self,FUNC) -> object:
+        self.__temp|={FUNC}
+        return self
+    
     def __setattr__(self,key,value) -> None:
         if key=="_cut__temp": return super().__setattr__(key,value)
         current=scope(1).locals
-        for key in self.__temp|{key}: current[key]=copy(value)
+        for key in self.__temp|{key}:
+            if isinstance(key,Callable): current[list(signature(key).parameters)[0]]=key(copy(value))
+            else: current[key]=copy(value)
         self.__temp=set()
     
     def __getattr__(self,key) -> object:
