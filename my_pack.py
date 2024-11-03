@@ -777,6 +777,7 @@ def IPython__file__() -> str:
     """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
     global FILE
     if FILE: return FILE
+    ## not sure why scope()['__file__'] doesn't get saved
     scope()["__file__"]=FILE=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1])
     return FILE
 
