@@ -105,7 +105,7 @@ def get_js(string: str,timeout: int="") -> str:
     Allows communication between jupyter notebooks IPython and javascript
     
     # code reference: erpuntbakker (2019) https://stackoverflow.com/questions/58881349/cannot-get-jupyter-notebook-to-access-javascript-variables?rq=3, CC BY-SA 4.0
-    # changes made: condensed into a function for reuse, allowed timeout to be optional, removed the try catch since the json used in the function should be consistently valid
+    # changes made: condensed into a function for reuse, allowed timeout to be optional, removed unnecessary code
     """
     if timeout: timeout=f",{timeout}000"
     display(Javascript("""
@@ -113,12 +113,10 @@ def get_js(string: str,timeout: int="") -> str:
 
       CodeCell.prototype.native_handle_input_request = CodeCell.prototype.native_handle_input_request || CodeCell.prototype._handle_input_request
       CodeCell.prototype._handle_input_request = function(msg) {
-          const command = JSON.parse(msg.content.prompt);
           setTimeout(() => { IPython.notebook.kernel.send_input_reply("""+string+""") """+timeout+"""})
       }
     """))
-    response = input(json.dumps({}))
-    return response
+    return input()
 
 @lambda x: x()
 class cut:
