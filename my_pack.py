@@ -781,9 +781,9 @@ def IPython__file__() -> str:
     scope()["__file__"]=FILE=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1])
     return FILE
 
-def unwrap(FUNC: Callable,depth: int=1) -> tuple[Callable,...]:
+def unwrap(FUNC: Callable,depth: int=1,trace: bool=False) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
-    if isclass(FUNC):
+    if isclass(FUNC) or trace: # trace - in case decorator functions return functions e.g. as a factory like the class decorators
         func_name=name(depth=depth)["args"]
         return tuple(source_code(FUNC,join=False,depth=depth+1)[0][1:].split("\n@")+func_name)
     functions=(FUNC,)
