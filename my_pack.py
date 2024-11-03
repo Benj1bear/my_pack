@@ -116,7 +116,7 @@ def get_js(string: str,timeout: int="") -> str:
           setTimeout(() => { IPython.notebook.kernel.send_input_reply("""+string+""") """+timeout+"""})
       }
     """))
-    return input()
+    return input({})
 
 @lambda x: x()
 class cut:
