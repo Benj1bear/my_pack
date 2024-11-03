@@ -4476,4 +4476,5 @@ class section_path:
         def isfile(self) -> bool: return not self.isdir
 
 if has_IPython():
+    IPython__file__() # sets the __file__ attribute in jupyter notebook
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
