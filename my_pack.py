@@ -100,6 +100,26 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+def get_js(string: str,timeout: int="") -> str:
+    """
+    Allows communication between jupyter notebooks IPython and javascript
+    
+    # code reference: erpuntbakker (2019) https://stackoverflow.com/questions/58881349/cannot-get-jupyter-notebook-to-access-javascript-variables?rq=3, CC BY-SA 4.0
+    # changes made: condensed into a function for reuse, allowed timeout to be optional, removed the try catch since the json used in the function should be consistently valid
+    """
+    if timeout: timeout=f",{timeout}000"
+    display(Javascript("""
+      const CodeCell = window.IPython.CodeCell;
+
+      CodeCell.prototype.native_handle_input_request = CodeCell.prototype.native_handle_input_request || CodeCell.prototype._handle_input_request
+      CodeCell.prototype._handle_input_request = function(msg) {
+          const command = JSON.parse(msg.content.prompt);
+          setTimeout(() => { IPython.notebook.kernel.send_input_reply("""+string+""") """+timeout+"""})
+      }
+    """))
+    response = input(json.dumps({}))
+    return response
+
 @lambda x: x()
 class cut:
     """
@@ -744,20 +764,23 @@ def bracket_removal(code: str) -> str:
         if not removing: new_string+=char
     return new_string
 
-def load_notebook_url() -> None:
+def notebook_url() -> None:
     """
-    if you reload the library you may need to call this function
-    within the main program. 
-    
-    Note: for some reason NOTEBOOK_URL can only be accessed after 
-    running a cell (not running many cells at once) for it to work.
-    """
-    display(Javascript("""IPython.notebook.kernel.execute("NOTEBOOK_URL='"+window.location.href+"'")"""))
+    Retrieves the notebooks url
 
+    Note: if using jupyter lab apparently this works:
+    # reference: https://github.com/jtpio/ipylab/discussions/139
+    import os
+    os.environ.get('JPY_SESSION_NAME')
+    """
+    return get_js("window.location.href")
+FILE=""
 def IPython__file__() -> str:
     """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
-    scope()["__file__"]=file_name=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(scope()["NOTEBOOK_URL"]).path.split("/")[-1])
-    return file_name
+    global FILE
+    if FILE: return FILE
+    scope()["__file__"]=FILE=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1])
+    return FILE
 
 def unwrap(FUNC: Callable,depth: int=1) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
@@ -2495,7 +2518,7 @@ def all_callables(module: str,return_module: bool=False) -> list[str] | tuple[li
 
 def side_display(dfs:pd.DataFrame | list[pd.DataFrame], captions: str | list=[], spacing: int=0) -> None:
     """
-    # code reference: Lysakowski, R., Aristide, (2021) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA,
+    # code reference: Lysakowski, R., Aristide, (2021) https://stackoverflow.com/questions/38783027/jupyter-notebook-display-two-pandas-tables-side-by-side,CC BY-SA 4.0
     # changes made: Added flexibility to user input and exception handling, made minor adjustments to type annotations and code style preferences, implemented my comments
     Display pd.DataFrames side by side
     
@@ -3186,7 +3209,7 @@ def all_packs() -> pd.DataFrame:
 def to_module(code: str) -> Callable[..., Any]:
     """
     converts a string to a python module object that associates with a temporary file for getting source code
-    # code reference: Sottile, A., (2020) https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5,CC BY-SA,
+    # code reference: Sottile, A., (2020) https://stackoverflow.com/questions/64925104/inspect-getsource-from-a-function-defined-in-a-string-s-def-f-return-5,CC BY-SA 4.0
     # changes made: combined into one function, used while loop to ensure uniqueness of filename, shortened code, implemented my comments
     """
     class Module:
@@ -4453,5 +4476,4 @@ class section_path:
         def isfile(self) -> bool: return not self.isdir
 
 if has_IPython():
-    load_notebook_url()
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
