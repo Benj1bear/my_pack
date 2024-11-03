@@ -100,20 +100,19 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
-def get_js(string: str,timeout: int="") -> str:
+def get_js(string: str) -> str:
     """
     Allows communication between jupyter notebooks IPython and javascript
     
     # code reference: erpuntbakker (2019) https://stackoverflow.com/questions/58881349/cannot-get-jupyter-notebook-to-access-javascript-variables?rq=3, CC BY-SA 4.0
     # changes made: condensed into a function for reuse, allowed timeout to be optional, removed unnecessary code
     """
-    if timeout: timeout=f",{timeout}000"
     display(Javascript("""
       const CodeCell = window.IPython.CodeCell;
 
       CodeCell.prototype.native_handle_input_request = CodeCell.prototype.native_handle_input_request || CodeCell.prototype._handle_input_request
       CodeCell.prototype._handle_input_request = function(msg) {
-          setTimeout(() => { IPython.notebook.kernel.send_input_reply("""+string+""") """+timeout+"""})
+          IPython.notebook.kernel.send_input_reply("""+string+""")
       }
     """))
     return input({})
