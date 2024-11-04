@@ -3671,25 +3671,6 @@ def pipe_func_dict(string: str) -> str:
         ls_new+=[ls[i]]
     return "".join(ls_new)
 
-####### not sure if this works... will check later ##############
-def line_enclose(string,start,end,FUNC="",sep="",separate=False):
-    start=line_sep(string,start,index=True)
-    end=line_sep(string,end,index=True)
-    enclosing=[]
-    if separate == True or sep!= "":
-        ls=list(string)
-        for i in range(len(start)//2):
-            ls[start[2*i]:end[2*i+1]] = sep
-        return "".join(ls)
-    if FUNC != "":
-        for i in range(len(start)//2):
-            enclosing+=[[start[2*i],end[2*i+1]]]
-        return FUNC(string,enclosing)
-    for i in range(len(start)//2):
-        enclosing+=[start[2*i],end[2*i+1]]
-    return indx_split([0]+enclosing,string)
-###################################################################
-
 ### seems to work but needs testing ###
 def interpret(code: str,checks: list[Callable]=[],operators: str=[]) -> str:
     """Checks code against a custom set of rules for how code should be formated"""
