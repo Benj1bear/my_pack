@@ -100,6 +100,29 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+def pd_df_map(method: Callable) -> Callable:
+    """Allows mapping str methods to pd.DataFrame.map"""
+    @wraps(method)
+    def wrapper(self,*args,**kwargs) -> pd.DataFrame:
+        """for mapping the string methods"""
+        return self.df.map(lambda x:method(x,*args,**kwargs))
+    return wrapper
+
+def StringAccessor(cls):
+    not_allowed=["__init__","__new__","__repr__","__dict__","__class__","__str__","__getattribute__","__doc__"]
+    for key,value in str.__dict__.items():
+        if key in not_allowed: not_allowed.remove(key)
+        else: setattr(cls,key,pd_df_map(value))
+    return cls
+
+@property
+@StringAccessor
+class str_df:
+    """String accessor extension for pd.DataFrame"""
+    def __init__(self,df: pd.DataFrame) -> None: self.df = df # save df
+
+pd.DataFrame.str=str_df
+
 def get_js(string: str,timeout: int="") -> str:
     """
     Allows communication between jupyter notebooks IPython and javascript
@@ -3238,17 +3261,6 @@ def inherit(cls: type,*bases: tuple[type]) -> type:
     """Adds inheritence to a choosen classname. This works for nested classes as well"""
     return type(cls.__name__,bases,cls.__dict__)
 
-## will eventually add more methods
-@property
-class str_df:
-    """String accessor extension for pd.DataFrame"""
-    def __init__(self,df: pd.DataFrame) -> None: self.__df = df # save df as private variable
-    # use df in methods
-    def __getitem__(self,index: list) -> pd.DataFrame: return self.__df.map(lambda x:x[index])
-    def split(self,sep: str=None) -> pd.DataFrame: return self.__df.map(lambda x:x.split(sep))
-
-pd.DataFrame.str=str_df # we use @property else it expects df which would be cumbersome #
-
 def req_file(directory: str="") -> None:
     """
     writes a requirements .txt file for .py and .ipynb files with modules version 
@@ -4447,9 +4459,6 @@ def sim_check(data_: pd.Series,mean: float=10,std: float=10,j_thr: float=0.75,l_
                         if count == limit:
                             return print("limit reached: "+str(limit)+" line/s")
         data = data[data.isin([base]) == False] # to reduce the uneccessary combinations / only get unique ones
-
-## eventually will move to str_df
-def str_strip(x: str) -> str: return x.strip() if isinstance(x,str) else x
 
 class section_path:
     """
