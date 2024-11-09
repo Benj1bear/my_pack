@@ -125,7 +125,7 @@ class str_df:
 
 pd.DataFrame.str=str_df
 
-def get_js(string: str,timeout: int=None) -> str:
+def get_js(string: str,timeout: int="") -> str:
     """
     Allows communication between jupyter notebooks IPython and javascript
 
