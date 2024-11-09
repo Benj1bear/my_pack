@@ -57,6 +57,8 @@ import readline
 from contextlib import contextmanager
 import pickletools
 
+module_dir=os.path.dirname(__file__)
+
 ## might remove __init__. seems unecessary but needs testing ##
 class Named:
     """
@@ -123,7 +125,7 @@ class str_df:
 
 pd.DataFrame.str=str_df
 
-def get_js(string: str,timeout: int="") -> str:
+def get_js(string: str,timeout: int=None) -> str:
     """
     Allows communication between jupyter notebooks IPython and javascript
 
@@ -132,7 +134,7 @@ def get_js(string: str,timeout: int="") -> str:
     # code reference: erpuntbakker (2019) https://stackoverflow.com/questions/58881349/cannot-get-jupyter-notebook-to-access-javascript-variables?rq=3, CC BY-SA 4.0
     # changes made: condensed into a function for reuse, allowed timeout to be optional, removed unnecessary code
     """
-    if timeout: timeout=f",{timeout}000"
+    if timeout: timeout=f",{timeout*10**3}"
     display(Javascript("""
       const CodeCell = window.IPython.CodeCell;
       CodeCell.prototype.native_handle_input_request = CodeCell.prototype.native_handle_input_request || CodeCell.prototype._handle_input_request
@@ -796,14 +798,10 @@ def notebook_url() -> None:
     os.environ.get('JPY_SESSION_NAME')
     """
     return get_js("window.location.href")
-FILE=""
+
 def IPython__file__() -> str:
     """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
-    global FILE
-    if FILE: return FILE
-    ## not sure why scope()['__file__'] doesn't get saved
-    scope()["__file__"]=FILE=os.getcwd()+"\\"+urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1])
-    return FILE
+    return os.path.join(os.getcwd(),urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1]))
 
 def unwrap(FUNC: Callable,depth: int=1,trace: bool=False) -> tuple[Callable,...]:
     """Extracts the function and all its wrapper functions in execution order"""
@@ -1184,7 +1182,9 @@ class nonlocals:
         if key not in self.nonlocals: raise KeyError(key)
 
     def __getitem__(self,key: Any) -> Any: return self.nonlocals[key]
-    def update(self,**dct) -> None: map_set(self,dct)
+    def update(self,dct) -> None:
+        for key,value in dct.items(): self[key]=value
+    def get(self,key,default=None) -> Any: return self.nonlocals.get(key,default=default)
     def __setitem__(self,key: Any,value: Any) -> None:
         self.check(key)
         self.locals[key]=value
@@ -1350,7 +1350,8 @@ class staticproperty:
 #     def __buffer__(self, flags): pass
 #     def __release_buffer__(self, m): pass
 
-class Store:
+@lambda x: x()
+class share:
     """
     Stores given variables from __main__ allowing to be used in-module
 
@@ -1377,8 +1378,9 @@ class Store:
     def __getitem__(self,index: slice|int) -> dict: return self.stored[index]
     def __setitem__(self,index: slice|int,value: Any) -> None: self.stored[index]=value
     def __delitem__(self,index: int) -> None: del self.stored[index]
-
-share=Store()
+    def update(self,dct) -> None:
+        for key,value in dct.items(): self[key]=value
+    def get(self,key,default=None) -> Any: return self.stored.get(key,default=default)
     
 def map_set(obj: Any,dct: dict,override: bool=True) -> None:
     """Sets mutliple attributes or keys to an object from a dict"""
@@ -3358,22 +3360,20 @@ def install(library_name: str,directory: str="",setup: bool=True,get_requirement
       -  if True will build a .whl file            - pro: can load the file quickly.          - con: requires reinstallation to rebuild it
     build_type: "wheel" or "sdist"
     """
-    try:
-        current_dir=os.getcwd()
-        if setup:
-            print("---setup configs---")
-            if defaults == True:
-                # get the default setup directory correct
-                default_config = "\\".join(getfile(install).split("\\")[:-1])+"\\"+default_config
-                configs = dict(pd.read_pickle(default_config))
-                configs["description"] = "'"+input("description: ")+"'"
-            else:
-                configs = {"version":"","description":"","author":"","email":""}
-                for i in configs.keys(): configs[i] = "'"+input(i+": ")+"'"
-            requirements = []
-            # search for requirements
-            if get_requirements == True: requirements = req_search(directory)
-            setup_content = """from setuptools import setup, find_packages
+    if setup:
+        print("---setup configs---")
+        if defaults:
+            # get the default setup directory correct
+            default_config = os.path.join(module_dir,default_config)
+            configs = dict(pd.read_pickle(default_config))
+            configs["description"] = "'"+input("description: ")+"'"
+        else:
+            configs = {"version":"","description":"","author":"","email":""}
+            for i in configs.keys(): configs[i] = "'"+input(i+": ")+"'"
+        requirements = []
+        # search for requirements
+        if get_requirements: requirements = req_search(directory)
+        setup_content = """from setuptools import setup, find_packages
 
 setup(
     name="""+"'"+library_name+"'"+""",  
@@ -3385,49 +3385,45 @@ setup(
     install_requires="""+str(requirements)+"""
 )
 """
-            # create __init__.py and setup.py
-            if build==False: # might consider an alternative for builds for subdirectories as well
-                with open(directory+"__init__.py","w"):None
-            with open(directory+"setup.py","w") as file: file.write(setup_content)
-            print("Successfully created setup files __init__.py and setup.py.")
+        # create __init__.py and setup.py
+        if build==False: # might consider an alternative for builds for subdirectories as well
+            with open(directory+"__init__.py","w"):None
+        with open(directory+"setup.py","w") as file: file.write(setup_content)
+        print("Successfully created setup files __init__.py and setup.py.")
         print("\ninstalling "+library_name+"...")
         # go to the directory then run the command
-        if directory != "": os.chdir(directory)
-        if build:
-            ## needs testing ##
-            if setup:
-                ## put all files into a directory named after the modules name ##
-                source=os.getcwd()
-                files=os.listdir(source)
-                files.remove("setup.py")
-                os.mkdir(library_name)
-                for file in files:
-                    shutil.move(os.path.join(source,file), library_name)
-            while build_type!="wheel" and build_type!="sdist":
-                build_type=input("build_type must be either 'wheel' or 'sdist'")
-            build_type=["bdist_wheel","whl"] if build_type=="wheel" else ["sdist","tar.gz"]
-            process=subprocess.run("python setup.py "+build_type[0],capture_output=True)
-            if process.returncode == 0:
-                os.chdir("dist")
-                build_name=glob.glob('*.'+build_type[1])[0]
-                process=subprocess.run("pip install "+build_name,capture_output=True)
-        else:
-            process=subprocess.run("pip install -e .",capture_output=True)
-        if process.returncode != 0:
-            print("---installation failed---")
-            print("note: some imported packages may use dummy names")            
-            print(process.stdout.decode('utf-8'))
-        else:
-            # wait for it to finish...
-            print("\n"+library_name+" successfully installed at: "+os.getcwd())
-            print("\nYou can now access the module where applicable by using: from "+library_name+" import *desired function*")
-            print("or: import "+library_name)
-            print("You may need to restart the kernel to use or uninstall")
-            print("To uninstall whilst retaining the pre-installation files run: !pip uninstall "+library_name)
-        os.chdir(current_dir)
-    except Exception as e:
-        os.chdir(current_dir)
-        print(e)
+        with Path(directory):
+            if build:
+                ## needs testing ##
+                if setup:
+                    ## put all files into a directory named after the modules name ##
+                    source=os.getcwd()
+                    files=os.listdir(source)
+                    files.remove("setup.py")
+                    os.mkdir(library_name)
+                    for file in files:
+                        shutil.move(os.path.join(source,file), library_name)
+                while build_type!="wheel" and build_type!="sdist":
+                    build_type=input("build_type must be either 'wheel' or 'sdist'")
+                build_type=["bdist_wheel","whl"] if build_type=="wheel" else ["sdist","tar.gz"]
+                process=subprocess.run("python setup.py "+build_type[0],capture_output=True)
+                if process.returncode == 0:
+                    os.chdir("dist")
+                    build_name=glob.glob('*.'+build_type[1])[0]
+                    process=subprocess.run("pip install "+build_name,capture_output=True)
+            else:
+                process=subprocess.run("pip install -e .",capture_output=True)
+            if process.returncode != 0:
+                print("---installation failed---")
+                print("note: some imported packages may use dummy names")            
+                print(process.stdout.decode('utf-8'))
+            else:
+                # wait for it to finish...
+                print("\n"+library_name+" successfully installed at: "+os.getcwd())
+                print("\nYou can now access the module where applicable by using: from "+library_name+" import *desired function*")
+                print("or: import "+library_name)
+                print("You may need to restart the kernel to use or uninstall")
+                print("To uninstall whilst retaining the pre-installation files run: !pip uninstall "+library_name)
 
 def uninstall(library_name: str,keep_setup: bool=True) -> None:
     """
@@ -3441,17 +3437,17 @@ def uninstall(library_name: str,keep_setup: bool=True) -> None:
     """
     # get the libraries directory (likely needs to be done first since uninstall may remove the path) - needs testing
     directory = module_file(library_name)
-    directory=os.path.dirname(directory)+"\\"
+    directory=os.path.dirname(directory)
     print("uninstalling "+library_name) if keep_setup else print("uninstalling "+library_name+" and removing setup files")
     # you have to add yes due to no request coming back; else nothing happens
     subprocess.run("pip uninstall "+library_name+" --yes")
     if keep_setup == False:
         # remove the __init__ and setup files
-        os.remove(directory+"__init__.py")
+        os.remove(os.path.join(directory,"__init__.py"))
         print("removed __init__.py")
-        os.remove(directory+"setup.py")
+        os.remove(os.path.join(directory,"setup.py"))
         print("removed setup.py")
-        shutil.rmtree(directory+library_name+".egg-info")
+        shutil.rmtree(os.path.join(directory,".egg-info"))
         print("removed "+library_name+".egg-info")
     print("\ndone")
 
@@ -4466,5 +4462,4 @@ class section_path:
         def isfile(self) -> bool: return not self.isdir
 
 if has_IPython():
-    IPython__file__() # sets the __file__ attribute in jupyter notebook
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
