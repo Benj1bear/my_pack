@@ -1207,7 +1207,28 @@ class nonlocals:
         # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error,CC BY-SA 4.0
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
 
-## may add a feature to show the correct names when using stackframes if possible
+def proxy(dunder_method: Callable) -> Callable:
+    """Creates a proxy wrapper for the method"""
+    @wraps(dunder_method)
+    def wrapper(self,*args,**kwargs) -> Any: return getattr(self.func(),dunder_method)(*args,**kwargs)
+    return wrapper
+
+def use_all_dunders(cls: type) -> type:
+    """
+    adds all relevant instance based dunder methods to a class without 
+    overriding important methods such as __getattr__,__class__, etc.
+    """
+    __dunders__=get_dunders()
+    not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
+            "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
+            "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
+            "__name__","__qualname__","__module__","__abstractmethods__"] ## need to check this
+    for dunder in __dunders__["call"]:
+        if dunder in not_allowed: not_allowed.remove(dunder);continue
+        setattr(cls,dunder,proxy(dunder))
+    return cls
+
+@use_all_dunders
 class staticproperty:
     """
     Allows a function to be called as a variable and will
@@ -1258,107 +1279,11 @@ class staticproperty:
     ## basically how it works is because it's instantiated
     ## it appears as a variable so all that needs to be 
     ## modified is the interactions it has with other objects
-    def __eq__(self, y): return self.func() == y
-    def __ne__(self, y): return self.func() != y
-    def __lt__(self, y): return self.func() < y
-    def __rt__(self, y): return self.func() < y
-    def __le__(self, y): return self.func() <= y
-    def __ge__(self, y): return self.func() >= y
-    def __hash__(self): return hash(self.func())
-    def __repr__(self): return repr(self.func())
-    def __str__(self): return str(self.func())
-    def __bool__(self): return bool(self.func())
-    def __int__(self): return int(self.func())
-    def __float__(self): return float(self.func())
-    def __bytes__(self): return bytes(self.func())
-    def __complex__(self): return complex(self.func())
-    def __format__(self, s): return format(self.func(), s)
-#     def __enter__(self): return self
-#     def __exit__(self, exc_type, exc_val, exc_tb): pass
-    def __len__(self): return len(self.func())
-    def __iter__(self): return iter(self.func())
-    def __getitem__(self, a): return self.func()[a]
-    def __setitem__(self, a, b): self.func()[a] = b
-    def __delitem__(self, a): del self.func()[a]
-    def __contains__(self, a): return a in self.func()
-    def __reversed__(self): return reversed(self.func())
-    def __next__(self): return next(self.func())
-#     def __missing__(self, a): pass
-    def __length_hint__(self): return self.func().__length_hint__()
-    def __add__(self, y): return self.func() + y
-    def __radd__(self, x): return x + self.func()
-    def __sub__(self, y): return self.func() - y
-    def __rsub__(self, x): return x - self.func()
-    def __mul__(self, y): return self.func() * y
-    def __rmul__(self, x): return x * self.func()
-    def __truediv__(self, y): return self.func() / y
-    def __rtruediv__(self, x): return x / self.func()
-    def __mod__(self, y): return self.func() % y
-    def __rmod__(self, x): return x % self.func()
-    def __floordiv__(self, y): return self.func() // y
-    def __rfloordiv__(self, x): return x // self.func()
-    def __pow__(self, y): return self.func() ** y
-    def __rpow__(self, x): return x ** self.func()
-    def __matmul__(self, y): return self.func() @ y
-    def __rmatmul__(self, x): return x @ self.func()
-    def __and__(self, y): return self.func() & y
-    def __rand__(self, x): return x & self.func()
-    def __or__(self, y): return self.func() | y
-    def __ror__(self, x): return x | self.func()
-    def __xor__(self, y): return self.func() ^ y
-    def __rxor__(self, x): return x ^ self.func()
-    def __rshift__(self, y): return self.func() >> y
-    def __rrshift__(self, x): return x >> self.func()
-    def __lshift__(self, y): return self.func() << y
-    def __rlshift__(self, x): return x << self.func()
-    def __neg__(self): return -self.func()
-    def __pos__(self): return +self.func()
-    def __invert__(self): return ~self.func()
-    def __divmod__(self, y): return divmod(self.func(), y)
-    def __abs__(self): return abs(self.func())
-    def __index__(self): return self.func().__index__()
-    def __round__(self): return round(self.func())
-    def __trunc__(self): return self.func().__trunc__()
-    def __floor__(self): return self.func().__floor__()
-    def __ceil__(self): return self.func().__ceil__()
-    def __iadd__(self, y): self.func().__iadd__(y); return self
-    def __isub__(self, y): self.func().__isub__(y); return self
-    def __imul__(self, y): self.func().__imul__(y); return self
-    def __itruediv__(self, y): self.func().__itruediv__(y); return self
-    def __imod__(self, y): self.func().__imod__(y); return self
-    def __ifloordiv__(self, y): self.func().__ifloordiv__(y); return self
-    def __ipow__(self, y): self.func().__ipow__(y); return self
-    def __imatmul__(self, y): self.func().__imatmul__(y); return self
-    def __iand__(self, y): self.func().__iand__(y); return self
-    def __ior__(self, y): self.func().__ior__(y); return self
-    def __ixor__(self, y): self.func().__ixor__(y); return self
-    def __irshift__(self, y): self.func().__irshift__(y); return self
-    def __ilshift__(self, y): self.func().__ilshift__(y); return self
-#    def __getattribute__(self, y): return object.__getattribute__(self, y) if object.hasattr(self,y) else getattr(self.func(),y)
-    def __getattr__(self, y):
-        if y in object.__getattribute__(self, "__dict__"):
-            return object.__getattribute__(self, y)
-        elif y not in ["_ipython_canary_method_should_not_exist_","_ipython_display_","_repr_mimebundle_","_repr_html_","_repr_markdown_","_repr_svg_","_repr_png_","_repr_pdf_","_repr_jpeg_","_repr_latex_","_repr_json_","_repr_javascript_"]:
-            return object.__getattribute__(self.func(),y)
-#    def __setattr__(self, y, z): object.__setattr__(self, y, z)
-#    def __delattr__(self, y): object.__delattr__(self, y)
-    def __dir__(self): return dir(self.func())
-#     def __set_name__(self, T, x): pass
-#     def __get__(self, t, T): return self
-#     def __set__(self, t, y): pass
-#     def __delete__(self, t): pass
-#     def __init_subclass__(cls, U): pass
-    def __mro_entries__(self, bases): return self.func().__mro_entries__(bases)
-    def __class_getitem__(cls, y): return cls
-    def __instancecheck__(cls, x): return isinstance(x, cls)
-    def __subclasscheck__(cls, U): return issubclass(U, cls)
-    def __await__(self): return (yield from self.func())
-    def __aenter__(self): return self.func().__aenter__()
-    def __aexit__(self, exc_type, exc_val, exc_tb): return self.func().__aexit__(exc_type, exc_val, exc_tb)
-    def __aiter__(self): return self.func().__aiter__()
-    def __anext__(self): return self.func().__anext__()
-#     def __buffer__(self, flags): pass
-#     def __release_buffer__(self, m): pass
+    def __getattr__(self, key: str):
+        if key in object.__getattribute__(self, "__dict__"):
+            return object.__getattribute__(self, key)
+        elif key not in ["_ipython_canary_method_should_not_exist_","_ipython_display_","_repr_mimebundle_","_repr_html_","_repr_markdown_","_repr_svg_","_repr_png_","_repr_pdf_","_repr_jpeg_","_repr_latex_","_repr_json_","_repr_javascript_"]:
+            return object.__getattribute__(self.func(),key)
 
 @lambda x: x()
 class share:
