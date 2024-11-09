@@ -59,6 +59,16 @@ import pickletools
 
 module_dir=os.path.dirname(__file__)
 
+def get_dunders() -> pd.DataFrame:
+    """
+    Retrieves a dataframe holding information about all dunder methods in python
+    
+    # reference: Hunner,T., (2024). Every dunder method in Python, https://www.pythonmorsels.com/every-dunder-method/, python morsels
+    """
+    __dunders__=read_pickle(os.path.join(module_dir,"dunders"))
+    __dunders__.__version__="3.9-3.11"
+    return __dunders__
+
 ## might remove __init__. seems unecessary but needs testing ##
 class Named:
     """
