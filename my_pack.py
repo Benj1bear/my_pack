@@ -132,7 +132,8 @@ def analyze_pickle(filename: str,show: bool=False) -> Generator:
             print("%5s |" % "", end=' ')
             print("%-12s| %-24s| %-4s|" % ("code |","name |","arg"))
             print("-"*54)
-            # code reference: https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395 - original source code for pickletools.dis
+            # original source code for pickletools.dis
+            # code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395
             maxproto=0
             for opcode, arg, pos in pickletools.genops(file):
                 if opcode.name=="MEMOIZE" and arg==None: continue
@@ -158,7 +159,7 @@ class pickle_stack:
     @classmethod
     def read(cls,filename: str) -> object:
         """Convenience method to initialize the stack with opcodes"""
-        return cls(read_pickle_opcodes(filename))
+        return cls(analyze_pickle(filename))
     
     def __init__(self,opcodes: Generator) -> None:
         """
