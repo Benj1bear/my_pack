@@ -62,29 +62,29 @@ module_dir=os.path.dirname(__file__)
 
 @lambda x:x()
 class wrap:
+    """
+    Decorator for wrapping functions with other functions
+    i.e.
+    How to use:
+    
+    def do2(string):
+        return str(string)
+
+    @wrap(do2)
+    def do(string):
+        return int(string)
+
+    do(3.0)
+    # should print
+    # '3'
+    """
     __inplace=False
     @property
     def inplace(self):
         self.__inplace=True
         return self
     
-    def __call__(self,FUNC: Callable,*wrap_args,__inplace_function__: bool=False,**wrap_kwargs) -> Callable:
-        """
-        Decorator for wrapping functions with other functions
-        i.e.
-        How to use:
-        
-        def do2(string):
-            return str(string)
-
-        @wrap(do2)
-        def do(string):
-            return int(string)
-
-        do(3.0)
-        # should print
-        # '3'
-        """
+    def __call__(self,FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
         def wrap_wrapper(func: Callable) -> Callable: # function to wrap
             @wraps(func) # transfers the docstring since the functions redefined as the wrapper
             def wrapper(*args,**kwargs) -> Any: # its args
