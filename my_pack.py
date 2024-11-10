@@ -22,7 +22,7 @@ from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
 from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType
-from typing import Any,Callable,NoReturn,Union,Iterable
+from typing import Any,Callable,NoReturn,Union,Iterable,Generator
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
 ########### for installing editable local libraries and figuring out what modules python scripts use
@@ -55,9 +55,164 @@ import urllib
 import readline
 #from collections.abc import Iterable
 from contextlib import contextmanager
+from collections import deque
 import pickletools
 
 module_dir=os.path.dirname(__file__)
+
+@lambda x:x()
+class wrap:
+    __inplace=False
+    @property
+    def inplace(self):
+        self.__inplace=True
+        return self
+    
+    def __call__(self,FUNC: Callable,*wrap_args,__inplace_function__: bool=False,**wrap_kwargs) -> Callable:
+        """
+        Decorator for wrapping functions with other functions
+        i.e.
+        How to use:
+        
+        def do2(string):
+            return str(string)
+
+        @wrap(do2)
+        def do(string):
+            return int(string)
+
+        do(3.0)
+        # should print
+        # '3'
+        """
+        def wrap_wrapper(func: Callable) -> Callable: # function to wrap
+            @wraps(func) # transfers the docstring since the functions redefined as the wrapper
+            def wrapper(*args,**kwargs) -> Any: # its args
+                inner=func(*args,**kwargs)
+                if self.__inplace:
+                    FUNC(inner,*wrap_args,**wrap_kwargs)
+                    return inner
+                return FUNC(inner,*wrap_args,**wrap_kwargs)
+            return wrapper
+        return wrap_wrapper
+
+def to_pickle(obj: object,filename: str,force: bool=False) -> None:
+    """Convenience function for pickling objects in python with context management"""
+    if filename[-4:]!='.pkl': filename+='.pkl'
+    with open(filename,'wb') as file:
+        if force: return dill.dump(obj, file)
+        pickle.dump(obj, file)
+
+def read_pickle(filename: "str",force: bool=False) -> Any:
+    """Convenience function for reading pickled objects in python with context management"""
+    if filename[-4:]!='.pkl': filename+='.pkl'
+    with open(filename, 'rb') as file:
+        if force: return dill.load(file)
+        return pickle.load(file)
+
+@wrap.inplace(next)
+def analyze_pickle(filename: str,show: bool=False) -> Generator:
+    """
+    Analyzes a .pkl file (Will try to further develop later)
+    
+    reading in a pickle file will directly execute code and it's 
+    possible if the code is from an untrusted source that it may
+    be malicious code. This function analyzes the pickle code without
+    executing it via disassembly
+
+    How to use:
+
+    analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
+    # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
+    # (pickle also has different opcode formats depending on the task)
+    """
+    if filename[-4:]!='.pkl': filename+='.pkl'
+    with open(filename, 'rb') as file:
+        if show:
+            print("%5s |" % "", end=' ')
+            print("%-12s| %-24s| %-4s|" % ("code |","name |","arg"))
+            print("-"*54)
+            # code reference: https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395 - original source code for pickletools.dis
+            maxproto=0
+            for opcode, arg, pos in pickletools.genops(file):
+                if opcode.name=="MEMOIZE" and arg==None: continue
+                print("%5d:" % pos, end=' ')
+                print("%-12s %-24s %-4s" % (repr(opcode.code)[1:-1],opcode.name,arg))
+                maxproto = max(maxproto, opcode.proto)
+            print("maximum protocol:",maxproto)
+            return (yield) ## because we used yield below it won't return as it should which is also why it's wrapped inplace with next
+        yield
+        for opcode, arg, pos in pickletools.genops(file): yield opcode, arg, pos
+
+## needs more work done ##
+class pickle_stack:
+    """Stack for deserializing pickle opcodes/names and args into readable python code"""
+    #### use single underscore for names for access and separation (i.e. on dir usage) ####
+    # for determining opcode type
+    _opcode_map={opcode.name:index for index,opcode in enumerate(pickletools.opcodes)}
+    ## for determining push opcodes value
+    _push_map=dict(zip((opcode.name for index,opcode in enumerate(pickletools.opcodes) if index < 26 or index in (29,34,38)),
+                       (*(int,)*7,*(str,)*3,*(bytes,)*3,bytearray,...,...,None,True,False,*(str,)*4,float,float,[],(),{},set()),
+                       strict=True)) ## both tuples must be the same length
+
+    @classmethod
+    def read(cls,filename: str) -> object:
+        """Convenience method to initialize the stack with opcodes"""
+        return cls(read_pickle_opcodes(filename))
+    
+    def __init__(self,opcodes: Generator) -> None:
+        """
+        stack: the pickle stack
+        marks: position of all current marks in the stack
+        memo: memoization cache
+        code: the final python code in string form
+        """
+        self.stack,self.marks,self.memo,self.code=*(deque(),)*2,{},""
+        for opcode, arg, pos in opcodes: self.stack_operation(opcode,arg)
+
+    def __repr__(self) -> str: return self.code
+    
+    def stack_operation(self,obj,arg: str) -> None:
+        """
+        Figures out if the opcode is stacking or stack manipulating
+        then performs the relevant operation to the pickle stack
+        """
+        index=self._opcode_map[obj.name]
+        if index < 26 or index in (29, 34, 38, 43): ## push value onto stack
+            if obj.name=="MARK": return self.marks.append(len(self.stack))
+            mapping=self._push_map[obj.name]
+            if type(mapping)==type: return self.stack.append(mapping(arg))
+            else: return self.stack.append(mapping)
+        if 44 < index < 52: ## memo opcodes
+            if index < 48: ## memo get
+                return self.stack.append(self.memo[arg]) ## ---------------------- what are the setters?? Needs implementing ##
+            else: ## memo put
+                self.memo[arg]=arg ## supposed to be the top of the stack apparently
+            return
+        #######################################################
+        ### class instantiation
+        #######################################################
+        if 58 < index < 63: ## class opcodes
+            return ## --------------------------------------------- needs implementing ##
+        if 62 < index < 66: ## special opcodes e.g. PROTO,STOP,FRAME
+            return
+        if 51 < index < 57: ## GET PUSH values opcodes
+            if 54 < index: ## global attrs
+                ## GLOBAL is proto 3 and text based apparently - likely global classes
+                ## STACK_GLOBAL is proto 4 and binary based apparently - global variables
+                value=... ## ------------------------------------ needs implementing ##
+            else: ## registry attrs
+                value=... ## ------------------------------------ needs implementing ##
+            # push onto stack
+            return self.stack.append(value)
+        if 65 < index: ## GET PUSH values opcodes for persistent attrs
+            value=... ## --------------------------------------------- needs implementing ##
+            return self.stack.append(value)
+        #################################################
+        ## stack manipulation opcodes
+        # get the arg
+        value=... ## needs implementing ##
+        return self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
     """
@@ -346,24 +501,6 @@ def shallow_trace(obj: Named|str,show_source: bool=False,depth: int=1,source: st
         elif isinstance(node,ast.Expr):
             pass ## needs implementing
     return [section_source(position(node),source) for node in trace] if show_source else trace
-
-def analyze_pickle(filename: str) -> None:
-    """
-    Analyzes a .pkl file (Will try to further develop later)
-    
-    reading in a pickle file will directly execute code and it's 
-    possible if the code is from an untrusted source that it may
-    be malicious code. This function analyzes the pickle code without
-    executing it via disassembly
-
-    How to use:
-
-    analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
-    # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
-    # (pickle also has different opcode formats depending on the task)
-    """
-    if filename[-4:]==".pkl": filename=filename[:-4]
-    with open(filename+".pkl", 'rb') as f: pickletools.dis(f)
 
 def patch_exception(FUNC: Callable) -> None:
     """
@@ -798,7 +935,7 @@ def bracket_removal(code: str) -> str:
         if not removing: new_string+=char
     return new_string
 
-def notebook_url() -> None:
+def notebook_url() -> str:
     """
     Retrieves the notebooks url
 
@@ -810,7 +947,7 @@ def notebook_url() -> None:
     return get_js("window.location.href")
 
 def IPython__file__() -> str:
-    """Gets the full file path if using jupyter notebook and sets it since the notebook doesn't have a __file__ global attribute"""
+    """Gets the full file path if using jupyter notebook"""
     return os.path.join(os.getcwd(),urllib.parse.unquote(urllib.parse.urlparse(notebook_url()).path.split("/")[-1]))
 
 def unwrap(FUNC: Callable,depth: int=1,trace: bool=False) -> tuple[Callable,...]:
@@ -2073,20 +2210,6 @@ def get_tabs(delay: int|float=1.5,close_init: bool=False) -> list[str]:
     if close_init: pyautogui.hotkey('ctrl', 'w')
     return links
 
-def to_pickle(obj: object,filename: str,force: bool=False) -> None:
-    """Convenience function for pickling objects in python with context management"""
-    if filename[-4:]!='.pkl': filename+='.pkl'
-    with open(filename,'wb') as file:
-        if force: return dill.dump(obj, file)
-        pickle.dump(obj, file)
-
-def read_pickle(filename: "str",force: bool=False) -> Any:
-    """Convenience function for reading pickled objects in python with context management"""
-    if filename[-4:]!='.pkl': filename+='.pkl'
-    with open(filename, 'rb') as file:
-        if force: return dill.load(file)
-        return pickle.load(file)
-
 def cwd() -> None:
     """convenience function for openning file explorer at the cwd"""
     os.startfile(os.getcwd())
@@ -2775,29 +2898,6 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
         exec(head_body)
         return locals()[FUNC.__name__]
     return FUNC
-
-def wrap(FUNC: Callable,*wrap_args,**wrap_kwargs) -> Callable:
-    """
-    Decorator for wrapping functions with other functions
-    i.e.
-    
-    def do2(string):
-        return str(string)
-
-    @wrap(do2)
-    def do(string):
-        return int(string)
-
-    do(3.0)
-    # should print
-    # '3'
-    """
-    def wrap_wrapper(func: Callable) -> Callable: # function to wrap
-        @wraps(func) # transfers the docstring since the functions redefined as the wrapper
-        def wrapper(*args,**kwargs) -> Any: # its args
-            return FUNC(func(*args,**kwargs),*wrap_args,**wrap_kwargs)
-        return wrapper
-    return wrap_wrapper
 
 def user_yield_wrapper(FUNC: Callable) -> Callable: # test
     """wrapper for the user_yield function"""
