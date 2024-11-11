@@ -234,6 +234,37 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+class attrdict(dict):
+    """
+    Allows attrs to be accessible as a dictionary
+    
+    Note: if a value is in either dictionary or class
+    instance it will go with what's already available
+    and use or modify. If this happens and you need to
+    perform operations on a dictionary then go back to
+    the regular methods that were intended.
+    
+    How to use:
+    
+    dct=attrdict({'a':0,'b':1,'c':3})
+    dct['a']
+    dct.a
+    dct.a=3
+    del dct.a
+    dct.a=3 # setattr
+    dct['a']=3
+    """
+    def __init__(self,*args,**kwargs) -> None: super().__init__(*args,**kwargs)
+    def __getattr__(self,key: str) -> Any: return self[key] if key in self else super().__getattr__(key)
+
+    def __setattr__(self,key: str,value: Any) -> None:
+        if key in self: self[key]=value
+        else: super().__setattr__(key,value)
+
+    def __delattr__(self,key: str) -> None:
+        if key in self: del self[key]
+        else: super().__delattr__(key)
+
 def pd_df_map(method: Callable) -> Callable:
     """Allows mapping str methods to pd.DataFrame.map"""
     @wraps(method)
