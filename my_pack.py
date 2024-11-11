@@ -144,7 +144,7 @@ class pickle_stack:
         """pops the stack until reaching the mark position"""
         return (self.stack.pop() for i in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
     
-   def stack_operation(self,obj,arg: str) -> None:
+    def stack_operation(self,obj,arg: str) -> None:
         """
         Figures out if the opcode is stacking or stack manipulating
         then performs the relevant operation to the pickle stack
