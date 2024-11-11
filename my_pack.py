@@ -234,6 +234,24 @@ class readonly:
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
 
+def iter_empty(iterable: Iterable) -> bool:
+    """Checks if an iterable is empty"""
+    try:
+        next(copy(iterable))
+        return False
+    except StopIteration: return True
+
+def iter_parts(iterable: Iterable,number_of_subsets: int) -> Iterable:
+    """iterable version of partition"""
+    def parts(cls: Callable) -> Generator:
+        nonlocal iterable
+        iterable=iter(iterable)
+        while True:
+            yield cls(value for _,value in zip(range(number_of_subsets),iterable)) # make sure it's range,iterable otherwise it skips values
+            if iter_empty(iterable): break
+    cls=(lambda x:x) if isinstance(iterable,Generator) else type(iterable)
+    return cls(parts(cls))
+
 class attrdict(dict):
     """
     Allows attrs to be accessible as a dictionary
