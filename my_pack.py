@@ -143,7 +143,7 @@ def analyze_pickle(filename: str,show: bool=False) -> Generator:
             print("maximum protocol:",maxproto)
             return (yield) ## because we used yield below it won't return as it should which is also why it's wrapped inplace with next
         yield
-        for opcode, arg, pos in pickletools.genops(file): yield opcode, arg, pos
+        yield from pickletools.genops(file)
 
 ## needs more work done ##
 class pickle_stack:
