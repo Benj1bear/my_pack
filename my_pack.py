@@ -139,18 +139,26 @@ class pickle_stack:
 
     def __repr__(self) -> str: return self.code
     
+    @property
+    def pop(self) -> Generator:
+        """pops the stack until reaching the mark position"""
+        return (self.stack.pop() for i in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
+    
     def stack_operation(self,obj,arg: str) -> None:
         """
         Figures out if the opcode is stacking or stack manipulating
         then performs the relevant operation to the pickle stack
         """
         index=self._opcode_map[obj.name]
-        if index < 26 or index in (29, 34, 38, 43): ## push value onto stack
+        if 62 < index < 66: ## special opcodes e.g. PROTO,STOP,FRAME
+            return
+        if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
             if type(mapping)==type: return self.stack.append(mapping(arg))
             else: return self.stack.append(mapping)
         if 44 < index < 52: ## memo opcodes
+            return
             if index < 48: ## memo get
                 return self.stack.append(self.memo[arg]) ## ---------------------- what are the setters?? Needs implementing ##
             else: ## memo put
@@ -161,8 +169,6 @@ class pickle_stack:
         #######################################################
         if 58 < index < 63: ## class opcodes
             return ## --------------------------------------------- needs implementing ##
-        if 62 < index < 66: ## special opcodes e.g. PROTO,STOP,FRAME
-            return
         if 51 < index < 57: ## GET PUSH values opcodes
             if 54 < index: ## global attrs
                 ## GLOBAL is proto 3 and text based apparently - likely global classes
@@ -175,10 +181,48 @@ class pickle_stack:
         if 65 < index: ## GET PUSH values opcodes for persistent attrs
             value=... ## --------------------------------------------- needs implementing ##
             return self.stack.append(value)
-        #################################################
-        ## stack manipulation opcodes
-        # get the arg
-        value=... ## needs implementing ##
+        match index: ## object wrapping, object mutating, and stack manipulation opcodes
+            case 26: # APPEND (list 1 item)
+                item=self.stack.pop()
+                value=self.stack.pop().append(item)
+            case 27: # APPENDS (list > 1 item)
+                items=self.pop
+                value=self.stack.pop().append(items)
+            case 28: # LIST --------------------------------------------- (comes before items)
+                value=list(self.pop)
+            case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
+                value=tuple(self.pop)
+            case 35: # DICT
+                value=dict(self.pop)
+            case 36: # SETITEM (dict 1 item)
+                dct=dict((self.pop,))
+                value=self.stack.pop().update(dct)
+                ((1,2),)
+            case 37: # SETITEMS (dict > 1 item)
+                
+                dict(
+                    (self.pop,)
+                )
+                
+                dct=self.pop
+                value=self.stack.pop().update(dct)
+            case 39: # ADDITEMS # set() --------------------------------------------- (comes before items)
+                value=set(self.pop)
+            case 40: # FROZENSET ------------------------------------- check if it comes before or not
+                value=frozenset(self.pop) # ------------------------------------------------- does MARK get popped??
+            case 41: # POP (pops the stack)
+                return self.stack.pop()
+            case 42: # DUP (appends a duplication of the top item onto the stack)
+                return self.stack.append(self.stack[-1])
+            case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
+                tuple(self.pop)
+                return self.stack.pop() # pop the MARK opcode
+            case 57: # REDUCE () ---------------------- Needs checking
+                value=arg(*self.pop)
+            case 58: # BUILD () ---------------------- Needs checking
+                args=self.pop
+                self.stack.pop(args)
+                value=...
         return self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
@@ -249,7 +293,7 @@ def iter_parts(iterable: Iterable,number_of_subsets: int) -> Iterable:
         while True:
             yield cls(value for _,value in zip(range(number_of_subsets),iterable)) # make sure it's range,iterable otherwise it skips values
             if iter_empty(iterable): break
-    cls=(lambda x:x) if isinstance(iterable,Generator) else type(iterable)
+    cls=type(iterable) if isinstance(iterable,list|tuple|set|dict) else (lambda x:x)
     return cls(parts(cls))
 
 class attrdict(dict):
