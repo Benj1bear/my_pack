@@ -163,22 +163,6 @@ class pickle_stack:
             ## memo put (stores the top of the stack into memo; the setters are determined by the opcode)
             self.memo[len(self.memo) if obj.name=="MEMOIZE" else arg]=self.stack[-1]
             return
-        ############################################################################################################################
-        ############################################################################################################################        
-        if 51 < index < 57: ## GET PUSH values opcodes
-            if 54 < index: ## global attrs
-                ## GLOBAL is proto 3 and text based apparently - likely global classes
-                ## STACK_GLOBAL is proto 4 and binary based apparently - global variables
-                value=... ## ------------------------------------ needs implementing ##
-            else: ## registry attrs
-                value=... ## ------------------------------------ needs implementing ##
-            # push onto stack
-            return self.stack.append(value)
-        if 65 < index: ## GET PUSH values opcodes for persistent attrs
-            value=... ## --------------------------------------------- needs implementing ##
-            return self.stack.append(value)
-        ############################################################################################################################
-        ############################################################################################################################
         match index: ## object wrapping, object mutating, and stack manipulation opcodes
             case 26: # APPEND (list 1 item)
                 item=self.stack.pop()
@@ -205,28 +189,38 @@ class pickle_stack:
                 value=self.stack.pop()|value
             case 40: # FROZENSET
                 value=frozenset(self.pop)
-            case 41: # POP (pops the stack)
+            case 41: # POP (pops the stack) ----------------- is POP and DUP for objects, opcodes, or both?
                 return self.stack.pop()
             case 42: # DUP (appends a duplication of the top item onto the stack)
                 return self.stack.append(self.stack[-1])
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.pop)
-                return self.stack.pop() # pop the MARK opcode
+            case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
+                value=self.global_extension(arg)
+            case 55: # GLOBAL (global classes) # global by lookup?
+                value=self.stack.pop() # or is it arg?
+                self.find_class(value.__module__, value.__name__)
+            case 56: # STACK_GLOBAL (global variables) # global by reference?
+                name=self.stack.pop()
+                module=self.stack.pop()
+                value=self.find_class(module, name)
             case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
             case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
+######################################################################################### needs testing
             case 59: # INST ------------------------------------------ check this
                 name=self.stack.pop()
                 module=self.stack.pop()
                 cls=self.find_class(module, name)
                 if len(args)==0 or hasattr(cls,"__getinitargs__")==False: ## this is a python version 2 kind of thing e.g. old-style classes
+                # 1. create an instance of an 'old-style dummy class',
+                # 2. rebind its __class__ to the desired class object.
                     # create a temporary old-style class
-                    old_cls=...## how to create an old-style class..?
-                    temp=old_cls(*args)
-                    # rebind its __class__ to the desired class object.
-                    cls.__class__=temp.__class__
+                    old_cls=...
+                    temp=old_cls(*args) ## how to create an old-style class..?
+                    cls.__class__=temp.__class__ # is apparently what's supposed to happen
                     if isinstance(cls,old_cls): ## not sure about
                         return self.stack.append(cls(*args))
                     raise pickle.UnpicklingError("old-style class creation failed")
@@ -246,6 +240,9 @@ class pickle_stack:
                 args=self.stack.pop() # or self.pop??
                 kwargs=self.stack.pop() # or self.pop??
                 value=cls.__new__(cls, *args,**kwargs)
+            case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID from some other object (not sure how yet)
+                value=self.persid(arg)
+#########################################################################################
         return self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
