@@ -59,8 +59,9 @@ from collections import deque
 import pickletools
 
 module_dir=os.path.dirname(__file__)
+TRACEBACK=IPython.core.interactiveshell.InteractiveShell.showtraceback if has_IPython() else sys.excepthook
 
-@lambda x:x()
+@lambda x: x()
 class wrap:
     """
     Decorator for wrapping functions with other functions
@@ -114,7 +115,7 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
 @wrap.inplace(next)
 def analyze_pickle(filename: str,show: bool=False) -> Generator:
     """
-    Analyzes a .pkl file (Will try to further develop later)
+    Analyzes a .pkl file
     
     reading in a pickle file will directly execute code and it's 
     possible if the code is from an untrusted source that it may
@@ -130,16 +131,14 @@ def analyze_pickle(filename: str,show: bool=False) -> Generator:
     if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename, 'rb') as file:
         if show:
-            print("%5s |" % "", end=' ')
-            print("%-12s| %-24s| %-4s|" % ("code |","name |","arg"))
+            print("%5s | %-12s| %-24s| %-4s|" % ("","code |","name |","arg"))
             print("-"*54)
             # original source code for pickletools.dis
             # code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395
             maxproto=0
             for opcode, arg, pos in pickletools.genops(file):
                 if opcode.name=="MEMOIZE" and arg==None: continue
-                print("%5d:" % pos, end=' ')
-                print("%-12s %-24s %-4s" % (repr(opcode.code)[1:-1],opcode.name,arg))
+                print("%5d: %-12s %-24s %-4s" % (pos,repr(opcode.code)[1:-1],opcode.name,arg))
                 maxproto = max(maxproto, opcode.proto)
             print("maximum protocol:",maxproto)
             return (yield) ## because we used yield below it won't return as it should which is also why it's wrapped inplace with next
