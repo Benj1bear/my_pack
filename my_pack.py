@@ -59,7 +59,6 @@ from collections import deque
 import pickletools
 
 module_dir=os.path.dirname(__file__)
-TRACEBACK=IPython.core.interactiveshell.InteractiveShell.showtraceback if has_IPython() else sys.excepthook
 
 @lambda x: x()
 class wrap:
@@ -4496,5 +4495,7 @@ class section_path:
         def isdir(self) -> bool: return True if self.ext=="" else False
         def isfile(self) -> bool: return not self.isdir
 
-if has_IPython():
+TRACEBACK=IPython.core.interactiveshell.InteractiveShell.showtraceback if has_IPython() else sys.excepthook
+
+if has_IPython():    
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
