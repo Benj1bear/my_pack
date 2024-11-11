@@ -81,6 +81,7 @@ class wrap:
     __inplace=False
     @property
     def inplace(self):
+        self=copy(self) ## otherwise __inplace stays set to True since we're not instantiating e.g. reusing the same instance for every use
         self.__inplace=True
         return self
     
