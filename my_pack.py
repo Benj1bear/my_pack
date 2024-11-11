@@ -111,39 +111,6 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
         if force: return dill.load(file)
         return pickle.load(file)
 
-@wrap.inplace(next)
-def analyze_pickle(filename: str,show: bool=False) -> Generator:
-    """
-    Analyzes a .pkl file
-    
-    reading in a pickle file will directly execute code and it's 
-    possible if the code is from an untrusted source that it may
-    be malicious code. This function analyzes the pickle code without
-    executing it via disassembly
-
-    How to use:
-
-    analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
-    # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
-    # (pickle also has different opcode formats depending on the task)
-    """
-    if filename[-4:]!='.pkl': filename+='.pkl'
-    with open(filename, 'rb') as file:
-        if show:
-            print("%5s | %-12s| %-24s| %-4s|" % ("","code |","name |","arg"))
-            print("-"*54)
-            # original source code for pickletools.dis
-            # code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395
-            maxproto=0
-            for opcode, arg, pos in pickletools.genops(file):
-                if opcode.name=="MEMOIZE" and arg==None: continue
-                print("%5d: %-12s %-24s %-4s" % (pos,repr(opcode.code)[1:-1],opcode.name,arg))
-                maxproto = max(maxproto, opcode.proto)
-            print("maximum protocol:",maxproto)
-            return (yield) ## because we used yield below it won't return as it should which is also why it's wrapped inplace with next
-        yield
-        yield from pickletools.genops(file)
-
 ## needs more work done ##
 class pickle_stack:
     """Stack for deserializing pickle opcodes/names and args into readable python code"""
@@ -4494,6 +4461,39 @@ class section_path:
             else: os.remove(self.path)
         def isdir(self) -> bool: return True if self.ext=="" else False
         def isfile(self) -> bool: return not self.isdir
+
+@wrap.inplace(next)
+def analyze_pickle(filename: str,show: bool=False) -> Generator:
+    """
+    Analyzes a .pkl file
+    
+    reading in a pickle file will directly execute code and it's 
+    possible if the code is from an untrusted source that it may
+    be malicious code. This function analyzes the pickle code without
+    executing it via disassembly
+
+    How to use:
+
+    analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
+    # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
+    # (pickle also has different opcode formats depending on the task)
+    """
+    if filename[-4:]!='.pkl': filename+='.pkl'
+    with open(filename, 'rb') as file:
+        if show:
+            print("%5s | %-12s| %-24s| %-4s|" % ("","code |","name |","arg"))
+            print("-"*54)
+            # original source code for pickletools.dis
+            # code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/main/Lib/pickletools.py#L2395
+            maxproto=0
+            for opcode, arg, pos in pickletools.genops(file):
+                if opcode.name=="MEMOIZE" and arg==None: continue
+                print("%5d: %-12s %-24s %-4s" % (pos,repr(opcode.code)[1:-1],opcode.name,arg))
+                maxproto = max(maxproto, opcode.proto)
+            print("maximum protocol:",maxproto)
+            return (yield) ## because we used yield below it won't return as it should which is also why it's wrapped inplace with next
+        yield
+        yield from pickletools.genops(file)
 
 TRACEBACK=IPython.core.interactiveshell.InteractiveShell.showtraceback if has_IPython() else sys.excepthook
 
