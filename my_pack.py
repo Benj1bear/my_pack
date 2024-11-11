@@ -144,29 +144,27 @@ class pickle_stack:
         """pops the stack until reaching the mark position"""
         return (self.stack.pop() for i in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
     
-    def stack_operation(self,obj,arg: str) -> None:
+   def stack_operation(self,obj,arg: str) -> None:
         """
         Figures out if the opcode is stacking or stack manipulating
         then performs the relevant operation to the pickle stack
         """
         index=self._opcode_map[obj.name]
         if 62 < index < 66: ## special opcodes e.g. PROTO,STOP,FRAME
+            #if obj.name=="STOP": self.code="".join(self.stack)
             return
         if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
-            if type(mapping)==type: return self.stack.append(mapping(arg))
-            else: return self.stack.append(mapping)
+            return self.stack.append(mapping(arg) if type(mapping)==type else mapping)
         if 44 < index < 52: ## memo opcodes
             if index < 48: ## memo get (get the value from memo using the key given by the arg)
                 return self.stack.append(self.memo[arg])
             ## memo put (stores the top of the stack into memo; the setters are determined by the opcode)
-            self.memo[len(self.memo) if opcode.name=="MEMOIZE" else arg]=self.stack[-1]
+            self.memo[len(self.memo) if obj.name=="MEMOIZE" else arg]=self.stack[-1]
             return
         ############################################################################################################################
-        ############################################################################################################################
-        if 58 < index < 63: ## class opcodes
-            return ## --------------------------------------------- needs implementing ##
+        ############################################################################################################################        
         if 51 < index < 57: ## GET PUSH values opcodes
             if 54 < index: ## global attrs
                 ## GLOBAL is proto 3 and text based apparently - likely global classes
@@ -189,7 +187,7 @@ class pickle_stack:
             case 27: # APPENDS (list > 1 item)
                 items=self.pop
                 value=self.stack.pop()
-                value.append(item)
+                value.append(items)
             case 28: # LIST
                 value=list(self.pop)
             case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
@@ -214,11 +212,40 @@ class pickle_stack:
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.pop)
                 return self.stack.pop() # pop the MARK opcode
-            case 57: # REDUCE ()
+            case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
-            case 58: # BUILD ()
+            case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
+            case 59: # INST ------------------------------------------ check this
+                name=self.stack.pop()
+                module=self.stack.pop()
+                cls=self.find_class(module, name)
+                if len(args)==0 or hasattr(cls,"__getinitargs__")==False: ## this is a python version 2 kind of thing e.g. old-style classes
+                    # create a temporary old-style class
+                    old_cls=...## how to create an old-style class..?
+                    temp=old_cls(*args)
+                    # rebind its __class__ to the desired class object.
+                    cls.__class__=temp.__class__
+                    if isinstance(cls,old_cls): ## not sure about
+                        return self.stack.append(cls(*args))
+                    raise pickle.UnpicklingError("old-style class creation failed")
+                elif not hasattr(cls,"__safe_for_unpickling__"):
+                    raise pickle.UnpicklingError("class creation failed, class must have a __safe_for_unpickling__ attribute")
+                else: return self.stack.append(arg(*tuple(self.pop)))
+            case 60: # OBJ
+                cls=self.stack.pop()
+                args=self.pop # this is correct
+                value=cls(*args) ## --------------------------------------------- check this
+            case 61: # NEWOBJ
+                cls=self.stack.pop()
+                args=self.stack.pop() # or self.pop??
+                value=cls.__new__(cls, *args)
+            case 62: # NEWOBJ_EX
+                cls=self.stack.pop()
+                args=self.stack.pop() # or self.pop??
+                kwargs=self.stack.pop() # or self.pop??
+                value=cls.__new__(cls, *args,**kwargs)
         return self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
