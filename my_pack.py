@@ -158,15 +158,13 @@ class pickle_stack:
             if type(mapping)==type: return self.stack.append(mapping(arg))
             else: return self.stack.append(mapping)
         if 44 < index < 52: ## memo opcodes
+            if index < 48: ## memo get (get the value from memo using the key given by the arg)
+                return self.stack.append(self.memo[arg])
+            ## memo put (stores the top of the stack into memo; the setters are determined by the opcode)
+            self.memo[len(self.memo) if opcode.name=="MEMOIZE" else arg]=self.stack[-1]
             return
-            if index < 48: ## memo get
-                return self.stack.append(self.memo[arg]) ## ---------------------- what are the setters?? Needs implementing ##
-            else: ## memo put
-                self.memo[arg]=arg ## supposed to be the top of the stack apparently
-            return
-        #######################################################
-        ### class instantiation
-        #######################################################
+        ############################################################################################################################
+        ############################################################################################################################
         if 58 < index < 63: ## class opcodes
             return ## --------------------------------------------- needs implementing ##
         if 51 < index < 57: ## GET PUSH values opcodes
@@ -181,35 +179,34 @@ class pickle_stack:
         if 65 < index: ## GET PUSH values opcodes for persistent attrs
             value=... ## --------------------------------------------- needs implementing ##
             return self.stack.append(value)
+        ############################################################################################################################
+        ############################################################################################################################
         match index: ## object wrapping, object mutating, and stack manipulation opcodes
             case 26: # APPEND (list 1 item)
                 item=self.stack.pop()
-                value=self.stack.pop().append(item)
+                value=self.stack.pop()
+                value.append(item)
             case 27: # APPENDS (list > 1 item)
                 items=self.pop
-                value=self.stack.pop().append(items)
-            case 28: # LIST --------------------------------------------- (comes before items)
+                value=self.stack.pop()
+                value.append(item)
+            case 28: # LIST
                 value=list(self.pop)
             case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
-                value=tuple(self.pop)
+                value=tuple(self.stack.pop() for i in range(index-30)) if 30 < index else tuple(self.pop)
             case 35: # DICT
                 value=dict(self.pop)
             case 36: # SETITEM (dict 1 item)
                 dct=dict((self.pop,))
                 value=self.stack.pop().update(dct)
-                ((1,2),)
             case 37: # SETITEMS (dict > 1 item)
-                
-                dict(
-                    (self.pop,)
-                )
-                
-                dct=self.pop
+                dct=dict(iter_parts(self.pop))
                 value=self.stack.pop().update(dct)
-            case 39: # ADDITEMS # set() --------------------------------------------- (comes before items)
+            case 39: # ADDITEMS # adds items to a set()
                 value=set(self.pop)
-            case 40: # FROZENSET ------------------------------------- check if it comes before or not
-                value=frozenset(self.pop) # ------------------------------------------------- does MARK get popped??
+                value=self.stack.pop()|value
+            case 40: # FROZENSET
+                value=frozenset(self.pop)
             case 41: # POP (pops the stack)
                 return self.stack.pop()
             case 42: # DUP (appends a duplication of the top item onto the stack)
@@ -217,12 +214,11 @@ class pickle_stack:
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.pop)
                 return self.stack.pop() # pop the MARK opcode
-            case 57: # REDUCE () ---------------------- Needs checking
+            case 57: # REDUCE ()
                 value=arg(*self.pop)
-            case 58: # BUILD () ---------------------- Needs checking
-                args=self.pop
-                self.stack.pop(args)
-                value=...
+            case 58: # BUILD ()
+                arg,value=self.stack.pop(),self.stack.pop()
+                value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
         return self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
@@ -4556,7 +4552,7 @@ class section_path:
         def isfile(self) -> bool: return not self.isdir
 
 @wrap.inplace(next)
-def analyze_pickle(filename: str,show: bool=False) -> Generator:
+def analyze_pickle(file: str|object,show: bool=False) -> Generator:
     """
     Analyzes a .pkl file
     
@@ -4570,9 +4566,14 @@ def analyze_pickle(filename: str,show: bool=False) -> Generator:
     analyze_pickle("my_tuple.pkl") # will return the pickle opcodes used on the pickle machine 
     # (pickle machine is a class that acts like a stack basically; last thing on there at stopping is the python object)
     # (pickle also has different opcode formats depending on the task)
+
+    you can also use i.e. BytesIO types as the first arguement i.e. for pickle.dumps
     """
-    if filename[-4:]!='.pkl': filename+='.pkl'
-    with open(filename, 'rb') as file:
+    if isinstance(file,str):
+        if file[-4:]!='.pkl': file+='.pkl'
+        io_used=open(file, 'rb')
+    else: io_used=file
+    with io_used as file:
         if show:
             print("%5s | %-12s| %-24s| %-4s|" % ("","code |","name |","arg"))
             print("-"*54)
