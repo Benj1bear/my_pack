@@ -111,7 +111,7 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
         if force: return dill.load(file)
         return pickle.load(file)
 
-## needs more work done ##
+## needs more work done ## - after I've figure out how the stack works then it should be easier to work out how to convert this into python code
 class pickle_stack:
     """Stack for deserializing pickle opcodes/names and args into readable python code"""
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
