@@ -1358,9 +1358,8 @@ def use_all_dunders(cls: type) -> type:
     """
     __dunders__=get_dunders()
     not_allowed=["__class__","__getattribute__","__getattr__","__dir__","__set_name__","__init_subclass__","__mro_entries__",
-            "__prepare__","__instancecheck__","__subclasscheck__","__sizeof__","__fspath__","__subclasses__","__subclasshook__",
-            "__init__","__new__","__setattr__","__delattr__","__get__","__set__","__delete__","__dict__","__doc__","__call__",
-            "__name__","__qualname__","__module__","__abstractmethods__"] ## need to check this
+            "__prepare__","__sizeof__","__fspath__","__init__","__new__","__setattr__","__delattr__","__get__","__set__",
+            "__delete__","__dict__","__doc__","__name__","__qualname__","__module__","__abstractmethods__"] ## need to check this
     for dunder in __dunders__["call"]:
         if dunder in not_allowed: not_allowed.remove(dunder);continue
         setattr(cls,dunder,proxy(dunder))
