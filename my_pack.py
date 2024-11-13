@@ -307,7 +307,7 @@ def istype(obj: Any,type: type) -> bool:
     
     How to use:
     
-    isinstanceof([1,2,3],list[int,...]) # True
+    istype([1,2,3],list[int,...]) # True
     """
     if hasattr(type,"__args__"):
         outer,inner=type.__origin__,type.__args__
