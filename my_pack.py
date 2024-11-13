@@ -1929,13 +1929,16 @@ class classproperty:
     def setter(self, fset): self.fset=fset;return self
     def deleter(self, fdel): self.fdel=fdel;return self
 
-def class_copy(cls: type) -> type:
+def class_copy(cls: type,use_base: bool=False) -> type:
     """
     copies a class since somtimes using copy.deepcopy can sometimes return a pointer for types
     
     creates a new class that is identical to the original class
+
+    Note: some types may require inheritance for full functionality i.e. tuple needs to be
+    inherited for the copyied version to be callable
     """
-    return type(cls.__name__,(),dict(cls.__dict__))
+    return inherit(cls) if use_base else inherit(cls,cls)
 
 def create_separate_class(func: Callable) -> Callable:
     """
@@ -3398,7 +3401,7 @@ def to_module(code: str) -> Callable[..., Any]:
 
 def inherit(cls: type,*bases: tuple[type]) -> type:
     """Adds inheritence to a choosen classname. This works for nested classes as well"""
-    return type(cls.__name__,bases,cls.__dict__)
+    return type(cls.__name__,bases,dict(cls.__dict__)) ## dict() incase of mapping proxy
 
 def req_file(directory: str="") -> None:
     """
