@@ -111,7 +111,7 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
         if force: return dill.load(file)
         return pickle.load(file)
 
-## needs more work done ## - after I've figure out how the stack works then it should be easier to work out how to convert this into python code
+## needs more work done ## - after I've figured out how the stack works then it should be easier to work out how to convert this into python code
 class pickle_stack:
     """Stack for deserializing pickle opcodes/names and args into readable python code"""
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
@@ -142,7 +142,7 @@ class pickle_stack:
     @property
     def pop(self) -> Generator:
         """pops the stack until reaching the mark position"""
-        return (self.stack.pop() for i in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
+        return (self.stack.pop() for _ in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
     
     def stack_operation(self,obj,arg: str) -> None:
         """
@@ -175,26 +175,30 @@ class pickle_stack:
             case 28: # LIST
                 value=list(self.pop)
             case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
-                value=tuple(self.stack.pop() for i in range(index-30)) if 30 < index else tuple(self.pop)
+                value=tuple(self.stack.pop() for _ in range(index-30)) if 30 < index else tuple(self.pop)
             case 35: # DICT
                 value=dict(self.pop)
             case 36: # SETITEM (dict 1 item)
                 dct=dict((self.pop,))
-                value=self.stack.pop().update(dct)
+                value=self.stack.pop()
+                value.update(dct)
             case 37: # SETITEMS (dict > 1 item)
                 dct=dict(iter_parts(self.pop))
-                value=self.stack.pop().update(dct)
+                value=self.stack.pop()
+                value.update(dct)
             case 39: # ADDITEMS # adds items to a set()
                 value=set(self.pop)
-                value=self.stack.pop()|value
+                value|=self.stack.pop()
             case 40: # FROZENSET
                 value=frozenset(self.pop)
-            case 41: # POP (pops the stack) ----------------- is POP and DUP for objects, opcodes, or both?
+            case 41: # POP (pops the stack)
                 return self.stack.pop()
             case 42: # DUP (appends a duplication of the top item onto the stack)
                 return self.stack.append(self.stack[-1])
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.pop)
+                return
+######################################################################################### needs testing
             case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
                 value=self.global_extension(arg)
             case 55: # GLOBAL (global classes) # global by lookup?
@@ -209,7 +213,6 @@ class pickle_stack:
             case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
-######################################################################################### needs testing
             case 59: # INST ------------------------------------------ check this
                 name=self.stack.pop()
                 module=self.stack.pop()
@@ -243,7 +246,7 @@ class pickle_stack:
             case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID from some other object (not sure how yet)
                 value=self.persid(arg)
 #########################################################################################
-        return self.stack.append(value)
+        self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
     """
@@ -297,6 +300,22 @@ class readonly:
     def __get__(self, obj, objtype) -> Any: return self.fget(obj)
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
+
+def istype(obj: Any,type: type) -> bool:
+    """
+    recursive isinstance checks for parameterized types
+    
+    How to use:
+    
+    isinstanceof([1,2,3],list[int,...]) # True
+    """
+    if hasattr(type,"__args__"):
+        outer,inner=type.__origin__,type.__args__
+        return istype(obj,inner) if isinstance(obj,outer) else False
+    for index,type in enumerate(type):
+        if isinstance(type,EllipsisType): continue
+        if not isinstance(obj[0],type): return False
+    return True
 
 def iter_empty(iterable: Iterable) -> bool:
     """Checks if an iterable is empty"""
@@ -1885,26 +1904,30 @@ class classproperty:
     @classmethod
     @property
     def some_function():
-    """
-    def __init__(self, fget: Callable=None) -> None: self.fget,self.__doc__=fget,fget.__doc__
-    def __get__(self, obj: None, objtype: type|None=None) -> Any: return self.class_method(self.fget)(obj)
     
-    def class_method(self,FUNC: Callable) -> Callable:
-        """Creates a classmethod wrapper"""
-        if hasattr(self,"wrapper"): return self.wrapper
-        if hasattr(self,"cls")==False:
-            name=FUNC.__qualname__.split(".")[0] # get the classes name
-            self.cls=scope()[name] # it should be in the global scope
-        number_of_args=get_arg_count(FUNC)[0]
-        if number_of_args==0: raise TypeError(f"method '{FUNC.__name__}' must have at least one arguement as the class for it to be a classproperty")
-        if number_of_args==1:
-            @wraps(FUNC)
-            def wrapper(*args,**kwargs): return FUNC(self.cls)
-        else:
-            @wraps(FUNC)
-            def wrapper(*args,**kwargs): return FUNC(self.cls,*args,**kwargs)
-        self.wrapper=wrapper
-        return wrapper
+    How to use:
+    
+    class a:
+        @classproperty
+        def a(cls):
+            return 1
+        @a.setter
+        def b(cls,value):
+            return 1
+        @a.deleter
+        def c(cls):
+            return 1
+    """
+    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+        for attr in ("fget","fset","fdel"): exec("self."+attr+"="+attr)
+        self.__doc__ = fget.__doc__ if fget else doc
+
+    def __get__(self, obj: None, objtype: type|None=None) -> Any: return self.fget(objtype)
+    def __set__(self, obj, value): return self.fset(type(obj), value)
+    def __delete__(self, obj): return self.fdel(type(obj))
+    def getter(self, fget): self.fget=fget;return self
+    def setter(self, fset): self.fset=fset;return self
+    def deleter(self, fdel): self.fdel=fdel;return self
 
 def class_copy(cls: type) -> type:
     """
