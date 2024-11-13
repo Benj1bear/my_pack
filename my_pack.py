@@ -2982,7 +2982,7 @@ def undecorate(FUNC: Callable,keep: Callable|list[Callable]=[],inplace: bool=Fal
     global SOURCE_CODES
     keep=as_list(keep)
     # get source code split into parts
-    decorators,head,doc_string,body=source_code(FUNC,False)
+    decorators,head,doc_string,body=source_code(FUNC,join=False)
     head_body=head+doc_string+body
     source=decorators+head_body
     # has decorators
@@ -3067,7 +3067,7 @@ def test(FUNC: Callable,*args,**kwargs) -> Callable:
     Note: This function will not work if there are multiline string expressions
     but is something I'll work on soon
     """
-    head,doc_string,body=source_code(FUNC,False)[1:]
+    head,body=source_code(FUNC,join=False)[1::2]
     lines=[]
     body_lines=body[:-1].split("\n    ")[1:]
     length=len(body_lines)
@@ -3081,8 +3081,7 @@ def test(FUNC: Callable,*args,**kwargs) -> Callable:
             lines+=[indentation+printing(f"line {indx+1}: {line}"),indentation+"yield locals()",line]
             continue
         lines+=[line,indentation+printing(f"line {indx+1}: {line}"),indentation+"yield locals()"]
-    body="\n    "+doc_string+"\n    ".join(lines)+"\n"
-    exec(head+body)
+    exec(head+"\n    ".join(lines)+"\n")
     return locals()[FUNC.__name__] # call it as you would with inputs if any #
 
 def unstr_df(string: str) -> pd.DataFrame:
