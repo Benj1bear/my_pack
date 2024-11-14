@@ -148,14 +148,16 @@ class pickle_stack:
         """
         if not isinstance(buffers,Iterable|None): raise TypeError("buffers must be an iterable or None")
         self.stack,self.marks,self.memo,self.code,self.buffers=*(deque(),)*2,{},"",iter(buffers) if buffers else buffers
-        for opcode, arg, pos in opcodes: self.stack_operation(opcode,arg)
+        for index,(opcode,arg,pos) in enumerate(opcodes):
+            self.stack_length=index+1 # needed in reference to popmark
+            self.stack_operation(opcode,arg)
 
     def __repr__(self) -> str: return self.code
     
     @property
     def popmark(self) -> Generator:
         """pops the stack until reaching the mark position"""
-        return (self.stack.pop() for _ in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
+        return (self.stack.pop() for _ in range(self.stack_length - (self.marks.pop() if len(self.marks) else 0)))
     
     @property
     def pop(self) -> Generator:
@@ -194,7 +196,7 @@ class pickle_stack:
             case 28: # LIST
                 value=list(self.pop)
             case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
-                value=tuple(self.stack.pop() for _ in range(index-30)) if 30 < index else tuple(self.pop)
+                value=tuple(self.stack.pop() for _ in range(index-30))[::-1] if 30 < index else tuple(self.pop)
             case 35: # DICT
                 value=dict(self.pop)
             case 36: # SETITEM (dict 1 item)
