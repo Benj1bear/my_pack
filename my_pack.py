@@ -181,7 +181,7 @@ class pickle_stack:
     _NoValue=object()
     def get_extension(self, code: int) -> object:
         """
-        code reference: https://github.com/python/cpython/blob/cae9d9d20f61cdbde0765efa340b6b596c31b67f/Lib/pickle.py#L1670C1-L1683C25
+        code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/cae9d9d20f61cdbde0765efa340b6b596c31b67f/Lib/pickle.py#L1670C1-L1683C25
         # changes made: returns the object instead of directly appending
         """
         obj = _extension_cache.get(code,self._NoValue)
