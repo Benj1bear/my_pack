@@ -153,9 +153,15 @@ class pickle_stack:
     def __repr__(self) -> str: return self.code
     
     @property
-    def pop(self) -> Generator:
+    def popmark(self) -> Generator:
         """pops the stack until reaching the mark position"""
         return (self.stack.pop() for _ in range(len(self.stack) - (self.mark.pop() if len(self.mark) else 0)))
+    
+    @property
+    def pop(self) -> Generator:
+        """reverses the current values to pop"""
+        temp=deque(self.popmark)
+        return (temp.pop() for _ in range(len(temp)))
     
     def stack_operation(self,obj,arg: str) -> None:
         """
@@ -192,7 +198,7 @@ class pickle_stack:
             case 35: # DICT
                 value=dict(self.pop)
             case 36: # SETITEM (dict 1 item)
-                dct=dict((self.pop,))
+                dct=dict((self.pop,)) ## does it matter if it's up to the mark or not??
                 value=self.stack.pop()
                 value.update(dct)
             case 37: # SETITEMS (dict > 1 item)
@@ -209,7 +215,7 @@ class pickle_stack:
             case 42: # DUP (appends a duplication of the top item onto the stack)
                 return self.stack.append(self.stack[-1])
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
-                tuple(self.pop)
+                tuple(self.popmark)
                 return
 ######################################################################################### needs testing
             case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries) ------- not sure how these are supposed to work
@@ -221,11 +227,13 @@ class pickle_stack:
                 name=self.stack.pop()
                 module=self.stack.pop()
                 value=self.find_class(module, name)
+#########################################################################################
             case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
             case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
+#########################################################################################
             case 59: # INST ------------------------------------------ check this
                 name=self.stack.pop()
                 module=self.stack.pop()
@@ -256,12 +264,12 @@ class pickle_stack:
                 args=self.stack.pop() # or self.pop??
                 kwargs=self.stack.pop() # or self.pop??
                 value=cls.__new__(cls, *args,**kwargs)
+#########################################################################################
             case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID
                 # both methods require that your arg or items class has implemented a persistent_load classmethod
                 # PERSID retrieves based on the arg whereas BINPERSID retrieves based on the top stack item
                 value=arg if index==66 else self.stack.pop()
                 value=type(value).persistent_load(value) # type(value) should be fine to get the class
-#########################################################################################
         self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
