@@ -115,26 +115,39 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
 class pickle_stack:
     """Stack for deserializing pickle opcodes/names and args into readable python code"""
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
+    def _next_buffer(self,arg) -> Any: ## set to a property type if no arg needed
+        """gets a buffer object for out of band buffers"""
+        return next(self.buffers)
+
+    def _readonly_buffer(self,arg) -> Any:
+        """sets the buffer to readonly (the buffer will be the top item on the stack)"""
+        ## should work but not sure what other cases are yet
+        return bytes(self.stack.pop())
+    
     # for determining opcode type
     _opcode_map={opcode.name:index for index,opcode in enumerate(pickletools.opcodes)}
     ## for determining push opcodes value
     _push_map=dict(zip((opcode.name for index,opcode in enumerate(pickletools.opcodes) if index < 26 or index in (29,34,38)),
-                       (*(int,)*7,*(str,)*3,*(bytes,)*3,bytearray,...,...,None,True,False,*(str,)*4,float,float,[],(),{},set()),
+                       (*(int,)*7,*(str,)*3,*(bytes,)*3,bytearray,_next_buffer,_readonly_buffer,None,True,False,*(str,)*4,float,float,[],(),{},set()),
                        strict=True)) ## both tuples must be the same length
 
     @classmethod
-    def read(cls,filename: str) -> object:
+    def read(cls,filename: str,buffers: Iterable|None=None) -> object:
         """Convenience method to initialize the stack with opcodes"""
-        return cls(analyze_pickle(filename))
+        return cls(analyze_pickle(filename),buffers)
     
-    def __init__(self,opcodes: Generator) -> None:
+    def __init__(self,opcodes: Generator,buffers: Iterable|None=None) -> None:
         """
         stack: the pickle stack
         marks: position of all current marks in the stack
         memo: memoization cache
         code: the final python code in string form
+        buffers: an iterable of buffers for out-of-band buffers (only if required 
+        e.g. user would've ran buffer_callabacks=buffers on pickle.dump; if it's 
+        required and not supplied an error will be thrown)
         """
-        self.stack,self.marks,self.memo,self.code=*(deque(),)*2,{},""
+        if not isinstance(buffers,Iterable|None): raise TypeError("buffers must be an iterable or None")
+        self.stack,self.marks,self.memo,self.code,self.buffers=*(deque(),)*2,{},"",iter(buffers)
         for opcode, arg, pos in opcodes: self.stack_operation(opcode,arg)
 
     def __repr__(self) -> str: return self.code
@@ -156,7 +169,7 @@ class pickle_stack:
         if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
-            return self.stack.append(mapping(arg) if type(mapping)==type else mapping)
+            return self.stack.append(mapping(arg) if isinstance(mapping,Callable) else mapping)
         if 44 < index < 52: ## memo opcodes
             if index < 48: ## memo get (get the value from memo using the key given by the arg)
                 return self.stack.append(self.memo[arg])
