@@ -212,7 +212,7 @@ class pickle_stack:
                 tuple(self.pop)
                 return
 ######################################################################################### needs testing
-            case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
+            case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries) ------- not sure how these are supposed to work
                 value=self.global_extension(arg)
             case 55: # GLOBAL (global classes) # global by lookup?
                 value=self.stack.pop() # or is it arg?
@@ -256,8 +256,11 @@ class pickle_stack:
                 args=self.stack.pop() # or self.pop??
                 kwargs=self.stack.pop() # or self.pop??
                 value=cls.__new__(cls, *args,**kwargs)
-            case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID from some other object (not sure how yet)
-                value=self.persid(arg)
+            case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID
+                # both methods require that your arg or items class has implemented a persistent_load classmethod
+                # PERSID retrieves based on the arg whereas BINPERSID retrieves based on the top stack item
+                value=arg if index==66 else self.stack.pop()
+                value=self.type.persistent_load(value) # self.type needs to be tracked as the stack gets operated
 #########################################################################################
         self.stack.append(value)
 
