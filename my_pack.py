@@ -260,7 +260,7 @@ class pickle_stack:
                 # both methods require that your arg or items class has implemented a persistent_load classmethod
                 # PERSID retrieves based on the arg whereas BINPERSID retrieves based on the top stack item
                 value=arg if index==66 else self.stack.pop()
-                value=self.type.persistent_load(value) # self.type needs to be tracked as the stack gets operated
+                value=type(value).persistent_load(value) # type(value) should be fine to get the class
 #########################################################################################
         self.stack.append(value)
 
