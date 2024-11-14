@@ -147,7 +147,7 @@ class pickle_stack:
         required and not supplied an error will be thrown)
         """
         if not isinstance(buffers,Iterable|None): raise TypeError("buffers must be an iterable or None")
-        self.stack,self.marks,self.memo,self.code,self.buffers=*(deque(),)*2,{},"",iter(buffers)
+        self.stack,self.marks,self.memo,self.code,self.buffers=*(deque(),)*2,{},"",iter(buffers) if buffers else buffers
         for opcode, arg, pos in opcodes: self.stack_operation(opcode,arg)
 
     def __repr__(self) -> str: return self.code
