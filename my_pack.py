@@ -113,7 +113,20 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
 
 ## needs more work done ## - after I've figured out how the stack works then it should be easier to work out how to convert this into python code
 class pickle_stack:
-    """Stack for deserializing pickle opcodes/names and args into readable python code"""
+    """
+    Stack for deserializing pickle opcodes/names and args into readable python code
+    
+    How to use:
+    i.e.
+    from my_pack import pickle_stack,analyze_pickle
+    import pickle
+    from io import BytesIO
+    
+    obj=(1,2,3,4)
+    pickle_stack.read(BytesIO(pickle.dumps(obj))).stack.pop()
+    """
+    from copyreg import _extension_registry, _inverted_registry, _extension_cache ## only needed for this class
+    
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
     def _next_buffer(self,arg) -> Any: ## set to a property type if no arg needed
         """gets a buffer object for out of band buffers"""
@@ -162,6 +175,23 @@ class pickle_stack:
         """reverses the current values to pop"""
         temp=deque(self.popmark)
         return (temp.pop() for _ in range(len(temp)))
+
+    def find_class(self,module: str,name: str) -> object: return getattr(__import__(module),name)
+
+    _NoValue=object()
+    def get_extension(self, code: int) -> object:
+        """
+        code reference: https://github.com/python/cpython/blob/cae9d9d20f61cdbde0765efa340b6b596c31b67f/Lib/pickle.py#L1670C1-L1683C25
+        # changes made: returns the object instead of directly appending
+        """
+        obj = _extension_cache.get(code,self._NoValue)
+        if obj is not self._NoValue:
+            return obj
+        key = _inverted_registry.get(code)
+        if not key: raise ValueError("unregistered extension code %d" % code)
+        obj = self.find_class(*key)
+        _extension_cache[code] = obj
+        return obj
     
     def stack_operation(self,obj,arg: str) -> None:
         """
@@ -218,17 +248,17 @@ class pickle_stack:
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.popmark)
                 return
-######################################################################################### needs testing
-            case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries) ------- not sure how these are supposed to work
-                value=self.global_extension(arg)
+            case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
+                value=self.get_extension(arg)
             case 55: # GLOBAL (global classes) # global by lookup?
+#########################################################################################
                 value=self.stack.pop() # or is it arg?
                 self.find_class(value.__module__, value.__name__)
+#########################################################################################
             case 56: # STACK_GLOBAL (global variables) # global by reference?
                 name=self.stack.pop()
                 module=self.stack.pop()
                 value=self.find_class(module, name)
-#########################################################################################
             case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
             case 58: # BUILD (signals the end of object construction)
