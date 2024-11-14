@@ -147,17 +147,15 @@ class pickle_stack:
         required and not supplied an error will be thrown)
         """
         if not isinstance(buffers,Iterable|None): raise TypeError("buffers must be an iterable or None")
-        self.stack,self.marks,self.memo,self.code,self.buffers=*(deque(),)*2,{},"",iter(buffers) if buffers else buffers
-        for index,(opcode,arg,pos) in enumerate(opcodes):
-            self.stack_length=index+1 # needed in reference to popmark
-            self.stack_operation(opcode,arg)
+        self.stack,self.marks,self.memo,self.code,self.buffers=deque(),deque(),{},"",iter(buffers) if buffers else buffers ## for some reason *(deque(),)*2 created the same ids
+        for opcode,arg,pos in opcodes: self.stack_operation(opcode,arg)
 
     def __repr__(self) -> str: return self.code
     
     @property
     def popmark(self) -> Generator:
         """pops the stack until reaching the mark position"""
-        return (self.stack.pop() for _ in range(self.stack_length - (self.marks.pop() if len(self.marks) else 0)))
+        return (self.stack.pop() for _ in range(len(self.stack) - (self.marks.pop() if len(self.marks) else 0)))
     
     @property
     def pop(self) -> Generator:
@@ -200,7 +198,8 @@ class pickle_stack:
             case 35: # DICT
                 value=dict(self.pop)
             case 36: # SETITEM (dict 1 item)
-                dct=dict((self.pop,)) ## does it matter if it's up to the mark or not??
+                item=(self.stack.pop(),self.stack.pop())[::-1]
+                dct=dict((item,))
                 value=self.stack.pop()
                 value.update(dct)
             case 37: # SETITEMS (dict > 1 item)
