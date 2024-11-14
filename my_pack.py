@@ -250,21 +250,18 @@ class pickle_stack:
                 return
             case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
                 value=self.get_extension(arg)
-            case 55: # GLOBAL (global classes) # global by lookup?
-#########################################################################################
-                value=self.stack.pop() # or is it arg?
-                self.find_class(value.__module__, value.__name__)
-#########################################################################################
-            case 56: # STACK_GLOBAL (global variables) # global by reference?
+            case 55: # GLOBAL (protocol 2 version of STACK_GLOBAL e.g. 'text' mode pickle)
+                self.find_class(*arg.split(" "))
+            case 56: # STACK_GLOBAL (global variables)
                 name=self.stack.pop()
                 module=self.stack.pop()
                 value=self.find_class(module, name)
             case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
+#########################################################################################
             case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
-#########################################################################################
             case 59: # INST ------------------------------------------ check this
                 name=self.stack.pop()
                 module=self.stack.pop()
