@@ -128,12 +128,12 @@ class pickle_stack:
     from copyreg import _extension_registry, _inverted_registry, _extension_cache ## only needed for this class
     
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
-
-    def _next_buffer(self,arg) -> Any:
+    @staticmethod
+    def _next_buffer(arg) -> Any:
         """gets a buffer object for out of band buffers"""
         return next(self.buffers)
-
-    def _readonly_buffer(self,arg) -> Any:
+    @staticmethod
+    def _readonly_buffer(arg) -> Any:
         """
         sets the buffer to readonly (the buffer will be the top item on the stack)
         code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/cae9d9d20f61cdbde0765efa340b6b596c31b67f/Lib/pickle.py#L1521C1-L1525C48
