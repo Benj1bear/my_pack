@@ -218,6 +218,7 @@ class pickle_stack:
         if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
+            if mapping==[] or mapping=={}: return self.stack.append(copy(mapping)) ## since lists and dicts are mutable
             if obj.name in ["NEXT_BUFFER","READONLY_BUFFER"]: return self.stack.append(mapping(self,arg))
             return self.stack.append(mapping(arg) if isinstance(mapping,Callable) else mapping)
         if 44 < index < 52: ## memo opcodes
