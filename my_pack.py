@@ -231,10 +231,10 @@ class pickle_stack:
                 item=self.stack.pop()
                 value=self.stack.pop()
                 value.append(item)
-            case 27: # APPENDS (list > 1 item)
+            case 27: # APPENDS (list > 1 item) ## some bug where the stack itself stays alive??
                 items=self.pop
                 value=self.stack.pop()
-                value.append(items)
+                for item in items: value.append(item)
             case 28: # LIST
                 value=list(self.pop)
             case 30 | 31 | 32 | 33: # TUPLE # tuple with > 3 items # TUPLE1 # tuple with 1 item # TUPLE2 # tuple with 2 items # tuple # TUPLE with 3 items
