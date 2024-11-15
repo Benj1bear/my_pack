@@ -111,7 +111,7 @@ def read_pickle(filename: "str",force: bool=False) -> Any:
         if force: return dill.load(file)
         return pickle.load(file)
 
-## needs more work done ## - after I've figured out how the stack works then it should be easier to work out how to convert this into python code
+## needs testing + more work done ## - after I've figured out how the stack works then it should be easier to work out how to convert this into python code
 class pickle_stack:
     """
     Stack for deserializing pickle opcodes/names and args into readable python code
@@ -124,8 +124,12 @@ class pickle_stack:
     
     obj=(1,2,3,4)
     pickle_stack.read(BytesIO(pickle.dumps(obj))).stack.pop()
+
+    Note: the methods in this class should reflect closely to that of pickle._Unpickler methods
+    but are likely much simpler and intended to have modifications later to convert a genops 
+    generator into readable python code as a string or other format
     """
-    from copyreg import _extension_registry, _inverted_registry, _extension_cache ## only needed for this class
+    from copyreg import _inverted_registry, _extension_cache ## only needed for this class
     
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
     @staticmethod
@@ -198,6 +202,10 @@ class pickle_stack:
         obj = self.find_class(*key)
         _extension_cache[code] = obj
         return obj
+
+    def persistent_load(self, pid) -> NoReturn:
+        #raise UnpicklingError() - should raise both errors ideally e.g. for less confusion
+        raise NotImplementedError("Persistent load not available in the parent class. Persistent loads are required to be implemented where applicable by subclasses")
     
     def stack_operation(self,obj,arg: str) -> None:
         """
@@ -264,46 +272,33 @@ class pickle_stack:
                 value=self.find_class(module, name)
             case 57: # REDUCE (for calling expressions)
                 value=arg(*self.pop)
-#########################################################################################
             case 58: # BUILD (signals the end of object construction)
                 arg,value=self.stack.pop(),self.stack.pop()
                 value.__set_state__(arg) if hasattr("__set_state__") else value.__dict__.update(arg)
-            case 59: # INST ------------------------------------------ check this
+            case 59: # INST
                 name=self.stack.pop()
                 module=self.stack.pop()
                 cls=self.find_class(module, name)
-                if len(args)==0 or hasattr(cls,"__getinitargs__")==False: ## this is a python version 2 kind of thing e.g. old-style classes
-                # 1. create an instance of an 'old-style dummy class',
-                # 2. rebind its __class__ to the desired class object.
-                    # create a temporary old-style class
-                    old_cls=...
-                    temp=old_cls(*args) ## how to create an old-style class..?
-                    cls.__class__=temp.__class__ # is apparently what's supposed to happen
-                    if isinstance(cls,old_cls): ## not sure about
-                        return self.stack.append(cls(*args))
-                    raise pickle.UnpicklingError("old-style class creation failed")
-                elif not hasattr(cls,"__safe_for_unpickling__"):
-                    raise pickle.UnpicklingError("class creation failed, class must have a __safe_for_unpickling__ attribute")
-                else: return self.stack.append(arg(*tuple(self.pop)))
+                value=cls(*self.pop)
             case 60: # OBJ
+                args=self.pop
                 cls=self.stack.pop()
-                args=self.pop # this is correct
-                value=cls(*args) ## --------------------------------------------- check this
+                value=cls(*args)
             case 61: # NEWOBJ
+                args=self.stack.pop()
                 cls=self.stack.pop()
-                args=self.stack.pop() # or self.pop??
                 value=cls.__new__(cls, *args)
             case 62: # NEWOBJ_EX
+                args=self.stack.pop()
+                kwargs=self.stack.pop()
                 cls=self.stack.pop()
-                args=self.stack.pop() # or self.pop??
-                kwargs=self.stack.pop() # or self.pop??
                 value=cls.__new__(cls, *args,**kwargs)
-#########################################################################################
             case 66 | 67: # PERSID, BINPERSID # gets the object from persistent ID
-                # both methods require that your arg or items class has implemented a persistent_load classmethod
+                ### This is the only significant opcode case I'm not entirely sure about ... but is generally not used ###
+                # both methods require that your arg or items class has implemented a persistent_load method
                 # PERSID retrieves based on the arg whereas BINPERSID retrieves based on the top stack item
                 value=arg if index==66 else self.stack.pop()
-                value=type(value).persistent_load(value) # type(value) should be fine to get the class
+                value=self.persistent_load(value)
         self.stack.append(value)
 
 def get_dunders() -> pd.DataFrame:
