@@ -102,15 +102,13 @@ def to_pickle(obj: object,filename: str,force: bool=False) -> None:
     """Convenience function for pickling objects in python with context management"""
     if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename,'wb') as file:
-        if force: return dill.dump(obj, file)
-        pickle.dump(obj, file)
+        return dill.dump(obj, file) if force else pickle.dump(obj, file)
 
 def read_pickle(filename: "str",force: bool=False) -> Any:
     """Convenience function for reading pickled objects in python with context management"""
     if filename[-4:]!='.pkl': filename+='.pkl'
     with open(filename, 'rb') as file:
-        if force: return dill.load(file)
-        return pickle.load(file)
+        return dill.load(file) if force else pickle.load(file)
 
 ## needs testing + more work done ## - after I've figured out how the stack works then it should be easier to work out how to convert this into python code
 class pickle_stack:
@@ -4707,7 +4705,7 @@ class MultipleExceptions(Exception):
                              else e.args[0] if len(e.args) else ""}""" for e in exceptions),"+")
         super().__init__(self.exceptions)
     
-    def __repr__(self) -> str: return self.exceptions
+    def __repr__(self) -> str: return self.exceptions[2:]
 
 if has_IPython():    
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
