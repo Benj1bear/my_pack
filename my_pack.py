@@ -203,8 +203,7 @@ class pickle_stack:
         return obj
 
     def persistent_load(self, pid) -> NoReturn:
-        #raise UnpicklingError() - should raise both errors ideally e.g. for less confusion
-        raise NotImplementedError("Persistent load not available in the parent class. Persistent loads are required to be implemented where applicable by subclasses")
+        raise MultipleExceptions(pickle.UnpicklingError,NotImplementedError("Persistent load not available in the parent class. Persistent loads are required to be implemented where applicable by subclasses"))
     
     def stack_operation(self,obj,arg: str) -> None:
         """
@@ -4693,6 +4692,22 @@ def analyze_pickle(file: str|object,show: bool=False) -> Generator:
         yield from pickletools.genops(file)
 
 TRACEBACK=IPython.core.interactiveshell.InteractiveShell.showtraceback if has_IPython() else sys.excepthook
+
+class MultipleExceptions(Exception):
+    """
+    For raising multiple exceptions
+
+    How to use:
+
+    i.e.
+    raise MultipleExceptions(Exception("an exception"),TypeError("a TypeError"),ValueError)
+    """
+    def __init__(self,*exceptions: tuple[Exception,...]) -> None:
+        self.exceptions=biop((f"""\n\n{e().__class__.__name__ if isclass(e) else e.__class__.__name__}: {"" if not hasattr(e.args,"__len__") else e.args if len(e.args) > 2 
+                             else e.args[0] if len(e.args) else ""}""" for e in exceptions),"+")
+        super().__init__(self.exceptions)
+    
+    def __repr__(self) -> str: return self.exceptions
 
 if has_IPython():    
     current_execution=get_ipython().__getstate__()["_trait_values"]["execution_count"]
