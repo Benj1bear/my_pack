@@ -245,7 +245,7 @@ class pickle_stack:
                 value=self.stack.pop()
                 value.update(dct)
             case 37: # SETITEMS (dict > 1 item)
-                dct=dict(iter_parts(self.pop))
+                dct=dict(iter_parts(self.pop,2)) ## --------------------- need to figure out how to copy generators
                 value=self.stack.pop()
                 value.update(dct)
             case 39: # ADDITEMS # adds items to a set()
