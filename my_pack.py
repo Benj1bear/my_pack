@@ -57,6 +57,7 @@ import readline
 from contextlib import contextmanager
 from collections import deque
 import pickletools
+from copyreg import _inverted_registry, _extension_cache
 
 module_dir=os.path.dirname(__file__)
 
@@ -129,8 +130,6 @@ class pickle_stack:
     but are likely much simpler and intended to have modifications later to convert a genops 
     generator into readable python code as a string or other format
     """
-    from copyreg import _inverted_registry, _extension_cache ## only needed for this class
-    
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
 
     def _next_buffer(self,arg) -> Any:
@@ -219,7 +218,7 @@ class pickle_stack:
         if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
-            if obj.name in ["NEXT_BUFFER","READONLY_BUFFER"]: return self.stack.append(mapping(arg))
+            if obj.name in ["NEXT_BUFFER","READONLY_BUFFER"]: return self.stack.append(mapping(self,arg))
             return self.stack.append(mapping(arg) if isinstance(mapping,Callable) else mapping)
         if 44 < index < 52: ## memo opcodes
             if index < 48: ## memo get (get the value from memo using the key given by the arg)
