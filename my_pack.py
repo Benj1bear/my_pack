@@ -132,12 +132,12 @@ class pickle_stack:
     from copyreg import _inverted_registry, _extension_cache ## only needed for this class
     
     #### use single underscore for names for access and separation (i.e. on dir usage) ####
-    @staticmethod
-    def _next_buffer(arg) -> Any:
+
+    def _next_buffer(self,arg) -> Any:
         """gets a buffer object for out of band buffers"""
         return next(self.buffers)
-    @staticmethod
-    def _readonly_buffer(arg) -> Any:
+
+    def _readonly_buffer(self,arg) -> Any:
         """
         sets the buffer to readonly (the buffer will be the top item on the stack)
         code reference: Python Software Foundation. (2024). Python. 3.13. https://github.com/python/cpython/blob/cae9d9d20f61cdbde0765efa340b6b596c31b67f/Lib/pickle.py#L1521C1-L1525C48
@@ -219,6 +219,7 @@ class pickle_stack:
         if index < 26 or index in (29, 34, 38, 43): ## push opcodes (pushes a value onto the stack)
             if obj.name=="MARK": return self.marks.append(len(self.stack))
             mapping=self._push_map[obj.name]
+            if obj.name in ["NEXT_BUFFER","READONLY_BUFFER"]: return self.stack.append(mapping(arg))
             return self.stack.append(mapping(arg) if isinstance(mapping,Callable) else mapping)
         if 44 < index < 52: ## memo opcodes
             if index < 48: ## memo get (get the value from memo using the key given by the arg)
