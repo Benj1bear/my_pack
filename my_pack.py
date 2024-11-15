@@ -61,6 +61,23 @@ from copyreg import _inverted_registry, _extension_cache
 
 module_dir=os.path.dirname(__file__)
 
+def empty_generator(stop: bool=True) -> Generator:
+    """returns an empty generator"""
+    if stop: yield (exec("raise StopIteration()"))
+    return (yield)
+    
+## needs testing and implement for function generators
+def copy_gen(gen: Generator) -> Generator:
+    """copies a generator"""
+    frame = gen.gi_frame
+    ## function generator - the co_name is readonly and therefore should represent the actual name
+    if not frame.f_code.co_name=='<genexpr>':
+        raise NotImplementedError("copying function generators is not yet implemented")
+    ## closed generator
+    if not frame: return empty_generator(False)
+    ## open generator
+    return deepcopy(frame.f_locals[".0"])
+
 @lambda x: x()
 class wrap:
     """
@@ -1119,6 +1136,7 @@ def copy(*args) -> Any|tuple[Any]:
     for arg in args:    
         if hasattr(arg,"copy"): new_args+=(arg.copy(),)
         elif isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
+        elif isinstance(arg,Generator): new_args+=(copy_gen(arg),)
         elif isclass(arg): new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
         else:
