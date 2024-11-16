@@ -21,7 +21,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType
+from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType,CodeType
 from typing import Any,Callable,NoReturn,Union,Iterable,Generator
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
@@ -61,6 +61,38 @@ from copyreg import _inverted_registry, _extension_cache
 
 module_dir=os.path.dirname(__file__)
 
+def copy_code(code: CodeType,**modified) -> CodeType:
+    """
+    Creates a new code object from a preexisting one with modifications
+    
+    Attributes that can be modified:
+    
+    co_argcount
+    co_posonlyargcount
+    co_kwonlyargcount
+    co_nlocals
+    co_stacksize
+    co_flags
+    co_code
+    co_consts
+    co_names
+    co_varnames
+    co_filename
+    co_name
+    co_qualname
+    co_firstlineno
+    co_lnotab
+    co_exceptiontable
+    co_freevars
+    co_cellvars
+    """
+    attrs=("co_argcount","co_posonlyargcount","co_kwonlyargcount","co_nlocals","co_stacksize",
+           "co_flags","co_code","co_consts","co_names","co_varnames","co_filename","co_name",
+           "co_qualname","co_firstlineno","co_lnotab","co_exceptiontable","co_freevars","co_cellvars")
+    kwargs={attr:getattr(code,attr) for attr in attrs}
+    kwargs.update(modified)
+    return CodeType(*kwargs.values()) ## we can't do **kwargs since the arg names are different from the attr names
+
 def empty_generator(stop: bool=True) -> Generator:
     """returns an empty generator"""
     if stop: yield (exec("raise StopIteration()"))
@@ -72,7 +104,10 @@ def copy_gen(gen: Generator) -> Generator:
     frame = gen.gi_frame
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
-        raise NotImplementedError("copying function generators is not yet implemented")
+        ## f_lasti - index of the last executed byte code ## co_code - byte code in bytes representation
+        ## slice the byte code to the last executed opcode, create a modified code object copy, eval it into a generator
+        return eval(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}))
+        
     ## closed generator
     if not frame: return empty_generator(False)
     ## open generator
@@ -1137,6 +1172,7 @@ def copy(*args) -> Any|tuple[Any]:
         if hasattr(arg,"copy"): new_args+=(arg.copy(),)
         elif isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
         elif isinstance(arg,Generator): new_args+=(copy_gen(arg),)
+        elif isinstance(arg,CodeType): new_args+=(copy_code(arg),)
         elif isclass(arg): new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
         else:
