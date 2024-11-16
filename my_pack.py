@@ -61,6 +61,18 @@ from copyreg import _inverted_registry, _extension_cache
 
 module_dir=os.path.dirname(__file__)
 
+def cast(obj: Any,address: int=None) -> tuple[[Any],int]:
+    """casts an object to a memory address"""
+    if not address:
+        obj=[obj]
+        address=id(obj)
+    ctypes.cast(address, ctypes.py_object).value = obj
+    return obj,address
+
+def ref(id: int) -> Any:
+    """Gets an object by id"""
+    return ctypes.cast(id, ctypes.py_object).value
+
 def copy_code(code: CodeType,**modified) -> CodeType:
     """
     Creates a new code object from a preexisting one with modifications
