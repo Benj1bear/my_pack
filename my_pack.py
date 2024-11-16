@@ -93,23 +93,22 @@ def copy_code(code: CodeType,**modified) -> CodeType:
     kwargs.update(modified)
     return CodeType(*kwargs.values()) ## we can't do **kwargs since the arg names are different from the attr names
 
-def empty_generator(stop: bool=True) -> Generator:
+def empty_generator() -> Generator:
     """returns an empty generator"""
-    if stop: yield (exec("raise StopIteration()"))
     return (yield)
     
-## needs testing and implement for function generators
+## need to check non-function generators
 def copy_gen(gen: Generator) -> Generator:
     """copies a generator"""
     frame = gen.gi_frame
+    ## closed generator
+    if not frame: return empty_generator()
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
         ## f_lasti - index of the last executed byte code ## co_code - byte code in bytes representation
         ## slice the byte code to the last executed opcode, create a modified code object copy, eval it into a generator
         return eval(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}))
-        
-    ## closed generator
-    if not frame: return empty_generator(False)
+
     ## open generator
     return deepcopy(frame.f_locals[".0"])
 
