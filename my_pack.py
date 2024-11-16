@@ -133,6 +133,10 @@ def copy_gen(gen: Generator) -> Generator:
         yield from gen
 
     copy_gen(gen2)
+
+    Also note that when you copy a generator it will copy up to its current
+    iteration e.g. it doesn't copy since it's beginning only from its current
+    position onwards
     """
     frame = gen.gi_frame
     ## closed generator
