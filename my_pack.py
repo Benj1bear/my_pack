@@ -132,7 +132,7 @@ def copy_gen(gen: Generator) -> Generator:
         global gen
         yield from gen
 
-    copy_gen(gen2)
+    copy_gen(gen2())
 
     Also note that when you copy a generator it will copy from its current
     iteration onwards e.g. it doesn't copy from it's beginning only its current
