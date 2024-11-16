@@ -108,10 +108,32 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
-    
-## need to check non-function generators
+
 def copy_gen(gen: Generator) -> Generator:
-    """copies a generator"""
+    """
+    copies a generator
+    
+    How to use:
+
+    gen=(i for i in range(3))
+    new_gen=copy_gen(gen) ## will create a new copy separate from gen
+
+    def gen():
+        for i in range(3):
+            yield i
+
+    new_gen=copy_gen(gen) ## will create a new copy separate from gen
+
+    Note: the following will not work and I'm considering adding a feature
+    to allows this or a work around:
+    
+    gen=(i for i in range(3))
+    def gen2():
+        global gen
+        yield from gen
+
+    copy_gen(gen2)
+    """
     frame = gen.gi_frame
     ## closed generator
     if not frame: return empty_generator()
@@ -122,7 +144,7 @@ def copy_gen(gen: Generator) -> Generator:
         return eval(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}))
 
     ## open generator
-    return deepcopy(frame.f_locals[".0"])
+    return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
 
 @lambda x: x()
 class wrap:
