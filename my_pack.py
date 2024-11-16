@@ -122,7 +122,7 @@ def copy_gen(gen: Generator) -> Generator:
         for i in range(3):
             yield i
 
-    new_gen=copy_gen(gen) ## will create a new copy separate from gen
+    new_gen=copy_gen(gen()) ## will create a new copy separate from gen
 
     Note: the following will not work and I'm considering adding a feature
     to allows this or a work around:
