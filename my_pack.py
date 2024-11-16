@@ -143,11 +143,13 @@ def copy_gen(gen: Generator) -> Generator:
     if not frame: return empty_generator()
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
-        FUNC=FunctionType(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}),locals())
-        args=signature(FUNC).parameters
-        kwargs=",".join(arg+"="+str(frame.f_locals[arg]) for arg in args)
-        kwargs=eval(f"dict({kwargs})")
-        return FUNC(**kwargs)
+        ## needs testing
+        # FUNC=FunctionType(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}),locals())
+        # args=signature(FUNC).parameters
+        # kwargs=",".join(arg+"="+str(frame.f_locals[arg]) for arg in args)
+        # kwargs=eval(f"dict({kwargs})")
+        # return FUNC(**kwargs)
+        return eval(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}))
     ## open generator
     return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
 
