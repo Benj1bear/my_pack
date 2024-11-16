@@ -134,9 +134,9 @@ def copy_gen(gen: Generator) -> Generator:
 
     copy_gen(gen2)
 
-    Also note that when you copy a generator it will copy up to its current
-    iteration e.g. it doesn't copy since it's beginning only from its current
-    position onwards
+    Also note that when you copy a generator it will copy from its current
+    iteration onwards e.g. it doesn't copy from it's beginning only its current
+    state
     """
     frame = gen.gi_frame
     ## closed generator
