@@ -40,7 +40,7 @@ from tkinter import Tk
 import secrets
 import string
 from operator import itemgetter
-from itertools import combinations,chain as iter_chain # since I have a class called 'chain'
+from itertools import tee,combinations,chain as iter_chain # since I have a class called 'chain'
 import IPython
 from warnings import simplefilter,warn
 #import traceback
@@ -108,58 +108,6 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
-
-def copy_gen(gen: Generator) -> Generator:
-    """
-    copies a generator
-    
-    How to use:
-
-    gen=(i for i in range(3))
-    new_gen=copy_gen(gen) ## will create a new copy separate from gen
-
-    def gen():
-        for i in range(3):
-            yield i
-
-    new_gen=copy_gen(gen()) ## will create a new copy separate from gen
-
-    Note: the following will not work and I'm considering adding a feature
-    to allows this or a work around:
-    
-    gen=(i for i in range(3))
-    def gen2():
-        global gen
-        yield from gen
-
-    copy_gen(gen2())
-
-    Also note that when you copy a generator it will copy from its current
-    iteration onwards e.g. it doesn't copy from it's beginning only its current
-    state
-    """
-    frame = gen.gi_frame
-    ## closed generator
-    if not frame: return empty_generator()
-    ## function generator - the co_name is readonly and therefore should represent the actual name
-    if not frame.f_code.co_name=='<genexpr>':
-        ## needs testing
-        code=frame.f_code
-        if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
-            FUNC=FunctionType(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}),globals())
-            args=signature(FUNC).parameters
-            def arg_set(arg,value):
-                nonlocal args
-                match args[arg].kind.value:
-                    case 0 | 1: return value # POSITIONAL_ONLY | POSITIONAL_OR_KEYWORD
-                    case 2: return "*"+value # VAR_POSITIONAL
-                    case 3: return arg+"="+value # KEYWORD_ONLY
-                    case 4: return "**"+value # VAR_KEYWORD 
-            params=",".join(arg_set(arg,str(frame.f_locals[arg])) for arg in args)
-            return eval(f"FUNC({params})")
-        return eval(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}))
-    ## open generator
-    return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
 
 @lambda x: x()
 class wrap:
@@ -1219,7 +1167,7 @@ def copy(*args) -> Any|tuple[Any]:
     for arg in args:    
         if hasattr(arg,"copy"): new_args+=(arg.copy(),)
         elif isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
-        elif isinstance(arg,Generator): new_args+=(copy_gen(arg),)
+        elif isinstance(arg,Generator): new_args+=(tee(arg,1)[0],)
         elif isinstance(arg,CodeType): new_args+=(copy_code(arg),)
         elif isclass(arg): new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
