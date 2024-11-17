@@ -144,12 +144,20 @@ def copy_gen(gen: Generator) -> Generator:
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
         ## needs testing
-        # FUNC=FunctionType(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}),locals())
-        # args=signature(FUNC).parameters
-        # kwargs=",".join(arg+"="+str(frame.f_locals[arg]) for arg in args)
-        # kwargs=eval(f"dict({kwargs})")
-        # return FUNC(**kwargs)
-        return eval(copy_code(gen.gi_code,**{"co_code":gen.gi_code.co_code[gen.gi_frame.f_lasti:]}))
+        code=frame.f_code
+        if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
+            FUNC=FunctionType(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}),globals())
+            args=signature(FUNC).parameters
+            def arg_set(arg,value):
+                nonlocal args
+                match args[arg].kind.value:
+                    case 0 | 1: return value # POSITIONAL_ONLY | POSITIONAL_OR_KEYWORD
+                    case 2: return "*"+value # VAR_POSITIONAL
+                    case 3: return arg+"="+value # KEYWORD_ONLY
+                    case 4: return "**"+value # VAR_KEYWORD 
+            params=",".join(arg_set(arg,str(frame.f_locals[arg])) for arg in args)
+            return eval(f"FUNC({params})")
+        return eval(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}))
     ## open generator
     return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
 
