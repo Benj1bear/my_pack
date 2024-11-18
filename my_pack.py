@@ -347,7 +347,7 @@ class pickle_stack:
                 value=self.stack.pop()
                 value.update(dct)
             case 37: # SETITEMS (dict > 1 item)
-                dct=dict(iter_parts(self.pop,2)) ## --------------------- need to figure out how to copy generators
+                dct=dict(iter_parts(self.pop,2))
                 value=self.stack.pop()
                 value.update(dct)
             case 39: # ADDITEMS # adds items to a set()
@@ -358,14 +358,14 @@ class pickle_stack:
             case 41: # POP (pops the stack)
                 return self.stack.pop()
             case 42: # DUP (appends a duplication of the top item onto the stack)
-                return self.stack.append(self.stack[-1])
+                value=self.stack[-1]
             case 44: # POP_MARK (pops the last MARK and everything above it on the stack)
                 tuple(self.popmark)
                 return
             case 52 | 53 | 54: # EXT1, EXT2, EXT4 (global extension registries)
                 value=self.get_extension(arg)
             case 55: # GLOBAL (protocol 2 version of STACK_GLOBAL e.g. 'text' mode pickle)
-                self.find_class(*arg.split(" "))
+                value=self.find_class(*arg.split(" "))
             case 56: # STACK_GLOBAL (global variables)
                 name=self.stack.pop()
                 module=self.stack.pop()
@@ -483,8 +483,9 @@ def iter_parts(iterable: Iterable,number_of_subsets: int) -> Iterable:
         nonlocal iterable
         iterable=iter(iterable)
         while True:
+            ## check if it's empty explicitly since it's possible for a similar error to be contained within the expression from code other than the iterable and pass
+            if iter_empty(iterable): break ## do it before else you get an extra (,) in a i.e. tuple
             yield cls(value for _,value in zip(range(number_of_subsets),iterable)) # make sure it's range,iterable otherwise it skips values
-            if iter_empty(iterable): break
     cls=type(iterable) if isinstance(iterable,list|tuple|set|dict) else (lambda x:x)
     return cls(parts(cls))
 
