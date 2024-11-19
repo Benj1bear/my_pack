@@ -95,7 +95,7 @@ def builtin__file__(module_name: str="") -> pd.DataFrame|str:
     """
     df=pd.read_pickle(os.path.join(module_dir,"builtin__file__.pkl"))
     def module(name: str) -> str:
-        path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
+        path=df[df["module_name"]==name].iloc[0].tolist()[1:]
         return os.path.join(path[0],path[1])
     df.module=module
     if module_name not in df["module_name"].tolist(): return df
