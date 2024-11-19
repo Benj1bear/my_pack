@@ -89,11 +89,17 @@ def builtin__file__(module_name: str="") -> pd.DataFrame|str:
 
     If it doesn't exist it will return a pandas dataframe of all
     the records with columns as: module_name,dir,filename
+
+    You can then use df.module("your module name") if desired to
+    retrieve the modules file path
     """
     df=pd.read_pickle(os.path.join(module_dir,"builtin__file__.pkl"))
+    def module(name) -> str:
+        path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
+        return os.path.join(path[0],path[1])
+    df.module=module
     if module_name not in df["module_name"].tolist(): return df
-    path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
-    return os.path.join(path[0],path[1])
+    return df.module(module_name)
 
 def cast(obj: Any,address: int=None) -> tuple[[Any],int]:
     """casts an object to a memory address"""
