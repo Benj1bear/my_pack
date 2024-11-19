@@ -94,7 +94,7 @@ def builtin__file__(module_name: str="") -> pd.DataFrame|str:
     retrieve the modules file path
     """
     df=pd.read_pickle(os.path.join(module_dir,"builtin__file__.pkl"))
-    def module(name) -> str:
+    def module(name: str) -> str:
         path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
         return os.path.join(path[0],path[1])
     df.module=module
