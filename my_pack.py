@@ -59,6 +59,8 @@ from collections import deque
 import pickletools
 from copyreg import _inverted_registry, _extension_cache
 
+module_dir=os.path.dirname(__file__)
+
 def builtin__file__(module_name: str="") -> pd.DataFrame|str:
     """
     Returns the file location of builtin modules
@@ -88,12 +90,10 @@ def builtin__file__(module_name: str="") -> pd.DataFrame|str:
     If it doesn't exist it will return a pandas dataframe of all
     the records with columns as: module_name,dir,filename
     """
-    df=pd.read_pickle("builtin__file__.pkl")
+    df=pd.read_pickle(os.path.join(module_dir,"builtin__file__.pkl"))
     if module_name not in df["module_name"].tolist(): raise KeyError(module_name)
     path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
     return os.path.join(path[0],path[1])
-
-module_dir=os.path.dirname(__file__)
 
 def cast(obj: Any,address: int=None) -> tuple[[Any],int]:
     """casts an object to a memory address"""
