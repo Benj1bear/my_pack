@@ -59,6 +59,40 @@ from collections import deque
 import pickletools
 from copyreg import _inverted_registry, _extension_cache
 
+def builtin__file__(module_name: str="") -> pd.DataFrame|str:
+    """
+    Returns the file location of builtin modules
+
+    Note: only covers from 3.11 onwards
+
+    Modules were part of the following:
+
+    import sys
+
+    modules=[]
+    for i in sys.stdlib_module_names:
+        try:
+            mod=__import__(i)
+            try: mod.__file__
+            except: modules+=[i]
+        except: pass
+
+    How to use:
+
+    if the module_name exists it will return its path relative
+    to the cpython github repo root directory.
+    
+    i.e.
+    builtin__file__("_opcode") # 'Modules\\_opcode.c'
+
+    If it doesn't exist it will return a pandas dataframe of all
+    the records with columns as: module_name,dir,filename
+    """
+    df=pd.read_pickle("builtin__file__.pkl")
+    if module_name not in df["module_name"].tolist(): raise KeyError(module_name)
+    path=df[df["module_name"]=="_opcode"].iloc[0].tolist()[1:]
+    return os.path.join(path[0],path[1])
+
 module_dir=os.path.dirname(__file__)
 
 def cast(obj: Any,address: int=None) -> tuple[[Any],int]:
