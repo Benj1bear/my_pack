@@ -148,6 +148,22 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
+## needs more work ##
+def code_complete(code: bytes,index: slice) -> bytes:
+    """
+    Completes a sliced code object (will further develop later)
+
+    When you slice a code object it's not always
+    able to run correctly after and will need adjustments
+
+    How to use:
+
+    code_complete(code_obj,index) # should return a code object sliced and adjusted
+    """
+    ## to allow returning a generator
+    generator_return=b'K\x00\x01\x00\x97\x00' if index else b''
+    return generator_return+code[index]
+
 ## needs testing ## - doesn't work for open function generators
 def copy_gen(gen: Generator) -> Generator:
     """
@@ -187,8 +203,9 @@ def copy_gen(gen: Generator) -> Generator:
     if not frame.f_code.co_name=='<genexpr>':
         ## needs testing
         code=frame.f_code
+        func_code=copy_code(code,**{"co_code":code_complete(code.co_code,frame.f_lasti)})
         if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
-            FUNC=FunctionType(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}),globals())
+            FUNC=FunctionType(func_code,locals())
             args=signature(FUNC).parameters
             def arg_set(arg,value):
                 nonlocal args
@@ -199,7 +216,7 @@ def copy_gen(gen: Generator) -> Generator:
                     case 4: return "**"+value # VAR_KEYWORD 
             params=",".join(arg_set(arg,str(frame.f_locals[arg])) for arg in args)
             return eval(f"FUNC({params})")
-        return eval(copy_code(code,**{"co_code":code.co_code[frame.f_lasti:]}))
+        return eval(func_code)
     ## open generator
     return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
 
