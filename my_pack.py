@@ -148,21 +148,18 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
-## needs more work ##
-def code_complete(code: bytes,index: slice) -> bytes:
-    """
-    Completes a sliced code object (will further develop later)
-
-    When you slice a code object it's not always
-    able to run correctly after and will need adjustments
-
-    How to use:
-
-    code_complete(code_obj,index) # should return a code object sliced and adjusted
-    """
-    ## to allow returning a generator
-    generator_return=b'K\x00\x01\x00\x97\x00' if index else b''
-    return generator_return+code[index]
+## needs testing ##
+def adjust_yield(bytecode: bytes,index: int) -> bytes:
+    """Moves on from the last yield in the byte code execution"""
+    if index:
+        count,bytecode=0,bytecode[index:]
+        for index,opcode,arg in dis._unpack_opargs(bytecode):
+            count+=1
+            if arg: count+=1
+            if opcode==1: break
+        # +2 is for the cache byte code with no args # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
+        return b'K\x00\x01\x00\x97\x00'+bytecode[count+2:]
+    return bytecode
 
 ## needs testing ## - doesn't work for open function generators
 def copy_gen(gen: Generator) -> Generator:
@@ -203,7 +200,7 @@ def copy_gen(gen: Generator) -> Generator:
     if not frame.f_code.co_name=='<genexpr>':
         ## needs testing
         code=frame.f_code
-        func_code=copy_code(code,**{"co_code":code_complete(code.co_code,slice(frame.f_lasti,None))})
+        func_code=copy_code(code,**{"co_code":adjust_yield(code.co_code,frame.f_lasti)})
         if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
             FUNC=FunctionType(func_code,locals())
             args=signature(FUNC).parameters
