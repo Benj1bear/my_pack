@@ -160,8 +160,7 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
         # +2 is for the cache byte code with no args # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode[count+2:]
     return bytecode
-
-## needs testing ## - doesn't work for open function generators
+## needs testing ##
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
@@ -175,12 +174,17 @@ def copy_gen(gen: Generator) -> Generator:
     generator is still intact.
     
     How to use:
+    
     gen=(i for i in range(3))
+    
     new_gen=copy_gen(gen) ## will create a new copy separate from gen
+    
     def gen():
         for i in range(3):
             yield i
+    
     new_gen=copy_gen(gen()) ## will create a new copy separate from gen
+    
     Note: the following will not work and I'm considering adding a feature
     to allows this or a work around:
     
@@ -188,20 +192,21 @@ def copy_gen(gen: Generator) -> Generator:
     def gen2():
         global gen
         yield from gen
+        
     copy_gen(gen2())
-    Also note that when you copy a generator it will copy from its current
-    iteration onwards e.g. it doesn't copy from it's beginning only its current
-    state
+    
+    Also note when you copy a generator it will copy from its current
+    iteration onwards e.g. it doesn't copy from it's beginning only 
+    its current state
     """
     frame = gen.gi_frame
     ## closed generator
     if not frame: return empty_generator()
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
-        ## needs testing
         code=frame.f_code
         func_code=copy_code(code,**{"co_code":adjust_yield(code.co_code,frame.f_lasti)})
-        if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
+        if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount:
             FUNC=FunctionType(func_code,locals())
             args=signature(FUNC).parameters
             def arg_set(arg,value):
