@@ -203,7 +203,7 @@ def copy_gen(gen: Generator) -> Generator:
     if not frame.f_code.co_name=='<genexpr>':
         ## needs testing
         code=frame.f_code
-        func_code=copy_code(code,**{"co_code":code_complete(code.co_code,slice(None,frame.f_lasti))})
+        func_code=copy_code(code,**{"co_code":code_complete(code.co_code,slice(frame.f_lasti,None))})
         if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount: ## needs testing e.g. doesn't work after first iteration
             FUNC=FunctionType(func_code,locals())
             args=signature(FUNC).parameters
