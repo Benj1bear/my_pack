@@ -133,14 +133,14 @@ def copy_code(code: CodeType,**modified) -> CodeType:
     co_name
     co_qualname
     co_firstlineno
-    co_lnotab
+    co_linetable
     co_exceptiontable
     co_freevars
     co_cellvars
     """
     attrs=("co_argcount","co_posonlyargcount","co_kwonlyargcount","co_nlocals","co_stacksize",
            "co_flags","co_code","co_consts","co_names","co_varnames","co_filename","co_name",
-           "co_qualname","co_firstlineno","co_lnotab","co_exceptiontable","co_freevars","co_cellvars")
+           "co_qualname","co_firstlineno","co_linetable","co_exceptiontable","co_freevars","co_cellvars")
     kwargs={attr:getattr(code,attr) for attr in attrs}
     kwargs.update(modified)
     return CodeType(*kwargs.values()) ## we can't do **kwargs since the arg names are different from the attr names
@@ -148,7 +148,7 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
-
+## needs testing ## - doesn't work for open function generators
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
