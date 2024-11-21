@@ -21,7 +21,7 @@ import os
 from threading import Thread,RLock
 lock=RLock()
 from time import time,sleep
-from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType,CodeType
+from types import ModuleType,BuiltinFunctionType,FrameType,FunctionType,MethodType,CodeType,CellType
 from typing import Any,Callable,NoReturn,Union,Iterable,Generator
 import tempfile
 from importlib.util import module_from_spec,spec_from_loader
@@ -148,6 +148,27 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
+## needs testing ##
+def byte_func(code_obj: CodeType,f_locals: dict,**modified) -> Callable:
+    """
+    Turns byte code into a function
+    
+    Since python disallows FrameType instantiation to store variables 
+    we can instead use closure cells to store the variables
+    
+    How to use:
+    
+    Takes in a code object, locals used in the frame, and any code modifications
+    """
+    # copy into the closure ## we need to make it a cell type since we're using it as a closure
+    if f_locals:
+        # copy into the closure ## we need to make it a cell type since we're using it as a closure
+        cells=tuple(CellType(deepcopy(f_locals[key])) for key in f_locals)
+        ## add COPY_FREE_VARS byte code and create as a function
+        modified['co_code']=b'\x95\x01'+(modified['co_code'] if "co_code" in modified else code_obj.co_code)
+        modified['co_freevars']=tuple(f_locals.keys())
+    return FunctionType(copy_code(code_obj,**modified),locals(),closure=cells)
+
 ## needs testing ##
 def adjust_yield(bytecode: bytes,index: int) -> bytes:
     """Moves on from the last yield in the byte code execution"""
