@@ -1658,7 +1658,7 @@ class nonlocals:
     @property
     def nonlocals(self) -> dict:
         names=self.frame.f_code.co_freevars
-        return dct_ext(self.locals)[names] if len(names) else {}
+        return {key: value for key, value in self.locals.items() if key in names}
 
     def check(self,key: Any) -> None:
         if key not in self.nonlocals: raise KeyError(key)
@@ -1929,9 +1929,9 @@ class scope:
             global_frame=global_frame.f_back
             if len(name)==depth+1: local_frame=(global_frame,) # to create a copy otherwise it's a pointer
         ## instantiate
-        if depth > (temp:=(len(name)-1)): raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {temp}")
-        name=["__main__"]+name[::-1][:-(1+depth)]
         self.depth=len(name)-1
+        if depth > self.depth: raise ValueError(f"the value of 'depth' exceeds the maximum stack frame depth allowed. Max depth allowed is {self.depth}")
+        name=["__main__"]+name[::-1][:-(1+depth)]
         self.name=".".join(name)
         self.local_frame,self.global_frame=local_frame[0],global_frame
         self.locals,self.globals,self.nonlocals=local_frame[0].f_locals,global_frame.f_locals,nonlocals(local_frame[0])
@@ -1973,7 +1973,7 @@ class scope:
         if key in self.locals:
             del self.locals[key]
             # code reference: https://stackoverflow.com/questions/76995970/explicitly-delete-variables-within-a-function-if-the-function-raised-an-error,CC BY-SA 4.0
-            ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.frame), ctypes.c_int(1))
+            ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(self.local_frame), ctypes.c_int(1))
         else: del self.globals[key]
 
 def id_dct(*args) -> dict:
