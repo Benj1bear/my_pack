@@ -169,17 +169,30 @@ def byte_func(code_obj: CodeType,f_locals: dict,**modified) -> Callable:
         modified['co_freevars']=tuple(f_locals.keys())
     return FunctionType(copy_code(code_obj,**modified),locals(),closure=cells)
 
-## needs testing ##
+def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> bytes:
+    """
+    Slices a byte object up to the start position
+    
+    attr should be either: line, opcode, arg
+    """
+    count=0
+    for line,opcode,arg in dis._unpack_opargs(bytecode):
+        count+=1
+        if arg: count+=1
+        if eval(attr)==index: break
+    # +2 is for the cache byte code with no args (CACHE opcode is hidden from dis and is used internally)
+    if attr=="opcode" and cache: count+=2
+    return bytecode[count:]
+## needs to account for 'yield from ...' ##
 def adjust_yield(bytecode: bytes,index: int) -> bytes:
     """Moves on from the last yield in the byte code execution"""
     if index:
-        count,bytecode=0,bytecode[index:]
-        for index,opcode,arg in dis._unpack_opargs(bytecode):
-            count+=1
-            if arg: count+=1
-            if opcode==1: break
-        # +2 is for the cache byte code with no args # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
-        return b'K\x00\x01\x00\x97\x00'+bytecode[count+2:]
+        ## slice to the starting line of the opcode, then slice to the POP_TOP opcode
+        bytecode=byte_slice(
+            byte_slice(bytecode,index),1,"opcode"
+        )
+        # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
+        return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
 ## needs testing ##
 def copy_gen(gen: Generator) -> Generator:
