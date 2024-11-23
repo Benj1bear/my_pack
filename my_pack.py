@@ -187,10 +187,17 @@ def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> 
 def adjust_yield(bytecode: bytes,index: int) -> bytes:
     """Moves on from the last yield in the byte code execution"""
     if index:
+        ## check if it's a yield or yield from
+        before,yield_from=0,False
+        for line,opcode,arg in dis._unpack_opargs(bytecode):
+            if line==index and before==123: ## 123 is the SEND opcode
+                yield_from=True
+                break
+            before=opcode
         ## slice to the starting line of the opcode, then slice to the POP_TOP opcode
-        bytecode=byte_slice(
-            byte_slice(bytecode,index),1,"opcode"
-        )
+        bytecode=byte_slice(bytecode,index)
+        ## if the opcode before the line is SEND then yes
+        if not yield_from: bytecode=byte_slice(bytecode,1,"opcode")
         # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
