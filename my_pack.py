@@ -183,7 +183,7 @@ def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> 
     # +2 is for the cache byte code with no args (CACHE opcode is hidden from dis and is used internally)
     if attr=="opcode" and cache: count+=2
     return bytecode[count:]
-## needs to account for 'yield from ...' ##
+## needs testing ##
 def adjust_yield(bytecode: bytes,index: int) -> bytes:
     """Moves on from the last yield in the byte code execution"""
     if index:
@@ -201,7 +201,7 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
         # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
-## needs testing ##
+## needs testing ## - need to fix byte_func for retaining variable copies in closure cells then it should be completely done
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
