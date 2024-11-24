@@ -149,7 +149,7 @@ def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
 ## needs testing ##
-def byte_func(code_obj: CodeType,f_locals: dict,**modified) -> Callable:
+def byte_func(code_obj: CodeType,frame: dict) -> Callable:
     """
     Turns byte code into a function
     
@@ -160,14 +160,17 @@ def byte_func(code_obj: CodeType,f_locals: dict,**modified) -> Callable:
     
     Takes in a code object, locals used in the frame, and any code modifications
     """
-    cells=None
-    if f_locals:
-        # copy into the closure ## we need to make it a cell type since we're using it as a closure
-        cells=tuple(CellType(deepcopy(f_locals[key])) for key in f_locals)
-        ## add COPY_FREE_VARS byte code and create as a function
-        modified['co_code']=b'\x95\x01'+(modified['co_code'] if "co_code" in modified else code_obj.co_code)
-        modified['co_freevars']=tuple(f_locals.keys())
-    return FunctionType(copy_code(code_obj,**modified),locals(),closure=cells)
+    ## copy any locals in the frame (not part of the signature) into locals() (we're going to use this in as our functions scope)
+    f_locals=frame.f_locals
+    allowed=code_obj.co_varnames[len(signature(FunctionType(code_obj,locals())).parameters):] # remove the signature
+    for key in f_locals:
+        if key in allowed: exec(f"{key}=copy(f_locals['{key}'])")
+    ## exec in the globals as a copy into the local scope
+    ## (this separates the copy from the globals and into the function)
+    for key in code_obj.co_names:
+        try: exec(f"{key}=copy(globals()['{key}'])")
+        except: pass
+    return FunctionType(code_obj,locals())
 
 def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> bytes:
     """
@@ -201,7 +204,7 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
         # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
-## needs testing ## - need to fix byte_func for retaining variable copies in closure cells then it should be completely done
+## needs testing ## - adjust_yield is malforming co_code and byte_func needs testing
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
@@ -242,13 +245,14 @@ def copy_gen(gen: Generator) -> Generator:
     """
     frame = gen.gi_frame
     ## closed generator
-    if not frame: return empty_generator()
+    if not frame:
+        return empty_generator()
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
         code=frame.f_code
         func_code=copy_code(code,**{"co_code":adjust_yield(code.co_code,frame.f_lasti)})
+        FUNC=byte_func(func_code,frame)
         if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount:
-            FUNC=FunctionType(func_code,locals())
             args=signature(FUNC).parameters
             def arg_set(arg,value):
                 nonlocal args
@@ -259,9 +263,9 @@ def copy_gen(gen: Generator) -> Generator:
                     case 4: return "**"+value # VAR_KEYWORD 
             params=",".join(arg_set(arg,str(frame.f_locals[arg])) for arg in args)
             return eval(f"FUNC({params})")
-        return eval(func_code)
+        return FUNC()
     ## open generator
-    return FunctionType(copy_code(gen.gi_code),locals())(deepcopy(frame.f_locals[".0"]))
+    return byte_func(copy_code(gen.gi_code),frame)(deepcopy(frame.f_locals[".0"]))
 
 @lambda x: x()
 class wrap:
