@@ -160,7 +160,7 @@ def byte_func(code_obj: CodeType,f_locals: dict,**modified) -> Callable:
     
     Takes in a code object, locals used in the frame, and any code modifications
     """
-    # copy into the closure ## we need to make it a cell type since we're using it as a closure
+    cells=None
     if f_locals:
         # copy into the closure ## we need to make it a cell type since we're using it as a closure
         cells=tuple(CellType(deepcopy(f_locals[key])) for key in f_locals)
@@ -403,6 +403,11 @@ class pickle_stack:
         return obj
 
     def persistent_load(self, pid) -> NoReturn:
+        """
+        Used for pickle.Unpickler subclasses
+        
+        i.e. see this example: https://docs.python.org/3/library/pickle.html#pickle-persistent:~:text=class%20DBUnpickler(,persistent%20object%22)
+        """
         raise MultipleExceptions(pickle.UnpicklingError,NotImplementedError("Persistent load not available in the parent class. Persistent loads are required to be implemented where applicable by subclasses"))
     
     def stack_operation(self,obj,arg: str) -> None:
