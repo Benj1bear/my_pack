@@ -149,7 +149,7 @@ def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
 ## needs testing ##
-def byte_func(code_obj: CodeType,frame: dict) -> Callable:
+def byte_func(code_obj: CodeType,frame: FrameType) -> Callable:
     """
     Turns byte code into a function
     
