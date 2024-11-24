@@ -163,14 +163,15 @@ def byte_func(code_obj: CodeType,frame: FrameType) -> Callable:
     ## copy any locals in the frame (not part of the signature) into locals() (we're going to use this in as our functions scope)
     f_locals=frame.f_locals
     allowed=code_obj.co_varnames[len(signature(FunctionType(code_obj,locals())).parameters):] # remove the signature
+    new_locals=dict()
     for key in f_locals:
-        if key in allowed: exec(f"{key}=copy(f_locals['{key}'])")
+        if key in allowed: exec(f"new_locals['{key}']=copy(f_locals['{key}'])")
     ## exec in the globals as a copy into the local scope
     ## (this separates the copy from the globals and into the function)
     for key in code_obj.co_names:
-        try: exec(f"{key}=copy(globals()['{key}'])")
+        try: exec(f"new_locals['{key}']=copy(globals()['{key}'])")
         except: pass
-    return FunctionType(code_obj,locals())
+    return FunctionType(code_obj,new_locals)
 
 def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> bytes:
     """
