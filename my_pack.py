@@ -168,7 +168,13 @@ def byte_func(code_obj: CodeType,frame: FrameType) -> Callable:
         try: new_locals[key]=copy(globals()[key])
         except: pass
     return FunctionType(code_obj,new_locals)
-## needs testing ##
+
+@lambda x: x((lambda opcode: 2) if sys.version_info >= (3, 6) else (lambda opcode: (1, 3)[opcode < 90])) ## HAVE_ARGUMENT opcode
+@wraps
+def byte_size(opcode: int) -> int:
+    """Determines what size the bytes are per opcode depending on the version"""
+    pass
+## needs testing ## - should just be the byte_size
 def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> bytes:
     """
     Slices a byte object up to the start position
@@ -558,6 +564,50 @@ class readonly:
     def __get__(self, obj, objtype) -> Any: return self.fget(obj)
     def __set__(self, obj, value) -> NoReturn: raise AttributeError("readonly attribute")
     def __delete__(self, obj) -> NoReturn: raise AttributeError("readonly attribute")
+
+class slist(list):
+    """
+    Base class for Search list type
+    
+    subclass of list that allows searching
+    """
+    def __init__(self,obj: list) -> None:
+        self.base=as_list(obj)
+        super().__init__(self.base)
+    
+    def init(self,ls: list) -> object:
+        """For temporary slist initializations"""
+        super().__init__(ls)
+        return self
+    
+    @classmethod
+    def dir(cls,obj: object) -> list: return cls(dir(obj))
+    @property
+    def reset(self) -> object: return self.init(self.base)
+    @property
+    def search(self) -> object: return search_list(self)
+    
+class search_list(slist):
+    """Allows searching a list either via the call or by method"""
+    def __call__(self,_isin: list=None,_notin: list=None,length: int=None,isin: list=None,notin: list=None,regex: str=None,FUNC=None,**kwargs) -> object:
+        """Searches a list"""
+        ls=self
+        if _isin: ls=[i for i in ls if _isin in i]
+        if _notin: ls=[i for i in ls if _notin not in i]
+        if regex: ls=[i for i in ls if re.match(regex,i)]
+        if isin: ls=[i for i in ls if i in isin]
+        if notin: ls=[i for i in ls if i not in notin]
+        if length!=None and isinstance(length,int|list|tuple):
+            if isinstance(length,list|tuple):
+                ls=[i for i in ls if len(i) > length] if length[1]=="g" else [i for i in ls if len(i) < length]
+            else:
+                ls=[i for i in ls if len(i)==length]
+        if FUNC: ls=[i for i in ls if FUNC(i,**kwargs)]
+        return self.init(ls)
+
+    def __getattr__(self,method: str) -> Callable:
+        """Allows other methods to be used"""
+        return lambda *args,**kwargs: self.init([i for i in self if getattr(i,method)(*args,**kwargs)])
 
 def istype(obj: Any,type: type) -> bool:
     """
