@@ -119,24 +119,24 @@ def copy_code(code: CodeType,**modified) -> CodeType:
     
     Attributes that can be modified:
     
-    co_argcount
-    co_posonlyargcount
-    co_kwonlyargcount
-    co_nlocals
-    co_stacksize
-    co_flags
-    co_code
-    co_consts
-    co_names
-    co_varnames
-    co_filename
-    co_name
-    co_qualname
-    co_firstlineno
-    co_linetable
-    co_exceptiontable
-    co_freevars
-    co_cellvars
+    co_argcount        - number args
+    co_posonlyargcount - number of position only args
+    co_kwonlyargcount  - number of key word only args
+    co_nlocals         - number of locals
+    co_stacksize       - stack space used
+    co_flags           - indicates certain identifiers. See here: https://docs.python.org/3/library/inspect.html#code-objects-bit-flags
+    co_code            - the bytecode
+    co_consts          - constants used in the bytecode
+    co_names           - globals
+    co_varnames        - locals (Note: the variables part of the function signature come first then all other variables are part of the function body)
+    co_filename        - name of the file location
+    co_name            - func name
+    co_qualname        - full func name
+    co_firstlineno     - starting line of where the code is executed from relative to the source code
+    co_linetable       - bytecode that's supposed to be helpful in relating bytecode to source code ----- Not entirely sure about
+    co_exceptiontable  - bytecode of where to go from when an exception occurs
+    co_freevars        - nonlocals
+    co_cellvars        - locals that are also part of a closure
     """
     attrs=("co_argcount","co_posonlyargcount","co_kwonlyargcount","co_nlocals","co_stacksize",
            "co_flags","co_code","co_consts","co_names","co_varnames","co_filename","co_name",
@@ -148,13 +148,13 @@ def copy_code(code: CodeType,**modified) -> CodeType:
 def empty_generator() -> Generator:
     """returns an empty generator"""
     return (yield)
-## needs testing ##
+
 def byte_func(code_obj: CodeType,frame: FrameType) -> Callable:
     """
     Turns byte code into a function
     
     Since python disallows FrameType instantiation to store variables 
-    we can instead use closure cells to store the variables
+    we can instead use a locals dict to store the variables
     
     How to use:
     
@@ -163,16 +163,12 @@ def byte_func(code_obj: CodeType,frame: FrameType) -> Callable:
     ## copy any locals in the frame (not part of the signature) into locals() (we're going to use this in as our functions scope)
     f_locals=frame.f_locals
     allowed=code_obj.co_varnames[len(signature(FunctionType(code_obj,locals())).parameters):] # remove the signature
-    new_locals=dict()
-    for key in f_locals:
-        if key in allowed: exec(f"new_locals['{key}']=copy(f_locals['{key}'])")
-    ## exec in the globals as a copy into the local scope
-    ## (this separates the copy from the globals and into the function)
+    new_locals={key:copy(f_locals[key]) for key in f_locals if key in allowed}
     for key in code_obj.co_names:
-        try: exec(f"new_locals['{key}']=copy(globals()['{key}'])")
+        try: new_locals[key]=copy(globals()[key])
         except: pass
     return FunctionType(code_obj,new_locals)
-
+## needs testing ##
 def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> bytes:
     """
     Slices a byte object up to the start position
@@ -187,7 +183,7 @@ def byte_slice(bytecode: bytes,index: int,attr: str="line",cache: bool=True) -> 
     # +2 is for the cache byte code with no args (CACHE opcode is hidden from dis and is used internally)
     if attr=="opcode" and cache: count+=2
     return bytecode[count:]
-## needs testing ##
+
 def adjust_yield(bytecode: bytes,index: int) -> bytes:
     """Moves on from the last yield in the byte code execution"""
     if index:
@@ -205,7 +201,7 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
         # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
-## needs testing ## - adjust_yield is malforming co_code and byte_func needs testing
+## needs testing ## - should be byte_slice that needs fixing then co_code shouldn't be malformed
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
@@ -246,8 +242,7 @@ def copy_gen(gen: Generator) -> Generator:
     """
     frame = gen.gi_frame
     ## closed generator
-    if not frame:
-        return empty_generator()
+    if not frame: return empty_generator()
     ## function generator - the co_name is readonly and therefore should represent the actual name
     if not frame.f_code.co_name=='<genexpr>':
         code=frame.f_code
