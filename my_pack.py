@@ -40,7 +40,7 @@ from tkinter import Tk
 import secrets
 import string
 from operator import itemgetter
-from itertools import combinations,chain as iter_chain # since I have a class called 'chain' #,tee
+from itertools import combinations,chain as iter_chain,tee # since I have a class called 'chain'
 import IPython
 from warnings import simplefilter,warn
 #import traceback
@@ -207,7 +207,8 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
         # the byte string before it is: RETURN_GENERATOR, RESUME, POP_TOP - this allows a generator to be returned
         return b'K\x00\x01\x00\x97\x00'+bytecode
     return bytecode
-## needs testing ## - should be byte_slice that needs fixing then co_code shouldn't be malformed
+
+INTERNAL_COPY={}
 def copy_gen(gen: Generator) -> Generator:
     """
     copies a generator
@@ -219,6 +220,11 @@ def copy_gen(gen: Generator) -> Generator:
     copies are created they are not truely separated.
     This offers an alternative where the original 
     generator is still intact.
+
+    How this function works is it places the original
+    reference into memory somewhere else and exposes
+    the copies from tee into the scope before effectively
+    creating copies.
     
     How to use:
     
@@ -246,28 +252,16 @@ def copy_gen(gen: Generator) -> Generator:
     iteration onwards e.g. it doesn't copy from it's beginning only 
     its current state
     """
-    frame = gen.gi_frame
-    ## closed generator
-    if not frame: return empty_generator()
-    ## function generator - the co_name is readonly and therefore should represent the actual name
-    if not frame.f_code.co_name=='<genexpr>':
-        code=frame.f_code
-        func_code=copy_code(code,**{"co_code":adjust_yield(code.co_code,frame.f_lasti)})
-        FUNC=byte_func(func_code,frame)
-        if code.co_argcount | code.co_posonlyargcount | code.co_kwonlyargcount:
-            args=signature(FUNC).parameters
-            def arg_set(arg,value):
-                nonlocal args
-                match args[arg].kind.value:
-                    case 0 | 1: return value # POSITIONAL_ONLY | POSITIONAL_OR_KEYWORD
-                    case 2: return "*"+value # VAR_POSITIONAL
-                    case 3: return arg+"="+value # KEYWORD_ONLY
-                    case 4: return "**"+value # VAR_KEYWORD 
-            params=",".join(arg_set(arg,str(frame.f_locals[arg])) for arg in args)
-            return eval(f"FUNC({params})")
-        return FUNC()
-    ## open generator
-    return byte_func(copy_code(gen.gi_code),frame)(deepcopy(frame.f_locals[".0"]))
+    varname=name(depth=1)["args"]
+    if varname:
+        varname=varname[0]
+        # create two copies
+        copies=tee(gen)
+        # keep the pointer in the INTERNAL copy, use scope to change the value
+        INTERNAL_COPY[id(gen)]=gen
+        scope(1)[varname]=copies[0]
+        return copies[1]
+    return tee(gen,1)
 
 @lambda x: x()
 class wrap:
