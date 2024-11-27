@@ -58,6 +58,11 @@ from contextlib import contextmanager
 from collections import deque
 import pickletools
 from copyreg import _inverted_registry, _extension_cache
+import uuid
+
+def new_id() -> str:
+    """Creates a new id pseudo-randomly"""
+    return int(uuid.uuid4())
 
 module_dir=os.path.dirname(__file__)
 
