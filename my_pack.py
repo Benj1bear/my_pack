@@ -60,7 +60,7 @@ import pickletools
 from copyreg import _inverted_registry, _extension_cache
 import uuid
 
-def new_id() -> str:
+def new_id() -> int:
     """Creates a new id pseudo-randomly"""
     return int(uuid.uuid4())
 
@@ -214,7 +214,7 @@ def adjust_yield(bytecode: bytes,index: int) -> bytes:
     return bytecode
 
 INTERNAL_COPY={}
-def copy_gen(gen: Generator) -> Generator:
+def copy_gen(gen: Generator,depth: int=0) -> Generator:
     """
     copies a generator
 
@@ -243,28 +243,18 @@ def copy_gen(gen: Generator) -> Generator:
     
     new_gen=copy_gen(gen()) ## will create a new copy separate from gen
     
-    Note: the following will not work and I'm considering adding a feature
-    to allows this or a work around:
-    
-    gen=(i for i in range(3))
-    def gen2():
-        global gen
-        yield from gen
-        
-    copy_gen(gen2())
-    
-    Also note when you copy a generator it will copy from its current
-    iteration onwards e.g. it doesn't copy from it's beginning only 
-    its current state
+    when you copy a generator it will copy from its current
+    iteration onwards e.g. it doesn't copy from it's beginning 
+    only its current state
     """
-    varname=name(depth=1)["args"]
+    varname=name(depth=depth+1)["args"]
     if varname:
         varname=varname[0]
         # create two copies
         copies=tee(gen)
         # keep the pointer in the INTERNAL copy, use scope to change the value
         INTERNAL_COPY[id(gen)]=gen
-        scope(1)[varname]=copies[0]
+        scope(depth+1)[varname]=copies[0]
         return copies[1]
     return tee(gen,1)
 
@@ -1376,7 +1366,7 @@ def copy(*args) -> Any|tuple[Any]:
     for arg in args:    
         if hasattr(arg,"copy"): new_args+=(arg.copy(),)
         elif isinstance(arg,FunctionType): new_args+=(func_copy(arg),)
-        elif isinstance(arg,Generator): new_args+=(copy_gen(arg),)
+        elif isinstance(arg,Generator): new_args+=(copy_gen(arg,1),) ## depth needs to be set to 1 to get past the copy stack frame
         elif isinstance(arg,CodeType): new_args+=(copy_code(arg),)
         elif isclass(arg): new_args+=(class_copy(arg),)
         elif isinstance(arg,ModuleType): new_args+=(module_copy(arg),)
