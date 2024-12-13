@@ -66,6 +66,22 @@ def new_id() -> int:
 
 module_dir=os.path.dirname(__file__)
 
+class pickle_code:
+    """Used to allow serialization and deserialization of unpickleable code objects"""
+    def __init__(self,code) -> None:
+        _attrs=("co_argcount","co_posonlyargcount","co_kwonlyargcount","co_nlocals","co_stacksize",
+                "co_flags","co_code","co_consts","co_names","co_varnames","co_filename","co_name",
+                "co_qualname","co_firstlineno","co_lnotab","co_exceptiontable","co_freevars","co_cellvars")
+        self.attrs=dict(zip(_attrs,(getattr(code,attr) for attr in _attrs)))
+        
+    def __getstate__(self) -> dict:
+        """Serializing pickle (what object you want serialized)"""
+        return self.attrs.copy()
+    
+    def __setstate__(self,state: dict) -> None:
+        """Deserializing pickle (returns an instance of the object with state)"""
+        self.code=CodeType(*state.values())
+
 def builtin__file__(module_name: str="") -> pd.DataFrame|str:
     """
     Returns the file location of builtin modules
