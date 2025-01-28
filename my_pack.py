@@ -60,20 +60,20 @@ import pickletools
 from copyreg import _inverted_registry, _extension_cache
 import uuid
 
-def is_cli():
+def is_cli() -> bool:
     try:
         readline.get_history_item(0)
         return True
     except IndexError:
         return False
 
-def code_context(depth=0):
+def code_context(depth: int=0) -> str:
     frame=currentframe()
     for i in range(depth+1):
         frame = frame.f_back
     if is_cli():
         return readline.get_history_item(-frame.f_lineno)
-    return getframeinfo(frame).code_context
+    return getframeinfo(frame).code_context[0]
 
 def new_id() -> int:
     """Creates a new id pseudo-randomly"""
