@@ -29,7 +29,7 @@ from importlib.util import module_from_spec,spec_from_loader
 import re
 import glob
 import shutil
-from inspect import getfile,getsource,signature,_empty,currentframe,stack,isclass
+from inspect import getfile,getsource,signature,_empty,currentframe,stack,isclass,getframeinfo
 import sys
 from functools import partial,wraps,reduce
 from keyword import iskeyword
@@ -59,6 +59,21 @@ from collections import deque
 import pickletools
 from copyreg import _inverted_registry, _extension_cache
 import uuid
+
+def is_cli():
+    try:
+        readline.get_history_item(0)
+        return True
+    except IndexError:
+        return False
+
+def code_context(depth=0):
+    frame=currentframe()
+    for i in range(depth+1):
+        frame = frame.f_back
+    if is_cli():
+        return readline.get_history_item(-frame.f_lineno)
+    return getframeinfo(frame).code_context
 
 def new_id() -> int:
     """Creates a new id pseudo-randomly"""
